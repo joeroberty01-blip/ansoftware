@@ -37,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# uploaded user content (staff photos, etc.) - not source, needs a real
+# persistent volume/object storage in production, not git
+/public/uploads/*
+!/public/uploads/.gitkeep
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

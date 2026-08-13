@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 interface Staff {
   id: string;
+  staff_number: string;
+  photo_url: string | null;
   full_name: string;
   email: string;
   phone: string | null;
@@ -118,6 +120,36 @@ export function StaffDetailView({
       setEditError("Hitilafu ya mtandao.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // --- Photo upload (Admin only) ---
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const onPhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError(null);
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      const res = await fetch(`/api/staff/${staff.id}/photo`, {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPhotoError(json.error ?? "Imeshindwa kupakia picha.");
+        return;
+      }
+      setStaff((prev) => ({ ...prev, photo_url: json.staff.photo_url }));
+    } catch {
+      setPhotoError("Hitilafu ya mtandao.");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -257,24 +289,69 @@ export function StaffDetailView({
 
   return (
     <div className="flex max-w-3xl flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900">
-            {staff.full_name}
-          </h1>
-          <p className="text-sm text-zinc-600">
-            {staff.profession} — {staff.email}
-          </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          {staff.photo_url ? (
+            <img
+              src={staff.photo_url}
+              alt={staff.full_name}
+              className="h-16 w-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-200 text-xs text-zinc-500">
+              Hakuna Picha
+            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-semibold text-zinc-900">
+              {staff.full_name}
+            </h1>
+            <p className="text-sm text-zinc-600">
+              {staff.profession} — {staff.email}
+            </p>
+            <p className="text-xs text-zinc-500">ID: {staff.staff_number}</p>
+          </div>
         </div>
-        {viewerIsAdmin && !editing && (
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Hariri
-          </button>
-        )}
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="flex gap-2">
+            {viewerIsAdmin && !editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              >
+                Hariri
+              </button>
+            )}
+            {viewerIsAdmin && (
+              <a
+                href={`/api/staff/${staff.id}/id-card`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              >
+                Pakua ID Card (PDF)
+              </a>
+            )}
+          </div>
+          {viewerIsAdmin && (
+            <label className="cursor-pointer text-xs font-medium text-brand-blue underline">
+              {uploadingPhoto ? "Inapakia picha..." : "Pakia/Badilisha Picha"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={onPhotoSelected}
+                disabled={uploadingPhoto}
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
       </div>
+      {photoError && (
+        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          {photoError}
+        </p>
+      )}
 
       {editing ? (
         <form

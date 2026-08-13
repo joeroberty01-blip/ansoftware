@@ -68,6 +68,18 @@ export async function getStaffByUserId(
   );
 }
 
+export async function nextStaffNumber(
+  client: { query: (text: string, params?: unknown[]) => Promise<{ rows: { count: string }[] }> }
+): Promise<string> {
+  const year = new Date().getFullYear();
+  const countRes = await client.query(
+    `SELECT COUNT(*)::text AS count FROM staff WHERE EXTRACT(YEAR FROM created_at) = $1`,
+    [year]
+  );
+  const seq = parseInt(countRes.rows[0]?.count ?? "0", 10) + 1;
+  return `ANH-${year}-${String(seq).padStart(4, "0")}`;
+}
+
 /**
  * Admin adds a Staff member directly (no self-signup approval flow):
  * creates the login-capable `users` row (status APPROVED immediately)
@@ -96,13 +108,16 @@ export async function createStaffWithUser(input: {
     );
     const user = userRes.rows[0];
 
+    const staffNumber = await nextStaffNumber(client);
+
     const staffRes = await client.query<StaffRow>(
       `INSERT INTO staff
-         (user_id, profession, base_salary, allowances, start_date, license_number, license_expiry_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+         (user_id, staff_number, profession, base_salary, allowances, start_date, license_number, license_expiry_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         user.id,
+        staffNumber,
         input.profession,
         input.baseSalary,
         input.allowances,
@@ -133,6 +148,7 @@ export async function updateStaffProfile(
     baseSalary?: string;
     allowances?: string;
     startDate?: string;
+    photoUrl?: string | null;
   }
 ): Promise<StaffRow | null> {
   const fields: string[] = [];
@@ -146,6 +162,7 @@ export async function updateStaffProfile(
     base_salary: patch.baseSalary,
     allowances: patch.allowances,
     start_date: patch.startDate,
+    photo_url: patch.photoUrl,
   };
 
   for (const [column, value] of Object.entries(columnMap)) {

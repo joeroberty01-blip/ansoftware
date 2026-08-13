@@ -37,6 +37,7 @@ CREATE TABLE users (
 CREATE TABLE staff (
   id                   TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id              TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  staff_number         TEXT UNIQUE NOT NULL,
   photo_url            TEXT,
   profession           profession NOT NULL,
   license_number       TEXT,

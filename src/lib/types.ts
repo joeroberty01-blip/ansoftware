@@ -43,6 +43,7 @@ export interface UserRow {
 export interface StaffRow {
   id: string;
   user_id: string;
+  staff_number: string;
   photo_url: string | null;
   profession: Profession;
   license_number: string | null;

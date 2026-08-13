@@ -5,6 +5,7 @@ import {
   staffSignupSchema,
 } from "@/lib/validation/auth";
 import { countAdmins, createUser, findUserByEmail } from "@/lib/repo/users";
+import { nextStaffNumber } from "@/lib/repo/staff";
 import { withTransaction } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
@@ -84,10 +85,11 @@ export async function POST(req: NextRequest) {
         [email.toLowerCase().trim(), passwordHash, fullName, phone]
       );
       const user = userRes.rows[0];
+      const staffNumber = await nextStaffNumber(client);
       await client.query(
-        `INSERT INTO staff (user_id, profession, base_salary, start_date)
-         VALUES ($1, $2, 0, CURRENT_DATE)`,
-        [user.id, profession]
+        `INSERT INTO staff (user_id, staff_number, profession, base_salary, start_date)
+         VALUES ($1, $2, $3, 0, CURRENT_DATE)`,
+        [user.id, staffNumber, profession]
       );
       return user;
     });
