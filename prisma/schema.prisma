@@ -1,0 +1,302 @@
+// Afya Nyumbani Home Care Services Ltd — Healthcare ERP
+// Phase 1: Auth + Finance + Billing/Invoices + Staff Management
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================= AUTH =================
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum UserStatus {
+  PENDING   // Staff amejisajili, anasubiri idhini ya Admin
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  fullName      String
+  phone         String?
+  role          UserRole
+  status        UserStatus @default(APPROVED) // Admin = APPROVED moja kwa moja; Staff = PENDING mpaka aidhinishwe
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  staff         Staff?
+
+  expensesCreated   Expense[]      @relation("ExpenseCreatedBy")
+  paymentsReceived  Payment[]      @relation("PaymentReceivedBy")
+  invoicesCreated   Invoice[]      @relation("InvoiceCreatedBy")
+  leaveDecisions    LeaveRequest[] @relation("LeaveDecidedBy")
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+// ================= STAFF =================
+
+enum Profession {
+  NURSE
+  DOCTOR
+  CHW // Community Health Worker
+  ADMIN_STAFF
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+model Staff {
+  id                String           @id @default(cuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  photoUrl          String?
+  profession        Profession
+  licenseNumber     String?
+  licenseExpiryDate DateTime?
+  startDate         DateTime
+  employmentStatus  EmploymentStatus @default(ACTIVE)
+
+  baseSalary        Decimal          @db.Decimal(14, 2)
+  allowances        Decimal          @default(0) @db.Decimal(14, 2)
+
+  leaveBalanceDays  Int              @default(28)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  leaveRequests     LeaveRequest[]
+  payrolls          Payroll[]
+
+  @@map("staff")
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  staffId      String
+  staff        Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  startDate    DateTime
+  endDate      DateTime
+  days         Int
+  reason       String
+
+  status       LeaveStatus @default(PENDING)
+  decidedById  String?
+  decidedBy    User?       @relation("LeaveDecidedBy", fields: [decidedById], references: [id])
+  decidedAt    DateTime?
+  decisionNote String?
+
+  createdAt    DateTime    @default(now())
+
+  @@map("leave_requests")
+}
+
+enum PayrollStatus {
+  PENDING
+  PAID
+}
+
+model Payroll {
+  id               String        @id @default(cuid())
+  staffId          String
+  staff            Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  month            Int // 1-12
+  year             Int
+
+  baseSalary       Decimal       @db.Decimal(14, 2)
+  allowances       Decimal       @default(0) @db.Decimal(14, 2)
+  nssfDeduction    Decimal       @default(0) @db.Decimal(14, 2)
+  payeDeduction    Decimal       @default(0) @db.Decimal(14, 2)
+  otherDeductions  Decimal       @default(0) @db.Decimal(14, 2)
+  grossPay         Decimal       @db.Decimal(14, 2)
+  netPay           Decimal       @db.Decimal(14, 2)
+
+  status           PayrollStatus @default(PENDING)
+  paidAt           DateTime?
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([staffId, month, year])
+  @@map("payrolls")
+}
+
+// ================= BILLING / INVOICES =================
+
+enum ClientType {
+  INDIVIDUAL
+  CORPORATE
+  INSURANCE
+}
+
+model Client {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  type      ClientType @default(INDIVIDUAL)
+  address   String?
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  invoices  Invoice[]
+
+  @@map("clients")
+}
+
+enum DocType {
+  QUOTATION
+  INVOICE
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id               String        @id @default(cuid())
+  documentNumber   String        @unique
+  docType          DocType       @default(INVOICE)
+
+  clientId         String
+  client           Client        @relation(fields: [clientId], references: [id])
+
+  issueDate        DateTime      @default(now())
+  dueDate          DateTime?
+
+  subtotal         Decimal       @db.Decimal(14, 2)
+  taxAmount        Decimal       @default(0) @db.Decimal(14, 2)
+  totalAmount      Decimal       @db.Decimal(14, 2)
+  amountPaid       Decimal       @default(0) @db.Decimal(14, 2)
+
+  paymentStatus    PaymentStatus @default(PENDING)
+  notes            String?
+
+  convertedFromId  String?       @unique
+  convertedFrom    Invoice?      @relation("QuotationToInvoice", fields: [convertedFromId], references: [id])
+  convertedTo      Invoice?      @relation("QuotationToInvoice")
+
+  createdById      String
+  createdBy        User          @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  items            InvoiceItem[]
+  payments         Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description String
+  quantity    Decimal @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(14, 2)
+  total       Decimal @db.Decimal(14, 2)
+
+  @@map("invoice_items")
+}
+
+enum PaymentMethod {
+  CASH
+  MPESA
+  AIRTEL_MONEY
+  MIXX_BY_YAS
+  BANK_TRANSFER
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id])
+
+  amount       Decimal       @db.Decimal(14, 2)
+  method       PaymentMethod
+  reference    String?
+  notes        String?
+
+  receivedById String
+  receivedBy   User          @relation("PaymentReceivedBy", fields: [receivedById], references: [id])
+
+  paidAt       DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+
+  @@map("payments")
+}
+
+// ================= FINANCE / EXPENSES =================
+
+enum ExpenseCategory {
+  MISHAHARA
+  VIFAA
+  USAFIRI
+  UENDESHAJI
+  MENGINEYO
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  category    ExpenseCategory
+  amount      Decimal         @db.Decimal(14, 2)
+  date        DateTime
+  description String
+
+  createdById String
+  createdBy   User            @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+
+  createdAt   DateTime        @default(now())
+
+  @@map("expenses")
+}
+
+// ================= AUDIT LOG =================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  action    String   // e.g. "CREATE_EXPENSE", "RECORD_PAYMENT", "APPROVE_PAYROLL"
+  entity    String   // e.g. "Expense", "Payment", "Payroll"
+  entityId  String?
+  amount    Decimal? @db.Decimal(14, 2)
+  meta      Json?
+
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}

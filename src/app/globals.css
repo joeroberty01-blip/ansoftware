@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Afya Nyumbani brand palette */
+  --color-brand-blue: #0d4ea6;
+  --color-brand-blue-dark: #0a3d80;
+  --color-brand-blue-light: #e8f0fb;
+  --color-brand-orange: #f58220;
+  --color-brand-orange-dark: #d96f10;
+  --color-brand-orange-light: #fef1e5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}

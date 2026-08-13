@@ -1,0 +1,57 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
+import { createPatientSchema } from "@/lib/validation/patients";
+import { createPatient, listPatients } from "@/lib/repo/patients";
+
+export async function GET(req: NextRequest) {
+  const session = await getCurrentUser();
+  if (!session) {
+    return NextResponse.json(
+      { error: "Unahitaji kuingia kwanza." },
+      { status: 401 }
+    );
+  }
+
+  const search = req.nextUrl.searchParams.get("search") ?? undefined;
+  const patients = await listPatients(search);
+  return NextResponse.json({ patients });
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getCurrentUser();
+  if (!session) {
+    return NextResponse.json(
+      { error: "Unahitaji kuingia kwanza." },
+      { status: 401 }
+    );
+  }
+
+  const body = await req.json();
+  const parsed = createPatientSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { status: 400 }
+    );
+  }
+
+  const d = parsed.data;
+  const patient = await createPatient({
+    fullName: d.fullName,
+    dateOfBirth: d.dateOfBirth ? d.dateOfBirth : null,
+    gender: d.gender ? d.gender : null,
+    phone: d.phone ? d.phone : null,
+    email: d.email ? d.email : null,
+    address: d.address ? d.address : null,
+    emergencyContactName: d.emergencyContactName ? d.emergencyContactName : null,
+    emergencyContactPhone: d.emergencyContactPhone ? d.emergencyContactPhone : null,
+    bloodType: d.bloodType ? d.bloodType : null,
+    allergies: d.allergies ? d.allergies : null,
+    chronicConditions: d.chronicConditions ? d.chronicConditions : null,
+    notes: d.notes ? d.notes : null,
+    createdById: session.id,
+  });
+
+  return NextResponse.json({ patient }, { status: 201 });
+}
