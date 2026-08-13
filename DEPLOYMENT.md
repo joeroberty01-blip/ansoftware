@@ -33,6 +33,12 @@ environment variable settings) and fill in real values:
   form. Use it once to create the first Admin account, then optionally
   rotate it to something else so the signup form can't create more admins
   without your involvement.
+- `BLOB_READ_WRITE_TOKEN` — **required on Vercel** (or any serverless host
+  with an ephemeral/read-only filesystem) for staff photo uploads to work.
+  Add the "Blob" storage integration in your Vercel project's Storage tab —
+  it sets this env var for you automatically. Not needed for Option A/B
+  below (Node server or Docker), where uploads are written to local disk
+  under `public/uploads/staff` instead.
 
 ## 3. Build and run
 
@@ -80,6 +86,6 @@ Staff who self-register.
   `ALTER TABLE`/`CREATE ...` statements by hand, apply them to the live
   database, and mirror the same change in `prisma/init.sql` so a fresh
   install stays in sync (this is the pattern used throughout this project).
-- No file storage is configured (Patient documents and Staff photos are
-  metadata-only, no upload). Add an object storage integration (S3-
-  compatible, etc.) if you need real file uploads.
+- Staff photo upload uses Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set,
+  local disk otherwise. Patient documents are still metadata-only (no file
+  upload) — add an object storage integration if you need that too.

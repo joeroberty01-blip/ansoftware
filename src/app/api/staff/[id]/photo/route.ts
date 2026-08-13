@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import { getCurrentUser } from "@/lib/auth";
 import { getStaffById, updateStaffProfile } from "@/lib/repo/staff";
 
@@ -53,14 +54,23 @@ export async function POST(
     );
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "staff");
-  await mkdir(uploadDir, { recursive: true });
-
   const filename = `${id}-${randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), buffer);
 
-  const photoUrl = `/uploads/staff/${filename}`;
+  let photoUrl: string;
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`staff-photos/${filename}`, buffer, {
+      access: "public",
+      contentType: file.type,
+    });
+    photoUrl = blob.url;
+  } else {
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "staff");
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(path.join(uploadDir, filename), buffer);
+    photoUrl = `/uploads/staff/${filename}`;
+  }
+
   const updated = await updateStaffProfile(id, { photoUrl });
 
   return NextResponse.json({ staff: updated });

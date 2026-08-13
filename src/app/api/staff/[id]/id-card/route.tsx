@@ -20,6 +20,12 @@ async function photoToDataUri(photoUrl: string | null): Promise<string | null> {
   const mime = MIME_BY_EXT[ext];
   if (!mime) return null;
   try {
+    if (photoUrl.startsWith("http")) {
+      const res = await fetch(photoUrl);
+      if (!res.ok) return null;
+      const buffer = Buffer.from(await res.arrayBuffer());
+      return `data:${mime};base64,${buffer.toString("base64")}`;
+    }
     const filePath = path.join(process.cwd(), "public", photoUrl);
     const buffer = await readFile(filePath);
     return `data:${mime};base64,${buffer.toString("base64")}`;
