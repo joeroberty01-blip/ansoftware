@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { ExpenseCategory } from "@/lib/types";
+import { ListToolbar } from "../_components/list-toolbar";
 
 interface Expense {
   id: string;
@@ -11,6 +12,13 @@ interface Expense {
   description: string;
   created_at: string;
 }
+
+const CSV_COLUMNS = [
+  { key: "date", label: "Tarehe" },
+  { key: "category", label: "Category" },
+  { key: "description", label: "Maelezo" },
+  { key: "amount", label: "Kiasi" },
+];
 
 interface Summary {
   income: string;
@@ -122,7 +130,7 @@ export default function FinancePage() {
         />
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-lg border border-zinc-200 bg-white p-5 print:hidden">
         <h2 className="mb-4 text-sm font-semibold text-zinc-900">
           Ongeza Expense
         </h2>
@@ -200,9 +208,16 @@ export default function FinancePage() {
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-5">
-        <h2 className="mb-4 text-sm font-semibold text-zinc-900">
-          Matumizi ya Hivi Karibuni
-        </h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900">
+            Matumizi ya Hivi Karibuni
+          </h2>
+          <ListToolbar
+            filename="expenses"
+            columns={CSV_COLUMNS}
+            rows={expenses}
+          />
+        </div>
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : expenses.length === 0 ? (

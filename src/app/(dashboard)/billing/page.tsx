@@ -2,6 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { ListToolbar } from "../_components/list-toolbar";
+
+const CSV_COLUMNS = [
+  { key: "document_number", label: "Namba" },
+  { key: "doc_type", label: "Aina" },
+  { key: "client_name", label: "Client" },
+  { key: "issue_date", label: "Tarehe" },
+  { key: "total_amount", label: "Jumla" },
+  { key: "amount_paid", label: "Imelipwa" },
+  { key: "payment_status", label: "Status" },
+];
 
 interface InvoiceListItem {
   id: string;
@@ -68,15 +79,22 @@ export default function BillingPage() {
         <h1 className="text-xl font-semibold text-zinc-900">
           Billing / Invoices
         </h1>
-        <Link
-          href="/billing/new"
-          className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
-        >
-          Tengeneza Mpya
-        </Link>
+        <div className="flex gap-2">
+          <ListToolbar
+            filename="invoices"
+            columns={CSV_COLUMNS}
+            rows={invoices}
+          />
+          <Link
+            href="/billing/new"
+            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+          >
+            Tengeneza Mpya
+          </Link>
+        </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 print:hidden">
         <select
           value={docType}
           onChange={(e) => setDocType(e.target.value)}

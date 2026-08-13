@@ -2,6 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { ListToolbar } from "../_components/list-toolbar";
+
+const CSV_COLUMNS = [
+  { key: "visit_date", label: "Tarehe" },
+  { key: "patient_name", label: "Mgonjwa" },
+  { key: "staff_name", label: "Staff" },
+  { key: "location", label: "Location" },
+  { key: "blood_pressure", label: "BP" },
+  { key: "status", label: "Status" },
+];
 
 interface Visit {
   id: string;
@@ -44,18 +54,25 @@ export default function HomeVisitsListPage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-900">Home Visits</h1>
-        <Link
-          href="/home-visits/new"
-          className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
-        >
-          Rekodi Ziara Mpya
-        </Link>
+        <div className="flex gap-2">
+          <ListToolbar
+            filename="home-visits"
+            columns={CSV_COLUMNS}
+            rows={visits}
+          />
+          <Link
+            href="/home-visits/new"
+            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+          >
+            Rekodi Ziara Mpya
+          </Link>
+        </div>
       </div>
 
       <select
         value={status}
         onChange={(e) => setStatus(e.target.value)}
-        className="w-full max-w-xs rounded border border-zinc-300 px-2 py-1.5 text-sm"
+        className="w-full max-w-xs rounded border border-zinc-300 px-2 py-1.5 text-sm print:hidden"
       >
         {STATUS_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>

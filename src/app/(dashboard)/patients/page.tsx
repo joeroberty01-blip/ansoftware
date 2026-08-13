@@ -2,6 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { ListToolbar } from "../_components/list-toolbar";
+
+const CSV_COLUMNS = [
+  { key: "full_name", label: "Jina" },
+  { key: "date_of_birth", label: "Tarehe ya Kuzaliwa" },
+  { key: "gender", label: "Jinsia" },
+  { key: "phone", label: "Simu" },
+  { key: "blood_type", label: "Blood Type" },
+  { key: "chronic_conditions", label: "Chronic Conditions" },
+];
 
 interface Patient {
   id: string;
@@ -42,15 +52,22 @@ export default function PatientsListPage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-900">Patients</h1>
-        <Link
-          href="/patients/new"
-          className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
-        >
-          Ongeza Mgonjwa Mpya
-        </Link>
+        <div className="flex gap-2">
+          <ListToolbar
+            filename="patients"
+            columns={CSV_COLUMNS}
+            rows={patients}
+          />
+          <Link
+            href="/patients/new"
+            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+          >
+            Ongeza Mgonjwa Mpya
+          </Link>
+        </div>
       </div>
 
-      <form onSubmit={onSearchSubmit} className="flex gap-2">
+      <form onSubmit={onSearchSubmit} className="flex gap-2 print:hidden">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}

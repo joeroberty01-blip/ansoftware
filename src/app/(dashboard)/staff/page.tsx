@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { ListToolbar } from "../_components/list-toolbar";
 
 interface Staff {
   id: string;
+  staff_number: string;
   full_name: string;
   email: string;
   phone: string | null;
@@ -17,6 +19,17 @@ interface Staff {
 }
 
 const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"];
+
+const CSV_COLUMNS = [
+  { key: "staff_number", label: "ID No" },
+  { key: "full_name", label: "Jina" },
+  { key: "email", label: "Barua Pepe" },
+  { key: "phone", label: "Simu" },
+  { key: "profession", label: "Taaluma" },
+  { key: "start_date", label: "Tarehe ya Kuanza" },
+  { key: "employment_status", label: "Status" },
+  { key: "base_salary", label: "Mshahara wa Msingi" },
+];
 
 function fmt(value: string) {
   return new Intl.NumberFormat("en-TZ", {
@@ -102,15 +115,20 @@ export default function StaffListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-900">Staff</h1>
         <div className="flex gap-2">
+          <ListToolbar
+            filename="staff"
+            columns={CSV_COLUMNS}
+            rows={staffList}
+          />
           <Link
             href="/staff/pending"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 print:hidden"
           >
             Wanaosubiri Idhini
           </Link>
           <button
             onClick={() => setShowAddForm((v) => !v)}
-            className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark"
+            className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
           >
             {showAddForm ? "Funga Fomu" : "Ongeza Staff Mpya"}
           </button>
@@ -120,7 +138,7 @@ export default function StaffListPage() {
       {showAddForm && (
         <form
           onSubmit={onSubmit}
-          className="grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4 print:hidden"
         >
           <input
             value={fullName}

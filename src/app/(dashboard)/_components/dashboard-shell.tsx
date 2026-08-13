@@ -70,7 +70,7 @@ export function DashboardShell({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0 print:hidden ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -121,7 +121,7 @@ export function DashboardShell({
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3">
+        <header className="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 print:hidden">
           <button
             type="button"
             className="text-zinc-700 sm:hidden"
@@ -230,7 +230,9 @@ export function DashboardShell({
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col bg-zinc-50">{children}</main>
+        <main className="flex flex-1 flex-col bg-zinc-50 print:bg-white">
+          {children}
+        </main>
       </div>
     </div>
   );

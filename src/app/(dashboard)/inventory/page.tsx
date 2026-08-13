@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { ListToolbar } from "../_components/list-toolbar";
 
 interface Item {
   id: string;
@@ -12,6 +13,14 @@ interface Item {
   current_stock: string;
   is_low_stock: boolean;
 }
+
+const CSV_COLUMNS = [
+  { key: "name", label: "Jina" },
+  { key: "category", label: "Category" },
+  { key: "unit", label: "Unit" },
+  { key: "current_stock", label: "Stock ya Sasa" },
+  { key: "reorder_level", label: "Reorder Level" },
+];
 
 export default function InventoryListPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -36,15 +45,16 @@ export default function InventoryListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-900">Inventory</h1>
         <div className="flex gap-2">
+          <ListToolbar filename="inventory" columns={CSV_COLUMNS} rows={items} />
           <Link
             href="/inventory/alerts"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 print:hidden"
           >
             Alerts{lowStockCount > 0 ? ` (${lowStockCount})` : ""}
           </Link>
           <Link
             href="/inventory/new"
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
+            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
           >
             Ongeza Item Mpya
           </Link>
@@ -52,7 +62,7 @@ export default function InventoryListPage() {
       </div>
 
       {lowStockCount > 0 && (
-        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800 print:hidden">
           Items {lowStockCount} ziko chini ya reorder level.{" "}
           <Link href="/inventory/alerts" className="underline">
             Ona alerts
