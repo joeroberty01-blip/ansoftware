@@ -138,7 +138,7 @@ export function DashboardShell({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search patients, bookings, invoices..."
+              placeholder="Search patients, staff, invoices..."
               className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-400"
             />
           </form>

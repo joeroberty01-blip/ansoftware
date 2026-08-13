@@ -7,7 +7,6 @@ import {
   Wallet,
   Receipt,
   Users,
-  CalendarCheck,
   HeartPulse,
   MapPinned,
   Package,
@@ -30,12 +29,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
   { label: "Patients", href: "/patients", icon: HeartPulse, group: "main" },
-  {
-    label: "Bookings",
-    href: `/coming-soon?feature=${encodeURIComponent("Bookings")}`,
-    icon: CalendarCheck,
-    group: "main",
-  },
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, group: "main" },
   {
     label: "Staff",

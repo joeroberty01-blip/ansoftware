@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth";
+import { AuthShell } from "../_components/auth-shell";
+import { BrandMark } from "../_components/brand-mark";
+import { IconInput } from "../_components/icon-input";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,54 +48,46 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-6 text-center text-xl font-semibold text-zinc-900">
-          Ingia — Afya Nyumbani ERP
-        </h1>
+    <AuthShell>
+      <div className="w-full max-w-md rounded-2xl border border-zinc-100 bg-white p-8 shadow-xl shadow-zinc-200/50">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <BrandMark size="md" />
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900">Welcome back</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Sign in to Afya Nyumbani ERP
+            </p>
+          </div>
+        </div>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
+          className="mt-6 flex flex-col gap-4"
           noValidate
         >
-          <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm font-medium text-zinc-700">
-              Barua pepe
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              className="rounded border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-600">{errors.email.message}</p>
-            )}
-          </div>
+          <IconInput
+            id="email"
+            icon={Mail}
+            label="Barua pepe"
+            type="email"
+            autoComplete="email"
+            placeholder="wewe@example.com"
+            error={errors.email?.message}
+            {...register("email")}
+          />
 
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-zinc-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              className="rounded border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-600">{errors.password.message}</p>
-            )}
-          </div>
+          <IconInput
+            id="password"
+            icon={Lock}
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            error={errors.password?.message}
+            {...register("password")}
+          />
 
           {serverError && (
-            <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
               {serverError}
             </p>
           )}
@@ -99,19 +95,23 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/25 transition-opacity hover:opacity-95 disabled:opacity-50"
           >
-            {submitting ? "Inaingia..." : "Ingia"}
+            {submitting ? "Inaingia..." : "Sign in"}
+            {!submitting && <ArrowRight className="h-4 w-4" />}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-600">
+        <p className="mt-6 text-center text-sm text-zinc-500">
           Huna akaunti?{" "}
-          <Link href="/register" className="font-medium text-zinc-900 underline">
+          <Link
+            href="/register"
+            className="font-semibold text-brand-blue hover:text-brand-blue-dark"
+          >
             Jisajili
           </Link>
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }

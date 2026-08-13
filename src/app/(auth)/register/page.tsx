@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { User, Mail, Phone, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 import {
   adminSignupSchema,
   staffSignupSchema,
   type AdminSignupInput,
   type StaffSignupInput,
 } from "@/lib/validation/auth";
+import { AuthShell } from "../_components/auth-shell";
+import { BrandMark } from "../_components/brand-mark";
+import { IconInput } from "../_components/icon-input";
 
 type Tab = "ADMIN" | "STAFF";
 
@@ -21,56 +25,63 @@ const PROFESSIONS: { value: StaffSignupInput["profession"]; label: string }[] = 
   { value: "ADMIN_STAFF", label: "Admin Staff" },
 ];
 
-const inputClass =
-  "rounded border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none";
-const labelClass = "text-sm font-medium text-zinc-700";
-const errorClass = "text-sm text-red-600";
-
 export default function RegisterPage() {
   const [tab, setTab] = useState<Tab>("ADMIN");
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-10">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-6 text-center text-xl font-semibold text-zinc-900">
-          Jisajili — Afya Nyumbani ERP
-        </h1>
+    <AuthShell>
+      <div className="w-full max-w-md rounded-2xl border border-zinc-100 bg-white p-8 shadow-xl shadow-zinc-200/50">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <BrandMark size="md" />
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900">
+              Create your account
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Get started with Afya Nyumbani ERP
+            </p>
+          </div>
+        </div>
 
-        <div className="mb-6 flex rounded border border-zinc-300 p-1">
+        <div className="mt-6 flex rounded-full border border-zinc-200 bg-zinc-50 p-1">
           <button
             type="button"
             onClick={() => setTab("ADMIN")}
-            className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
               tab === "ADMIN"
-                ? "bg-brand-blue text-white"
-                : "text-zinc-600 hover:bg-zinc-100"
+                ? "bg-brand-blue text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700"
             }`}
           >
+            <ShieldCheck className="h-4 w-4" />
             Admin
           </button>
           <button
             type="button"
             onClick={() => setTab("STAFF")}
-            className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
               tab === "STAFF"
-                ? "bg-brand-blue text-white"
-                : "text-zinc-600 hover:bg-zinc-100"
+                ? "bg-brand-blue text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700"
             }`}
           >
+            <User className="h-4 w-4" />
             Staff
           </button>
         </div>
 
-        {tab === "ADMIN" ? <AdminForm /> : <StaffForm />}
+        <div className="mt-6">
+          {tab === "ADMIN" ? <AdminForm /> : <StaffForm />}
+        </div>
 
-        <p className="mt-6 text-center text-sm text-zinc-600">
+        <p className="mt-6 text-center text-sm text-zinc-500">
           Una akaunti tayari?{" "}
-          <Link href="/login" className="font-medium text-zinc-900 underline">
-            Ingia
+          <Link href="/login" className="font-semibold text-brand-blue hover:text-brand-blue-dark">
+            Sign in
           </Link>
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }
 
@@ -116,80 +127,68 @@ function AdminForm() {
       className="flex flex-col gap-4"
       noValidate
     >
-      <div className="flex flex-col gap-1">
-        <label htmlFor="admin-fullName" className={labelClass}>
-          Jina kamili
-        </label>
-        <input
-          id="admin-fullName"
-          className={inputClass}
-          {...register("fullName")}
-        />
-        {errors.fullName && (
-          <p className={errorClass}>{errors.fullName.message}</p>
-        )}
-      </div>
+      <IconInput
+        id="admin-fullName"
+        icon={User}
+        label="Jina kamili"
+        placeholder="Joe Robert"
+        error={errors.fullName?.message}
+        {...register("fullName")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="admin-email" className={labelClass}>
-          Barua pepe
-        </label>
-        <input
-          id="admin-email"
-          type="email"
-          autoComplete="email"
-          className={inputClass}
-          {...register("email")}
-        />
-        {errors.email && <p className={errorClass}>{errors.email.message}</p>}
-      </div>
+      <IconInput
+        id="admin-email"
+        icon={Mail}
+        label="Barua pepe"
+        type="email"
+        autoComplete="email"
+        placeholder="joe@example.com"
+        error={errors.email?.message}
+        {...register("email")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="admin-phone" className={labelClass}>
-          Namba ya simu
-        </label>
-        <input
-          id="admin-phone"
-          type="tel"
-          className={inputClass}
-          {...register("phone")}
-        />
-        {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
-      </div>
+      <IconInput
+        id="admin-phone"
+        icon={Phone}
+        label="Namba ya simu"
+        type="tel"
+        placeholder="0700 000 000"
+        error={errors.phone?.message}
+        {...register("phone")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="admin-password" className={labelClass}>
-          Password
-        </label>
-        <input
-          id="admin-password"
-          type="password"
-          autoComplete="new-password"
-          className={inputClass}
-          {...register("password")}
-        />
-        {errors.password && (
-          <p className={errorClass}>{errors.password.message}</p>
-        )}
-      </div>
+      <IconInput
+        id="admin-password"
+        icon={Lock}
+        label="Password"
+        type="password"
+        autoComplete="new-password"
+        error={errors.password?.message}
+        {...register("password")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="admin-secret" className={labelClass}>
-          Admin secret code
-        </label>
-        <input
+      <div className="rounded-xl border border-brand-blue-light bg-brand-blue-light/40 p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-brand-blue" />
+          <p className="text-sm font-semibold text-zinc-800">
+            Admin Verification
+          </p>
+        </div>
+        <p className="mb-3 text-xs text-zinc-500">
+          Enter your authorized admin code to continue.
+        </p>
+        <IconInput
           id="admin-secret"
+          icon={ShieldCheck}
+          label="Admin secret code"
           type="password"
-          className={inputClass}
+          error={errors.adminSecretCode?.message}
           {...register("adminSecretCode")}
         />
-        {errors.adminSecretCode && (
-          <p className={errorClass}>{errors.adminSecretCode.message}</p>
-        )}
       </div>
 
       {serverError && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
           {serverError}
         </p>
       )}
@@ -197,9 +196,10 @@ function AdminForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-2 rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+        className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/25 transition-opacity hover:opacity-95 disabled:opacity-50"
       >
-        {submitting ? "Inasajili..." : "Jisajili kama Admin"}
+        {submitting ? "Inasajili..." : "Create Admin Account"}
+        {!submitting && <ArrowRight className="h-4 w-4" />}
       </button>
     </form>
   );
@@ -244,12 +244,12 @@ function StaffForm() {
   if (registered) {
     return (
       <div className="flex flex-col items-center gap-4 py-4 text-center">
-        <p className="rounded bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Umesajiliwa, inasubiri idhini ya Admin.
         </p>
         <Link
           href="/login"
-          className="w-full rounded bg-brand-blue px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-blue-dark"
+          className="w-full rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-brand-blue/25"
         >
           Rudi kwenye Login
         </Link>
@@ -263,70 +263,53 @@ function StaffForm() {
       className="flex flex-col gap-4"
       noValidate
     >
-      <div className="flex flex-col gap-1">
-        <label htmlFor="staff-fullName" className={labelClass}>
-          Jina kamili
-        </label>
-        <input
-          id="staff-fullName"
-          className={inputClass}
-          {...register("fullName")}
-        />
-        {errors.fullName && (
-          <p className={errorClass}>{errors.fullName.message}</p>
-        )}
-      </div>
+      <IconInput
+        id="staff-fullName"
+        icon={User}
+        label="Jina kamili"
+        placeholder="Jina lako"
+        error={errors.fullName?.message}
+        {...register("fullName")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="staff-email" className={labelClass}>
-          Barua pepe
-        </label>
-        <input
-          id="staff-email"
-          type="email"
-          autoComplete="email"
-          className={inputClass}
-          {...register("email")}
-        />
-        {errors.email && <p className={errorClass}>{errors.email.message}</p>}
-      </div>
+      <IconInput
+        id="staff-email"
+        icon={Mail}
+        label="Barua pepe"
+        type="email"
+        autoComplete="email"
+        placeholder="wewe@example.com"
+        error={errors.email?.message}
+        {...register("email")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="staff-phone" className={labelClass}>
-          Namba ya simu
-        </label>
-        <input
-          id="staff-phone"
-          type="tel"
-          className={inputClass}
-          {...register("phone")}
-        />
-        {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
-      </div>
+      <IconInput
+        id="staff-phone"
+        icon={Phone}
+        label="Namba ya simu"
+        type="tel"
+        placeholder="0700 000 000"
+        error={errors.phone?.message}
+        {...register("phone")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="staff-password" className={labelClass}>
-          Password
-        </label>
-        <input
-          id="staff-password"
-          type="password"
-          autoComplete="new-password"
-          className={inputClass}
-          {...register("password")}
-        />
-        {errors.password && (
-          <p className={errorClass}>{errors.password.message}</p>
-        )}
-      </div>
+      <IconInput
+        id="staff-password"
+        icon={Lock}
+        label="Password"
+        type="password"
+        autoComplete="new-password"
+        error={errors.password?.message}
+        {...register("password")}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="staff-profession" className={labelClass}>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="staff-profession" className="text-sm font-medium text-zinc-700">
           Taaluma
         </label>
         <select
           id="staff-profession"
-          className={inputClass}
+          className="rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
           {...register("profession")}
         >
           {PROFESSIONS.map((p) => (
@@ -336,12 +319,12 @@ function StaffForm() {
           ))}
         </select>
         {errors.profession && (
-          <p className={errorClass}>{errors.profession.message}</p>
+          <p className="text-xs text-red-600">{errors.profession.message}</p>
         )}
       </div>
 
       {serverError && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
           {serverError}
         </p>
       )}
@@ -349,9 +332,10 @@ function StaffForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-2 rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+        className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/25 transition-opacity hover:opacity-95 disabled:opacity-50"
       >
-        {submitting ? "Inasajili..." : "Jisajili kama Staff"}
+        {submitting ? "Inasajili..." : "Create Staff Account"}
+        {!submitting && <ArrowRight className="h-4 w-4" />}
       </button>
     </form>
   );

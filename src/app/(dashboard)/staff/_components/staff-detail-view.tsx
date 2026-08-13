@@ -699,8 +699,7 @@ export function StaffDetailView({
           <p className="text-xs text-zinc-500">Idadi ya Ziara (Visits) — Mwezi Huu</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900">0</p>
           <p className="mt-3 text-sm text-zinc-500">
-            Kipengele hiki kinakuja hivi karibuni — kitakamilika baada ya
-            Bookings na Home Visits (Phase 2 &amp; 4) kujengwa.
+            Kipengele hiki kinakuja hivi karibuni.
           </p>
         </div>
       )}
