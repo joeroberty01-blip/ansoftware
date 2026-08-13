@@ -32,6 +32,54 @@ export default function InventoryItemDetailPage() {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // --- Edit item ---
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editUnit, setEditUnit] = useState("");
+  const [editReorderLevel, setEditReorderLevel] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const startEditing = () => {
+    if (!item) return;
+    setEditName(item.name);
+    setEditCategory(item.category);
+    setEditUnit(item.unit);
+    setEditReorderLevel(String(item.reorder_level));
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const onSaveItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditError(null);
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/inventory/items/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName,
+          category: editCategory,
+          unit: editUnit,
+          reorderLevel: Number(editReorderLevel),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setEditError(json.error ?? "Imeshindwa kuhifadhi.");
+        return;
+      }
+      setEditing(false);
+      await load();
+    } catch {
+      setEditError("Hitilafu ya mtandao.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const [movementType, setMovementType] = useState<"IN" | "OUT">("IN");
   const [quantity, setQuantity] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
@@ -95,37 +143,119 @@ export default function InventoryItemDetailPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-900">{item.name}</h1>
-        <p className="text-sm text-zinc-600">
-          {item.category} — Unit: {item.unit}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900">{item.name}</h1>
+          <p className="text-sm text-zinc-600">
+            {item.category} — Unit: {item.unit}
+          </p>
+        </div>
+        {!editing && (
+          <button
+            onClick={startEditing}
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          >
+            Hariri
+          </button>
+        )}
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
-        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-          <div>
-            <p className="text-xs text-zinc-500">Stock ya Sasa</p>
-            <p className="text-lg font-semibold text-zinc-900">
-              {item.current_stock}
+      {editing ? (
+        <form
+          onSubmit={onSaveItem}
+          className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Jina la Item
+              </label>
+              <input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Category
+              </label>
+              <input
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Unit
+              </label>
+              <input
+                value={editUnit}
+                onChange={(e) => setEditUnit(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Reorder Level
+              </label>
+              <input
+                value={editReorderLevel}
+                onChange={(e) => setEditReorderLevel(e.target.value)}
+                inputMode="numeric"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+          </div>
+          {editError && (
+            <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+              {editError}
             </p>
-          </div>
-          <div>
-            <p className="text-xs text-zinc-500">Reorder Level</p>
-            <p className="font-medium">{item.reorder_level}</p>
-          </div>
-          <div>
-            <p className="text-xs text-zinc-500">Status</p>
-            <p
-              className={`font-medium ${
-                item.is_low_stock ? "text-amber-700" : "text-zinc-900"
-              }`}
+          )}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {item.is_low_stock ? "Stock Chini" : "Sawa"}
-            </p>
+              {saving ? "Inahifadhi..." : "Hifadhi"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            >
+              Ghairi
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+          <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+            <div>
+              <p className="text-xs text-zinc-500">Stock ya Sasa</p>
+              <p className="text-lg font-semibold text-zinc-900">
+                {item.current_stock}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Reorder Level</p>
+              <p className="font-medium">{item.reorder_level}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Status</p>
+              <p
+                className={`font-medium ${
+                  item.is_low_stock ? "text-amber-700" : "text-zinc-900"
+                }`}
+              >
+                {item.is_low_stock ? "Stock Chini" : "Sawa"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="rounded-lg border border-zinc-200 bg-white p-5">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">

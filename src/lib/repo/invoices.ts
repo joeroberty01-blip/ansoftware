@@ -291,6 +291,53 @@ export async function convertToPayableDocument(
   });
 }
 
+/**
+ * Cancels a document by setting payment_status = CANCELLED. Refused if any
+ * payment has already been recorded against it (money already moved — that
+ * needs a credit note / refund process, not a cancel) or if it's already
+ * CANCELLED. Line items and any payments are left untouched, preserving the
+ * document as an immutable audit trail.
+ */
+export async function cancelInvoice(
+  id: string,
+  cancelledById: string
+): Promise<InvoiceRow> {
+  return withTransaction(async (client) => {
+    const res = await client.query<InvoiceRow>(
+      `SELECT * FROM invoices WHERE id = $1 FOR UPDATE`,
+      [id]
+    );
+    const invoice = res.rows[0];
+    if (!invoice) throw new Error("NOT_FOUND");
+    if (invoice.payment_status === "CANCELLED") {
+      throw new Error("ALREADY_CANCELLED");
+    }
+    if (new Decimal(invoice.amount_paid).greaterThan(0)) {
+      throw new Error("HAS_PAYMENTS");
+    }
+
+    const updatedRes = await client.query<InvoiceRow>(
+      `UPDATE invoices SET payment_status = 'CANCELLED', updated_at = now()
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    await logAudit(
+      {
+        userId: cancelledById,
+        action: "INVOICE_CANCELLED",
+        entity: "invoice",
+        entityId: id,
+        meta: { documentNumber: invoice.document_number, docType: invoice.doc_type },
+      },
+      client
+    );
+
+    return updatedRes.rows[0];
+  });
+}
+
 export interface RecordPaymentResult {
   payment: PaymentRow;
   invoice: InvoiceRow;

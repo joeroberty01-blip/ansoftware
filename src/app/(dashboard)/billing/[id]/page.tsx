@@ -74,6 +74,8 @@ export default function BillingDetailPage() {
   const [paying, setPaying] = useState(false);
   const [converting, setConverting] = useState(false);
   const [convertError, setConvertError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -136,6 +138,34 @@ export default function BillingDetailPage() {
     }
   };
 
+  const onCancel = async () => {
+    if (!invoice) return;
+    if (
+      !window.confirm(
+        `Una uhakika unataka kughairi ${invoice.document_number}? Hatua hii haiwezi kutenduliwa.`
+      )
+    ) {
+      return;
+    }
+    setCancelError(null);
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/invoices/${id}/cancel`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setCancelError(json.error ?? "Imeshindwa kughairi.");
+        return;
+      }
+      await load();
+    } catch {
+      setCancelError("Hitilafu ya mtandao.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
   }
@@ -148,6 +178,9 @@ export default function BillingDetailPage() {
   const canPay =
     invoice.payment_status !== "PAID" &&
     invoice.payment_status !== "CANCELLED";
+  const canCancel =
+    invoice.payment_status !== "CANCELLED" &&
+    Number(invoice.amount_paid) === 0;
 
   return (
     <div className="flex max-w-3xl flex-col gap-6 p-6">
@@ -186,11 +219,25 @@ export default function BillingDetailPage() {
           >
             Pakua PDF
           </a>
+          {canCancel && (
+            <button
+              onClick={onCancel}
+              disabled={cancelling}
+              className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            >
+              {cancelling ? "Inaghairi..." : "Ghairi"}
+            </button>
+          )}
         </div>
       </div>
       {convertError && (
         <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
           {convertError}
+        </p>
+      )}
+      {cancelError && (
+        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          {cancelError}
         </p>
       )}
 

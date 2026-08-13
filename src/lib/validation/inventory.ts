@@ -9,6 +9,15 @@ export const createItemSchema = z.object({
 
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 
+export const updateItemSchema = z.object({
+  name: z.string().trim().min(2, "Jina la item linahitajika").optional(),
+  category: z.string().trim().min(1, "Category inahitajika").optional(),
+  unit: z.string().trim().min(1, "Unit inahitajika (mf. vipande, chupa)").optional(),
+  reorderLevel: z.number().int().min(0).optional(),
+});
+
+export type UpdateItemInput = z.infer<typeof updateItemSchema>;
+
 export const recordMovementSchema = z.object({
   movementType: z.enum(["IN", "OUT"]),
   quantity: z.number().int().positive("Idadi lazima iwe zaidi ya sifuri"),

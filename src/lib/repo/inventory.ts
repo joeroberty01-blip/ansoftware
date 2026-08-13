@@ -29,6 +29,47 @@ export async function createItem(input: {
   return row;
 }
 
+export async function updateItem(
+  id: string,
+  patch: {
+    name?: string;
+    category?: string;
+    unit?: string;
+    reorderLevel?: number;
+  }
+): Promise<InventoryItemRow | null> {
+  const columnMap: Record<string, unknown> = {
+    name: patch.name,
+    category: patch.category,
+    unit: patch.unit,
+    reorder_level: patch.reorderLevel,
+  };
+
+  const fields: string[] = [];
+  const params: unknown[] = [];
+  for (const [column, value] of Object.entries(columnMap)) {
+    if (value !== undefined) {
+      params.push(value);
+      fields.push(`${column} = $${params.length}`);
+    }
+  }
+
+  if (fields.length === 0) {
+    return queryOne<InventoryItemRow>(
+      `SELECT * FROM inventory_items WHERE id = $1`,
+      [id]
+    );
+  }
+
+  params.push(id);
+  return queryOne<InventoryItemRow>(
+    `UPDATE inventory_items SET ${fields.join(", ")}, updated_at = now()
+     WHERE id = $${params.length}
+     RETURNING *`,
+    params
+  );
+}
+
 export async function listItemsWithStock(): Promise<InventoryItemWithStock[]> {
   return query<InventoryItemWithStock>(
     `SELECT ${STOCK_SELECT}
