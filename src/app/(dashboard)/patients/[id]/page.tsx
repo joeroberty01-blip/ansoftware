@@ -57,6 +57,7 @@ interface HomeVisit {
   pulse: number | null;
   weight: string | null;
   treatment_notes: string | null;
+  notes: string | null;
 }
 
 export default function PatientDetailPage() {
@@ -70,12 +71,17 @@ export default function PatientDetailPage() {
     "homeVisits"
   );
   const [isAdmin, setIsAdmin] = useState(false);
+  const [myStaffId, setMyStaffId] = useState<string | null>(null);
   const [deletingPatient, setDeletingPatient] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
+      .catch(() => {});
+    fetch("/api/staff/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => setMyStaffId(json?.staff?.id ?? null))
       .catch(() => {});
   }, []);
 
@@ -317,6 +323,7 @@ export default function PatientDetailPage() {
   const [qrPulse, setQrPulse] = useState("");
   const [qrWeight, setQrWeight] = useState("");
   const [qrTreatmentNotes, setQrTreatmentNotes] = useState("");
+  const [qrNotes, setQrNotes] = useState("");
   const [qrError, setQrError] = useState<string | null>(null);
   const [qrSubmitting, setQrSubmitting] = useState(false);
 
@@ -330,6 +337,7 @@ export default function PatientDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patientId: id,
+          staffId: myStaffId || undefined,
           visitDate: new Date().toISOString().slice(0, 10),
           status: "COMPLETED",
           location: patient?.address || undefined,
@@ -338,6 +346,7 @@ export default function PatientDetailPage() {
           pulse: qrPulse ? Number(qrPulse) : undefined,
           weight: qrWeight || undefined,
           treatmentNotes: qrTreatmentNotes || undefined,
+          notes: qrNotes || undefined,
         }),
       });
       const json = await res.json();
@@ -350,6 +359,7 @@ export default function PatientDetailPage() {
       setQrPulse("");
       setQrWeight("");
       setQrTreatmentNotes("");
+      setQrNotes("");
       setShowQuickReport(false);
       await loadHomeVisits();
     } catch {
@@ -879,13 +889,25 @@ export default function PatientDetailPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
-                  Ripoti ya Matibabu / Taratibu Zilizofanyika (Procedures)
+                  Taratibu Zilizofanyika (Procedures)
                 </label>
                 <textarea
                   value={qrTreatmentNotes}
                   onChange={(e) => setQrTreatmentNotes(e.target.value)}
                   rows={3}
-                  placeholder="Andika ripoti ya leo na taratibu zilizofanyika kwa mgonjwa..."
+                  placeholder="mf. Alibadilishiwa bandage, alipimwa sukari, alipewa dawa X..."
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-600">
+                  Maendeleo ya Mgonjwa / Maelezo Mengine (Progress Notes)
+                </label>
+                <textarea
+                  value={qrNotes}
+                  onChange={(e) => setQrNotes(e.target.value)}
+                  rows={3}
+                  placeholder="mf. Hali ya mgonjwa leo, maumivu, hamu ya kula, usingizi, mabadiliko yoyote..."
                   className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 />
               </div>
@@ -921,6 +943,7 @@ export default function PatientDetailPage() {
               )}
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
@@ -932,6 +955,8 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Temp</th>
                   <th className="py-2 pr-4">Pulse</th>
                   <th className="py-2 pr-4">Weight</th>
+                  <th className="py-2 pr-4">Taratibu</th>
+                  <th className="py-2 pr-4">Maendeleo</th>
                 </tr>
               </thead>
               <tbody>
@@ -956,10 +981,23 @@ export default function PatientDetailPage() {
                     <td className="py-2 pr-4">
                       {v.weight ? `${v.weight} kg` : "-"}
                     </td>
+                    <td
+                      className="max-w-[160px] truncate py-2 pr-4"
+                      title={v.treatment_notes ?? undefined}
+                    >
+                      {v.treatment_notes ?? "-"}
+                    </td>
+                    <td
+                      className="max-w-[160px] truncate py-2 pr-4"
+                      title={v.notes ?? undefined}
+                    >
+                      {v.notes ?? "-"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
