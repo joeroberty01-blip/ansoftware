@@ -54,6 +54,25 @@ export async function countPatients(): Promise<number> {
   return parseInt(rows[0]?.count ?? "0", 10);
 }
 
+export async function countNewPatientsThisMonth(): Promise<number> {
+  const rows = await query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM patients
+     WHERE created_at >= date_trunc('month', CURRENT_DATE)`
+  );
+  return parseInt(rows[0]?.count ?? "0", 10);
+}
+
+/** "Active" here means seen on a home visit in the last 30 days — the only
+ * real signal we have, since patients has no explicit active/discharged
+ * status field. */
+export async function countActivePatients(): Promise<number> {
+  const rows = await query<{ count: string }>(
+    `SELECT COUNT(DISTINCT patient_id)::text AS count FROM home_visits
+     WHERE visit_date >= CURRENT_DATE - 30`
+  );
+  return parseInt(rows[0]?.count ?? "0", 10);
+}
+
 export async function listPatients(search?: string): Promise<PatientRow[]> {
   if (search) {
     return query<PatientRow>(

@@ -1,12 +1,52 @@
 import { queryOne } from "../db";
-import { getFinanceSummary, getRevenueTrend, type FinancePeriod } from "./finance";
+import {
+  getExpenseTrend,
+  getFinanceComparison,
+  getFinanceSummary,
+  getRevenueTrend,
+  type FinancePeriod,
+} from "./finance";
 import { getOutstandingSummary } from "./invoices";
-import { countActiveStaff, getStaffStatusCounts } from "./staff";
-import { countPatients } from "./patients";
-import { getHomeVisitStatusCounts, listHomeVisits } from "./home-visits";
+import { countActiveStaff, getStaffStatusCounts, listExpiringLicenses } from "./staff";
+import { countActivePatients, countNewPatientsThisMonth, countPatients } from "./patients";
+import {
+  countMissedVisits,
+  getHomeVisitStatusCounts,
+  getStaffVisitLeaderboard,
+  listHomeVisits,
+} from "./home-visits";
 import { listPendingStaff } from "./users";
 import { listLowStockItems, listExpiringBatches } from "./inventory";
 import { listLeaveRequests } from "./leave";
+import { listRecentActivity, type AuditLogWithUser } from "../audit";
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  PAYMENT_RECORDED: "alirekodi malipo",
+  LEAVE_APPROVED: "aliidhinisha likizo",
+  LEAVE_REJECTED: "alikataa ombi la likizo",
+  STAFF_APPROVED: "aliidhinisha staff mpya",
+  STAFF_REJECTED: "alikataa ombi la staff",
+  PAYROLL_GENERATED: "alitengeneza payroll",
+  EXPENSE_CREATED: "aliongeza expense",
+  STOCK_IN: "aliongeza stock",
+  STOCK_OUT: "alitoa stock",
+  INVOICE_CANCELLED: "aliighairi invoice",
+  SALARY_PAID: "alilipa mshahara",
+  BILL_PAID: "alilipa bill",
+};
+
+function formatActivity(log: AuditLogWithUser): string {
+  const action = ACTIVITY_LABELS[log.action] ?? log.action.toLowerCase();
+  const amountPart = log.amount ? ` — TZS ${Number(log.amount).toLocaleString("en-TZ")}` : "";
+  return `${log.user_name} ${action}${amountPart}`;
+}
+
+function percentChange(current: string, previous: string): number | null {
+  const prev = Number(previous);
+  const curr = Number(current);
+  if (prev === 0) return curr === 0 ? 0 : null;
+  return Math.round(((curr - prev) / prev) * 100);
+}
 
 export interface PendingAction {
   label: string;
@@ -43,6 +83,15 @@ export interface DashboardOverview {
   todaySchedule: TodayScheduleItem[];
   pendingActions: PendingAction[];
   revenueTrend: { month: string; income: string }[];
+  expenseTrend: { month: string; expenses: string }[];
+  incomeChangePct: number | null;
+  expenseChangePct: number | null;
+  missedVisitsCount: number;
+  expiringLicensesCount: number;
+  newPatientsThisMonth: number;
+  activePatientsCount: number;
+  staffLeaderboard: { staffId: string; staffName: string; completedCount: number }[];
+  recentActivity: { id: string; message: string; createdAt: string }[];
 }
 
 export async function getDashboardOverview(
@@ -52,6 +101,7 @@ export async function getDashboardOverview(
 
   const [
     finance,
+    financeComparison,
     outstanding,
     patientsCount,
     activeStaffCount,
@@ -63,9 +113,17 @@ export async function getDashboardOverview(
     expiring,
     pendingLeave,
     revenueTrend,
+    expenseTrend,
     payrollRow,
+    missedVisitsCount,
+    expiringLicenses,
+    newPatientsThisMonth,
+    activePatientsCount,
+    staffLeaderboardRows,
+    recentActivityRows,
   ] = await Promise.all([
     getFinanceSummary(period),
+    getFinanceComparison(period),
     getOutstandingSummary(),
     countPatients(),
     countActiveStaff(),
@@ -77,12 +135,19 @@ export async function getDashboardOverview(
     listExpiringBatches(30),
     listLeaveRequests({ status: "PENDING" }),
     getRevenueTrend(6),
+    getExpenseTrend(6),
     queryOne<{ total: string }>(
       `SELECT COALESCE(SUM(net_pay), 0) AS total
        FROM payrolls
        WHERE month = EXTRACT(MONTH FROM CURRENT_DATE)::int
          AND year = EXTRACT(YEAR FROM CURRENT_DATE)::int`
     ),
+    countMissedVisits(),
+    listExpiringLicenses(30),
+    countNewPatientsThisMonth(),
+    countActivePatients(),
+    getStaffVisitLeaderboard(30),
+    listRecentActivity(8),
   ]);
 
   const todayHomeVisitsCompleted = todayVisits.filter(
@@ -115,6 +180,16 @@ export async function getDashboardOverview(
       count: expiring.length,
       href: "/inventory/alerts",
     },
+    {
+      label: "Ziara zilizokosekana (missed)",
+      count: missedVisitsCount,
+      href: "/home-visits",
+    },
+    {
+      label: "Leseni za staff zinazokaribia kuisha",
+      count: expiringLicenses.length,
+      href: "/staff",
+    },
   ].filter((a) => a.count > 0);
 
   return {
@@ -139,5 +214,25 @@ export async function getDashboardOverview(
     })),
     pendingActions,
     revenueTrend,
+    expenseTrend,
+    incomeChangePct: percentChange(financeComparison.income, financeComparison.previousIncome),
+    expenseChangePct: percentChange(
+      financeComparison.expenses,
+      financeComparison.previousExpenses
+    ),
+    missedVisitsCount,
+    expiringLicensesCount: expiringLicenses.length,
+    newPatientsThisMonth,
+    activePatientsCount,
+    staffLeaderboard: staffLeaderboardRows.map((r) => ({
+      staffId: r.staff_id,
+      staffName: r.staff_name,
+      completedCount: parseInt(r.completed_count, 10),
+    })),
+    recentActivity: recentActivityRows.map((a) => ({
+      id: a.id,
+      message: formatActivity(a),
+      createdAt: a.created_at,
+    })),
   };
 }

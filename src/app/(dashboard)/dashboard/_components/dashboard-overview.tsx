@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users,
-  ClipboardList,
+  ClipboardCheck,
   MapPinned,
   UserCheck,
   Wallet,
   FileWarning,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Trophy,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +46,15 @@ interface Overview {
   }[];
   pendingActions: { label: string; count: number; href: string }[];
   revenueTrend: { month: string; income: string }[];
+  expenseTrend: { month: string; expenses: string }[];
+  incomeChangePct: number | null;
+  expenseChangePct: number | null;
+  missedVisitsCount: number;
+  expiringLicensesCount: number;
+  newPatientsThisMonth: number;
+  activePatientsCount: number;
+  staffLeaderboard: { staffId: string; staffName: string; completedCount: number }[];
+  recentActivity: { id: string; message: string; createdAt: string }[];
 }
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -84,7 +98,13 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
             {greeting}, {fullName.split(" ")[0]} 👋
           </h1>
           <p className="text-sm text-zinc-500">
-            Here&apos;s what&apos;s happening across Afya Nyumbani today.
+            {new Date().toLocaleDateString("en-TZ", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+            {" — "}Here&apos;s what&apos;s happening across Afya Nyumbani today.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -117,25 +137,38 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
         <p className="text-sm text-zinc-500">Inapakia...</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
             <StatCard
               icon={Users}
               color="blue"
-              label="Active Patients"
+              label="Total Patients"
               value={String(data.patientsCount)}
+              sub={`+${data.newPatientsThisMonth} this month`}
             />
             <StatCard
-              icon={ClipboardList}
-              color="orange"
-              label="Scheduled Visits"
-              value={String(data.homeVisitStatusCounts.scheduled)}
+              icon={UserCheck}
+              color="green"
+              label="Active Patients"
+              value={String(data.activePatientsCount)}
+              sub="seen in last 30 days"
             />
             <StatCard
               icon={MapPinned}
-              color="green"
-              label="Today's Home Visits"
+              color="orange"
+              label="Today's Visits"
               value={String(data.todayHomeVisitsCount)}
-              sub={`${data.todayHomeVisitsCompleted} completed`}
+            />
+            <StatCard
+              icon={ClipboardCheck}
+              color="green"
+              label="Completed Visits"
+              value={String(data.todayHomeVisitsCompleted)}
+            />
+            <StatCard
+              icon={AlertTriangle}
+              color={data.missedVisitsCount > 0 ? "red" : "green"}
+              label="Missed Visits"
+              value={String(data.missedVisitsCount)}
             />
             <StatCard
               icon={UserCheck}
@@ -148,6 +181,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
               color="blue"
               label={`Revenue (${PERIOD_LABELS[period]})`}
               value={`TZS ${fmtCompact(data.income)}`}
+              changePct={data.incomeChangePct}
             />
             <StatCard
               icon={FileWarning}
@@ -224,8 +258,9 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="rounded-xl border border-zinc-200 bg-white p-5">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-zinc-900">
-                  Pending Actions
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+                  <AlertTriangle className="h-4 w-4 text-brand-orange" />
+                  Alerts &amp; Exceptions
                 </h2>
                 {data.pendingActions.length > 0 && (
                   <span className="rounded-full bg-brand-orange-light px-2 py-0.5 text-xs font-semibold text-brand-orange">
@@ -235,7 +270,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
               </div>
               {data.pendingActions.length === 0 ? (
                 <p className="text-sm text-zinc-500">
-                  Hakuna vitendo vinavyosubiri.
+                  Hakuna vitendo vinavyosubiri — kila kitu kiko sawa ✓
                 </p>
               ) : (
                 <ul className="flex flex-col gap-1">
@@ -258,16 +293,90 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
 
             <div className="rounded-xl border border-zinc-200 bg-white p-5">
               <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-                Care Team Overview
+                Care Team Status
               </h2>
               <CareTeamDonut counts={data.staffStatusCounts} />
             </div>
 
             <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-                Revenue Overview
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-zinc-900">
+                  Financial Snapshot
+                </h2>
+                {data.expenseChangePct !== null && (
+                  <span
+                    className={`flex items-center gap-0.5 text-xs font-semibold ${
+                      data.expenseChangePct <= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    Expenses {data.expenseChangePct >= 0 ? "+" : ""}
+                    {data.expenseChangePct}%
+                  </span>
+                )}
+              </div>
+              <RevenueBarChart income={data.revenueTrend} expenses={data.expenseTrend} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+                <Trophy className="h-4 w-4 text-brand-orange" />
+                Staff Performance (Last 30 Days)
               </h2>
-              <RevenueBarChart points={data.revenueTrend} />
+              {data.staffLeaderboard.length === 0 ? (
+                <p className="text-sm text-zinc-500">
+                  Hakuna ziara zilizokamilika miongoni mwa siku 30 zilizopita.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {data.staffLeaderboard.map((s, i) => (
+                    <li
+                      key={s.staffId}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-blue-light text-xs font-semibold text-brand-blue">
+                          {i + 1}
+                        </span>
+                        <span className="text-zinc-800">{s.staffName}</span>
+                      </div>
+                      <span className="font-semibold text-zinc-900">
+                        {s.completedCount} visits
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+                <Activity className="h-4 w-4 text-brand-blue" />
+                Recent Activity
+              </h2>
+              {data.recentActivity.length === 0 ? (
+                <p className="text-sm text-zinc-500">Hakuna shughuli za hivi karibuni.</p>
+              ) : (
+                <ul className="flex flex-col gap-2.5">
+                  {data.recentActivity.map((a) => (
+                    <li key={a.id} className="flex items-start gap-2 text-sm">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-blue" />
+                      <div>
+                        <p className="text-zinc-700">{a.message}</p>
+                        <p className="text-xs text-zinc-400">
+                          {new Date(a.createdAt).toLocaleString("en-TZ", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </>
@@ -281,6 +390,7 @@ const STAT_COLOR_MAP: Record<string, { bg: string; text: string }> = {
   orange: { bg: "bg-brand-orange-light", text: "text-brand-orange" },
   green: { bg: "bg-green-50", text: "text-green-600" },
   purple: { bg: "bg-purple-50", text: "text-purple-600" },
+  red: { bg: "bg-red-50", text: "text-red-600" },
 };
 
 function StatCard({
@@ -289,21 +399,39 @@ function StatCard({
   label,
   value,
   sub,
+  changePct,
 }: {
   icon: LucideIcon;
   color: string;
   label: string;
   value: string;
   sub?: string;
+  changePct?: number | null;
 }) {
   const c = STAT_COLOR_MAP[color] ?? STAT_COLOR_MAP.blue;
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-3 sm:p-4">
-      <span
-        className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${c.bg} ${c.text}`}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
+      <div className="mb-2 flex items-center justify-between">
+        <span
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${c.bg} ${c.text}`}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        {changePct !== undefined && changePct !== null && (
+          <span
+            className={`flex items-center gap-0.5 text-xs font-semibold ${
+              changePct >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {changePct >= 0 ? (
+              <TrendingUp className="h-3 w-3" />
+            ) : (
+              <TrendingDown className="h-3 w-3" />
+            )}
+            {Math.abs(changePct)}%
+          </span>
+        )}
+      </div>
       <p className="text-xs text-zinc-500">{label}</p>
       <p className="text-lg font-semibold text-zinc-900 sm:text-xl">{value}</p>
       {sub && <p className="text-xs text-zinc-400">{sub}</p>}
@@ -366,7 +494,7 @@ function CareTeamDonut({
 }) {
   const total = counts.active + counts.onLeave + counts.inactive + counts.terminated;
   const segments = [
-    { label: "Available", value: counts.active, color: "#16a34a" },
+    { label: "Active", value: counts.active, color: "#16a34a" },
     { label: "On Leave", value: counts.onLeave, color: "#f59e0b" },
     { label: "Inactive", value: counts.inactive, color: "#a1a1aa" },
     { label: "Terminated", value: counts.terminated, color: "#dc2626" },
@@ -427,28 +555,51 @@ function CareTeamDonut({
 }
 
 function RevenueBarChart({
-  points,
+  income,
+  expenses,
 }: {
-  points: { month: string; income: string }[];
+  income: { month: string; income: string }[];
+  expenses: { month: string; expenses: string }[];
 }) {
-  const max = Math.max(...points.map((p) => Number(p.income)), 1);
+  const max = Math.max(
+    ...income.map((p) => Number(p.income)),
+    ...expenses.map((p) => Number(p.expenses)),
+    1
+  );
   return (
-    <div className="flex h-32 items-end gap-2">
-      {points.map((p) => {
-        const height = Math.max((Number(p.income) / max) * 100, 2);
-        return (
-          <div key={p.month} className="flex flex-1 flex-col items-center gap-1">
-            <div className="flex h-24 w-full items-end">
-              <div
-                className="w-full rounded-t bg-brand-blue"
-                style={{ height: `${height}%` }}
-                title={`${p.month}: ${fmt(p.income)}`}
-              />
+    <div>
+      <div className="mb-2 flex items-center gap-3 text-xs text-zinc-500">
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full bg-brand-blue" /> Income
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full bg-brand-orange" /> Expenses
+        </span>
+      </div>
+      <div className="flex h-32 items-end gap-2">
+        {income.map((p, i) => {
+          const exp = expenses[i];
+          const incHeight = Math.max((Number(p.income) / max) * 100, 2);
+          const expHeight = exp ? Math.max((Number(exp.expenses) / max) * 100, 2) : 2;
+          return (
+            <div key={p.month} className="flex flex-1 flex-col items-center gap-1">
+              <div className="flex h-24 w-full items-end gap-0.5">
+                <div
+                  className="w-1/2 rounded-t bg-brand-blue"
+                  style={{ height: `${incHeight}%` }}
+                  title={`Income ${p.month}: ${fmt(p.income)}`}
+                />
+                <div
+                  className="w-1/2 rounded-t bg-brand-orange"
+                  style={{ height: `${expHeight}%` }}
+                  title={`Expenses ${p.month}: ${exp ? fmt(exp.expenses) : "0"}`}
+                />
+              </div>
+              <span className="text-[10px] text-zinc-400">{p.month.slice(5)}</span>
             </div>
-            <span className="text-[10px] text-zinc-400">{p.month.slice(5)}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

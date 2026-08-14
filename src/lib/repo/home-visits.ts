@@ -125,6 +125,40 @@ export async function getHomeVisitById(
   );
 }
 
+/** Visits still SCHEDULED whose date has already passed — a real, computable "missed" signal. */
+export async function countMissedVisits(): Promise<number> {
+  const row = await queryOne<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM home_visits
+     WHERE status = 'SCHEDULED' AND visit_date < CURRENT_DATE`
+  );
+  return parseInt(row?.count ?? "0", 10);
+}
+
+export interface StaffVisitLeaderboardRow {
+  staff_id: string;
+  staff_name: string;
+  completed_count: string;
+}
+
+/** Top staff by completed home visits in the last `days` days. */
+export async function getStaffVisitLeaderboard(
+  days: number,
+  limit = 5
+): Promise<StaffVisitLeaderboardRow[]> {
+  return query<StaffVisitLeaderboardRow>(
+    `SELECT s.id AS staff_id, u.full_name AS staff_name, COUNT(hv.id)::text AS completed_count
+     FROM home_visits hv
+     JOIN staff s ON s.id = hv.staff_id
+     JOIN users u ON u.id = s.user_id
+     WHERE hv.status = 'COMPLETED'
+       AND hv.visit_date >= CURRENT_DATE - $1::int
+     GROUP BY s.id, u.full_name
+     ORDER BY COUNT(hv.id) DESC
+     LIMIT $2`,
+    [days, limit]
+  );
+}
+
 export async function deleteHomeVisit(id: string): Promise<boolean> {
   const rows = await query(`DELETE FROM home_visits WHERE id = $1 RETURNING id`, [id]);
   return rows.length > 0;

@@ -1,5 +1,5 @@
 import type { PoolClient } from "pg";
-import { pool } from "./db";
+import { pool, query } from "./db";
 
 interface AuditLogInput {
   userId: string;
@@ -31,5 +31,28 @@ export async function logAudit(
       input.amount ?? null,
       input.meta ? JSON.stringify(input.meta) : null,
     ]
+  );
+}
+
+export interface AuditLogWithUser {
+  id: string;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  amount: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+  user_name: string;
+}
+
+export async function listRecentActivity(limit = 10): Promise<AuditLogWithUser[]> {
+  return query<AuditLogWithUser>(
+    `SELECT a.id, a.action, a.entity, a.entity_id, a.amount, a.meta, a.created_at,
+            u.full_name AS user_name
+     FROM audit_logs a
+     JOIN users u ON u.id = a.user_id
+     ORDER BY a.created_at DESC
+     LIMIT $1`,
+    [limit]
   );
 }

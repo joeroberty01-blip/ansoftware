@@ -81,6 +81,57 @@ export async function getFinanceSummary(
   };
 }
 
+/**
+ * Same current-period totals as getFinanceSummary, plus the immediately
+ * preceding period of equal length, so the UI can show a real % change
+ * instead of a fabricated trend arrow.
+ */
+export async function getFinanceComparison(period: FinancePeriod): Promise<{
+  income: string;
+  previousIncome: string;
+  expenses: string;
+  previousExpenses: string;
+}> {
+  const row = await queryOne<{
+    income: string;
+    previous_income: string;
+    expenses: string;
+    previous_expenses: string;
+  }>(
+    `WITH period AS (
+       SELECT
+         CASE
+           WHEN $1 = 'today' THEN CURRENT_DATE
+           WHEN $1 = 'week' THEN date_trunc('week', CURRENT_DATE)::date
+           ELSE date_trunc('month', CURRENT_DATE)::date
+         END AS from_date,
+         CASE
+           WHEN $1 = 'today' THEN (CURRENT_DATE + 1)
+           WHEN $1 = 'week' THEN (date_trunc('week', CURRENT_DATE) + interval '1 week')::date
+           ELSE (date_trunc('month', CURRENT_DATE) + interval '1 month')::date
+         END AS to_date,
+         CASE
+           WHEN $1 = 'today' THEN (CURRENT_DATE - 1)
+           WHEN $1 = 'week' THEN (date_trunc('week', CURRENT_DATE) - interval '1 week')::date
+           ELSE (date_trunc('month', CURRENT_DATE) - interval '1 month')::date
+         END AS prev_from_date
+     )
+     SELECT
+       (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.from_date AND paid_at < period.to_date) AS income,
+       (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.prev_from_date AND paid_at < period.from_date) AS previous_income,
+       (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.from_date AND date < period.to_date) AS expenses,
+       (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.prev_from_date AND date < period.from_date) AS previous_expenses`,
+    [period]
+  );
+
+  return {
+    income: row?.income ?? "0",
+    previousIncome: row?.previous_income ?? "0",
+    expenses: row?.expenses ?? "0",
+    previousExpenses: row?.previous_expenses ?? "0",
+  };
+}
+
 export interface MonthlyRevenuePoint {
   month: string;
   income: string;
@@ -102,6 +153,33 @@ export async function getRevenueTrend(
      LEFT JOIN payments p
        ON p.paid_at >= ms.month_start
        AND p.paid_at < ms.month_start + interval '1 month'
+     GROUP BY ms.month_start
+     ORDER BY ms.month_start ASC`,
+    [months]
+  );
+}
+
+export interface MonthlyExpensePoint {
+  month: string;
+  expenses: string;
+}
+
+/** Last `months` calendar months of expenses (SUM of expenses.amount), oldest first. */
+export async function getExpenseTrend(
+  months: number
+): Promise<MonthlyExpensePoint[]> {
+  return query<MonthlyExpensePoint>(
+    `WITH month_series AS (
+       SELECT date_trunc('month', CURRENT_DATE) - (n || ' months')::interval AS month_start
+       FROM generate_series(0, $1 - 1) AS n
+     )
+     SELECT
+       to_char(ms.month_start, 'YYYY-MM') AS month,
+       COALESCE(SUM(e.amount), 0) AS expenses
+     FROM month_series ms
+     LEFT JOIN expenses e
+       ON e.date >= ms.month_start
+       AND e.date < ms.month_start + interval '1 month'
      GROUP BY ms.month_start
      ORDER BY ms.month_start ASC`,
     [months]
