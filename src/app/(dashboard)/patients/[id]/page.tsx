@@ -56,6 +56,8 @@ interface HomeVisit {
   temperature: string | null;
   pulse: number | null;
   weight: string | null;
+  blood_glucose: string | null;
+  food_intake: string | null;
   treatment_notes: string | null;
   notes: string | null;
 }
@@ -322,6 +324,8 @@ export default function PatientDetailPage() {
   const [qrTemperature, setQrTemperature] = useState("");
   const [qrPulse, setQrPulse] = useState("");
   const [qrWeight, setQrWeight] = useState("");
+  const [qrBloodGlucose, setQrBloodGlucose] = useState("");
+  const [qrFoodIntake, setQrFoodIntake] = useState("");
   const [qrTreatmentNotes, setQrTreatmentNotes] = useState("");
   const [qrNotes, setQrNotes] = useState("");
   const [qrError, setQrError] = useState<string | null>(null);
@@ -345,6 +349,8 @@ export default function PatientDetailPage() {
           temperature: qrTemperature || undefined,
           pulse: qrPulse ? Number(qrPulse) : undefined,
           weight: qrWeight || undefined,
+          bloodGlucose: qrBloodGlucose || undefined,
+          foodIntake: qrFoodIntake || undefined,
           treatmentNotes: qrTreatmentNotes || undefined,
           notes: qrNotes || undefined,
         }),
@@ -358,6 +364,8 @@ export default function PatientDetailPage() {
       setQrTemperature("");
       setQrPulse("");
       setQrWeight("");
+      setQrBloodGlucose("");
+      setQrFoodIntake("");
       setQrTreatmentNotes("");
       setQrNotes("");
       setShowQuickReport(false);
@@ -841,7 +849,7 @@ export default function PatientDetailPage() {
                 Rekodi ripoti/vitals za leo ({new Date().toISOString().slice(0, 10)})
                 kwa mgonjwa huyu bila kuondoka ukurasa huu.
               </p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
                     Blood Pressure
@@ -886,6 +894,29 @@ export default function PatientDetailPage() {
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   />
                 </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Sukari / Blood Glucose
+                  </label>
+                  <input
+                    value={qrBloodGlucose}
+                    onChange={(e) => setQrBloodGlucose(e.target.value)}
+                    inputMode="decimal"
+                    placeholder="mf. 5.5"
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-600">
+                  Chakula / Ulishaji (Food Intake)
+                </label>
+                <input
+                  value={qrFoodIntake}
+                  onChange={(e) => setQrFoodIntake(e.target.value)}
+                  placeholder="mf. Alikula ugali na mboga, kikombe 1 cha chai..."
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
@@ -955,6 +986,8 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Temp</th>
                   <th className="py-2 pr-4">Pulse</th>
                   <th className="py-2 pr-4">Weight</th>
+                  <th className="py-2 pr-4">Sukari</th>
+                  <th className="py-2 pr-4">Chakula</th>
                   <th className="py-2 pr-4">Taratibu</th>
                   <th className="py-2 pr-4">Maendeleo</th>
                 </tr>
@@ -980,6 +1013,15 @@ export default function PatientDetailPage() {
                     <td className="py-2 pr-4">{v.pulse ?? "-"}</td>
                     <td className="py-2 pr-4">
                       {v.weight ? `${v.weight} kg` : "-"}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {v.blood_glucose ? `${v.blood_glucose} mmol/L` : "-"}
+                    </td>
+                    <td
+                      className="max-w-[140px] truncate py-2 pr-4"
+                      title={v.food_intake ?? undefined}
+                    >
+                      {v.food_intake ?? "-"}
                     </td>
                     <td
                       className="max-w-[160px] truncate py-2 pr-4"

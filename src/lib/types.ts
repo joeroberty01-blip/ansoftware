@@ -262,6 +262,8 @@ export interface HomeVisitRow {
   temperature: string | null;
   pulse: number | null;
   weight: string | null;
+  blood_glucose: string | null;
+  food_intake: string | null;
   treatment_notes: string | null;
   notes: string | null;
   created_by_id: string;

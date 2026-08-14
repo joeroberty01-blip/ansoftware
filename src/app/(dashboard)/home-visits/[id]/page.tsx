@@ -14,6 +14,8 @@ interface Visit {
   temperature: string | null;
   pulse: number | null;
   weight: string | null;
+  blood_glucose: string | null;
+  food_intake: string | null;
   treatment_notes: string | null;
   notes: string | null;
 }
@@ -34,6 +36,8 @@ export default function HomeVisitDetailPage() {
   const [temperature, setTemperature] = useState("");
   const [pulse, setPulse] = useState("");
   const [weight, setWeight] = useState("");
+  const [bloodGlucose, setBloodGlucose] = useState("");
+  const [foodIntake, setFoodIntake] = useState("");
   const [treatmentNotes, setTreatmentNotes] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +55,8 @@ export default function HomeVisitDetailPage() {
       setTemperature(json.visit.temperature ?? "");
       setPulse(json.visit.pulse != null ? String(json.visit.pulse) : "");
       setWeight(json.visit.weight ?? "");
+      setBloodGlucose(json.visit.blood_glucose ?? "");
+      setFoodIntake(json.visit.food_intake ?? "");
       setTreatmentNotes(json.visit.treatment_notes ?? "");
       setNotes(json.visit.notes ?? "");
     }
@@ -76,6 +82,8 @@ export default function HomeVisitDetailPage() {
           temperature: temperature || undefined,
           pulse: pulse ? Number(pulse) : undefined,
           weight: weight || undefined,
+          bloodGlucose: bloodGlucose || undefined,
+          foodIntake: foodIntake || undefined,
           treatmentNotes: treatmentNotes || undefined,
           notes: notes || undefined,
         }),
@@ -226,6 +234,29 @@ export default function HomeVisitDetailPage() {
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Sukari / Blood Glucose
+              </label>
+              <input
+                value={bloodGlucose}
+                onChange={(e) => setBloodGlucose(e.target.value)}
+                inputMode="decimal"
+                placeholder="mf. 5.5"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <label className="text-xs font-medium text-zinc-600">
+                Chakula / Ulishaji (Food Intake)
+              </label>
+              <input
+                value={foodIntake}
+                onChange={(e) => setFoodIntake(e.target.value)}
+                placeholder="mf. Alikula ugali na mboga..."
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
@@ -303,6 +334,16 @@ export default function HomeVisitDetailPage() {
               <p className="font-medium">
                 {visit.weight ? `${visit.weight} kg` : "-"}
               </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Sukari (Blood Glucose)</p>
+              <p className="font-medium">
+                {visit.blood_glucose ? `${visit.blood_glucose} mmol/L` : "-"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Chakula (Food Intake)</p>
+              <p className="font-medium">{visit.food_intake ?? "-"}</p>
             </div>
           </div>
           <div className="mt-4">

@@ -69,6 +69,9 @@ export async function PATCH(
     temperature: d.temperature === undefined ? undefined : d.temperature || null,
     pulse: d.pulse,
     weight: d.weight === undefined ? undefined : d.weight || null,
+    bloodGlucose:
+      d.bloodGlucose === undefined ? undefined : d.bloodGlucose || null,
+    foodIntake: d.foodIntake === undefined ? undefined : d.foodIntake || null,
     treatmentNotes:
       d.treatmentNotes === undefined ? undefined : d.treatmentNotes || null,
     notes: d.notes === undefined ? undefined : d.notes || null,

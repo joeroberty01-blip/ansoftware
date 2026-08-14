@@ -125,6 +125,8 @@ export default async function PatientReportPrintPage(
                 <th className="py-1.5 pr-2 font-semibold">Temp</th>
                 <th className="py-1.5 pr-2 font-semibold">Pulse</th>
                 <th className="py-1.5 pr-2 font-semibold">Weight</th>
+                <th className="py-1.5 pr-2 font-semibold">Sukari</th>
+                <th className="py-1.5 pr-2 font-semibold">Chakula</th>
                 <th className="py-1.5 pr-2 font-semibold">Maelezo</th>
               </tr>
             </thead>
@@ -142,6 +144,10 @@ export default async function PatientReportPrintPage(
                   <td className="py-1.5 pr-2">
                     {v.weight ? `${v.weight} kg` : "-"}
                   </td>
+                  <td className="py-1.5 pr-2">
+                    {v.blood_glucose ? `${v.blood_glucose} mmol/L` : "-"}
+                  </td>
+                  <td className="py-1.5 pr-2">{v.food_intake ?? "-"}</td>
                   <td className="py-1.5 pr-2">{v.treatment_notes ?? "-"}</td>
                 </tr>
               ))}

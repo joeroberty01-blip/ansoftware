@@ -42,6 +42,8 @@ export async function createHomeVisit(input: {
   temperature: string | null;
   pulse: number | null;
   weight: string | null;
+  bloodGlucose: string | null;
+  foodIntake: string | null;
   treatmentNotes: string | null;
   notes: string | null;
   createdById: string;
@@ -49,8 +51,8 @@ export async function createHomeVisit(input: {
   const row = await queryOne<HomeVisitRow>(
     `INSERT INTO home_visits
        (patient_id, staff_id, visit_date, status, location, blood_pressure, temperature,
-        pulse, weight, treatment_notes, notes, created_by_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        pulse, weight, blood_glucose, food_intake, treatment_notes, notes, created_by_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
      RETURNING *`,
     [
       input.patientId,
@@ -62,6 +64,8 @@ export async function createHomeVisit(input: {
       input.temperature,
       input.pulse,
       input.weight,
+      input.bloodGlucose,
+      input.foodIntake,
       input.treatmentNotes,
       input.notes,
       input.createdById,
@@ -173,6 +177,8 @@ export async function updateHomeVisit(
     temperature?: string | null;
     pulse?: number | null;
     weight?: string | null;
+    bloodGlucose?: string | null;
+    foodIntake?: string | null;
     treatmentNotes?: string | null;
     notes?: string | null;
   }
@@ -184,6 +190,8 @@ export async function updateHomeVisit(
     temperature: patch.temperature,
     pulse: patch.pulse,
     weight: patch.weight,
+    blood_glucose: patch.bloodGlucose,
+    food_intake: patch.foodIntake,
     treatment_notes: patch.treatmentNotes,
     notes: patch.notes,
   };

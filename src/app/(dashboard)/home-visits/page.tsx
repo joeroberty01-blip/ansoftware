@@ -11,6 +11,8 @@ const CSV_COLUMNS = [
   { key: "staff_name", label: "Staff" },
   { key: "location", label: "Location" },
   { key: "blood_pressure", label: "BP" },
+  { key: "blood_glucose", label: "Sukari" },
+  { key: "food_intake", label: "Chakula" },
   { key: "status", label: "Status" },
 ];
 
@@ -22,6 +24,8 @@ interface Visit {
   status: string;
   location: string | null;
   blood_pressure: string | null;
+  blood_glucose: string | null;
+  food_intake: string | null;
   treatment_notes: string | null;
 }
 

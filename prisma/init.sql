@@ -258,6 +258,8 @@ CREATE TABLE home_visits (
   temperature       DECIMAL(4,1),
   pulse             INT CHECK (pulse IS NULL OR pulse > 0),
   weight            DECIMAL(5,2),
+  blood_glucose     DECIMAL(5,1),
+  food_intake       TEXT,
   treatment_notes   TEXT,
   notes             TEXT,
   created_by_id     TEXT NOT NULL REFERENCES users(id),

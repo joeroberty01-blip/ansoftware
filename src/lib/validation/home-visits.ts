@@ -22,6 +22,8 @@ export const createHomeVisitSchema = z.object({
   temperature: optionalDecimal("Joto sio sahihi (mf. 36.5)"),
   pulse: z.number().int().positive().optional(),
   weight: optionalDecimal("Uzito sio sahihi (mf. 68.5)"),
+  bloodGlucose: optionalDecimal("Sukari sio sahihi (mf. 5.5)"),
+  foodIntake: optionalText(500),
   treatmentNotes: optionalText(2000),
   notes: optionalText(1000),
 });
@@ -35,6 +37,8 @@ export const updateHomeVisitSchema = z.object({
   temperature: optionalDecimal("Joto sio sahihi (mf. 36.5)"),
   pulse: z.number().int().positive().optional(),
   weight: optionalDecimal("Uzito sio sahihi (mf. 68.5)"),
+  bloodGlucose: optionalDecimal("Sukari sio sahihi (mf. 5.5)"),
+  foodIntake: optionalText(500),
   treatmentNotes: optionalText(2000),
   notes: optionalText(1000),
 });
