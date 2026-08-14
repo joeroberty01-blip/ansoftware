@@ -495,7 +495,7 @@ export function StaffDetailView({
                 Hariri
               </button>
             )}
-            {viewerIsAdmin && (
+            {(viewerIsAdmin || isOwnProfile) && (
               <a
                 href={`/api/staff/${staff.id}/id-card`}
                 target="_blank"

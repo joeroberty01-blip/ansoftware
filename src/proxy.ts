@@ -48,8 +48,11 @@ const ADMIN_ONLY_PREFIXES = [
 ];
 
 // "My own profile" routes: STAFF must be able to reach these even though
-// /staff and /api/staff are otherwise Admin-only.
+// /staff and /api/staff are otherwise Admin-only. The route handlers behind
+// these paths do their own self-or-admin ownership checks against the real
+// staff record, so the proxy only needs to let the request through.
 const ADMIN_ONLY_EXCEPTIONS = ["/staff/me", "/api/staff/me"];
+const ID_CARD_ROUTE = /^\/api\/staff\/[^/]+\/id-card$/;
 
 function matches(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -77,7 +80,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const isAdminOnlyException = matches(pathname, ADMIN_ONLY_EXCEPTIONS);
+  const isAdminOnlyException =
+    matches(pathname, ADMIN_ONLY_EXCEPTIONS) || ID_CARD_ROUTE.test(pathname);
 
   if (
     matches(pathname, ADMIN_ONLY_PREFIXES) &&

@@ -45,14 +45,14 @@ export async function GET(
       { status: 401 }
     );
   }
-  if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
-  }
-
   const { id } = await ctx.params;
   const staff = await getStaffById(id);
   if (!staff) {
     return NextResponse.json({ error: "Staff hakupatikana." }, { status: 404 });
+  }
+
+  if (session.role !== "ADMIN" && staff.user_id !== session.id) {
+    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
   }
 
   const [photoDataUri, qrDataUri] = await Promise.all([
