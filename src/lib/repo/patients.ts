@@ -259,3 +259,44 @@ export async function listDocuments(
     [patientId]
   );
 }
+
+export interface PatientDocumentWithNames extends PatientDocumentRow {
+  patient_name: string;
+  uploaded_by_name: string;
+}
+
+/**
+ * All documents across all patients, joined with patient/uploader names.
+ * `staffId` scopes results to that staff member's assigned patients only
+ * (used for non-admin viewers of the cross-patient Documents hub).
+ */
+export async function listAllDocuments(filters?: {
+  staffId?: string;
+  search?: string;
+}): Promise<PatientDocumentWithNames[]> {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters?.staffId) {
+    params.push(filters.staffId);
+    conditions.push(`p.assigned_staff_id = $${params.length}`);
+  }
+  if (filters?.search) {
+    params.push(`%${filters.search}%`);
+    conditions.push(
+      `(p.full_name ILIKE $${params.length} OR d.title ILIKE $${params.length})`
+    );
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  return query<PatientDocumentWithNames>(
+    `SELECT d.*, p.full_name AS patient_name, u.full_name AS uploaded_by_name
+     FROM patient_documents d
+     JOIN patients p ON p.id = d.patient_id
+     JOIN users u ON u.id = d.uploaded_by_id
+     ${where}
+     ORDER BY d.created_at DESC`,
+    params
+  );
+}

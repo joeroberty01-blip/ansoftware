@@ -78,14 +78,14 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Reports",
-    href: `/coming-soon?feature=${encodeURIComponent("Reports")}`,
+    href: "/reports",
     icon: BarChart3,
     hideForStaff: true,
     group: "other",
   },
   {
     label: "Documents",
-    href: `/coming-soon?feature=${encodeURIComponent("Documents")}`,
+    href: "/documents",
     icon: FileText,
     group: "other",
   },
