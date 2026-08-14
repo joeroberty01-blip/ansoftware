@@ -18,7 +18,15 @@ export async function GET(req: NextRequest) {
   const assignedToMe = req.nextUrl.searchParams.get("assignedToMe") === "true";
 
   let assignedStaffId: string | undefined;
-  if (assignedToMe) {
+  if (session.role !== "ADMIN") {
+    // Staff can only ever see patients assigned to them — not an optional
+    // filter, always enforced regardless of the assignedToMe query param.
+    const ownStaff = await getStaffByUserId(session.id);
+    if (!ownStaff) {
+      return NextResponse.json({ patients: [] });
+    }
+    assignedStaffId = ownStaff.id;
+  } else if (assignedToMe) {
     const ownStaff = await getStaffByUserId(session.id);
     if (!ownStaff) {
       return NextResponse.json({ patients: [] });
@@ -36,6 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Unahitaji kuingia kwanza." },
       { status: 401 }
+    );
+  }
+  if (session.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Ruhusa hairuhusiwi. Wasiliana na Admin kusajili mgonjwa mpya." },
+      { status: 403 }
     );
   }
 

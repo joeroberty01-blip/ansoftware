@@ -174,7 +174,9 @@ export function DashboardShell({
                     onClick={() => setCreateOpen(false)}
                   />
                   <div className="absolute right-0 z-20 mt-2 w-52 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg">
-                    {CREATE_LINKS.map((link) => (
+                    {CREATE_LINKS.filter(
+                      (link) => role === "ADMIN" || link.href !== "/patients/new"
+                    ).map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}

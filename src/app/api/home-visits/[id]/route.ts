@@ -6,6 +6,7 @@ import {
   getHomeVisitById,
   updateHomeVisit,
 } from "@/lib/repo/home-visits";
+import { assertPatientAccess } from "@/lib/patient-access";
 
 export async function GET(
   _req: Request,
@@ -25,6 +26,9 @@ export async function GET(
     return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
   }
 
+  const denied = await assertPatientAccess(session, visit.patient_id);
+  if (denied) return denied;
+
   return NextResponse.json({ visit });
 }
 
@@ -41,6 +45,13 @@ export async function PATCH(
   }
 
   const { id } = await ctx.params;
+  const existingVisit = await getHomeVisitById(id);
+  if (!existingVisit) {
+    return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
+  }
+  const denied = await assertPatientAccess(session, existingVisit.patient_id);
+  if (denied) return denied;
+
   const body = await req.json();
   const parsed = updateHomeVisitSchema.safeParse(body);
   if (!parsed.success) {
@@ -80,6 +91,10 @@ export async function DELETE(
       { error: "Unahitaji kuingia kwanza." },
       { status: 401 }
     );
+  }
+
+  if (session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
   }
 
   const { id } = await ctx.params;

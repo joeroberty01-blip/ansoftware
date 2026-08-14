@@ -32,6 +32,14 @@ export default function PatientsListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [mineOnly, setMineOnly] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
+      .catch(() => {});
+  }, []);
 
   const load = useCallback(async (q: string, mine: boolean) => {
     setLoading(true);
@@ -90,14 +98,22 @@ export default function PatientsListPage() {
             columns={CSV_COLUMNS}
             rows={patients}
           />
-          <Link
-            href="/patients/new"
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
-          >
-            Ongeza Mgonjwa Mpya
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/patients/new"
+              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+            >
+              Ongeza Mgonjwa Mpya
+            </Link>
+          )}
         </div>
       </div>
+
+      {!isAdmin && (
+        <p className="rounded-lg bg-brand-blue-light/40 px-3 py-2 text-sm text-brand-blue print:hidden">
+          Unaona wagonjwa waliopangiwa kwako pekee.
+        </p>
+      )}
 
       <form onSubmit={onSearchSubmit} className="flex flex-wrap items-center gap-2 print:hidden">
         <input
@@ -112,17 +128,19 @@ export default function PatientsListPage() {
         >
           Tafuta
         </button>
-        <button
-          type="button"
-          onClick={() => setMineOnly((v) => !v)}
-          className={`rounded px-3 py-1.5 text-sm font-medium ${
-            mineOnly
-              ? "bg-brand-blue text-white"
-              : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
-          }`}
-        >
-          {mineOnly ? "✓ Wagonjwa Wangu" : "Wagonjwa Wangu"}
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setMineOnly((v) => !v)}
+            className={`rounded px-3 py-1.5 text-sm font-medium ${
+              mineOnly
+                ? "bg-brand-blue text-white"
+                : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+            }`}
+          >
+            {mineOnly ? "✓ Wagonjwa Wangu" : "Wagonjwa Wangu"}
+          </button>
+        )}
       </form>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-5">
@@ -141,7 +159,7 @@ export default function PatientsListPage() {
                 <th className="py-2 pr-4">Blood Type</th>
                 <th className="py-2 pr-4">Chronic Conditions</th>
                 <th className="py-2 pr-4">Nurse Aliyepangiwa</th>
-                <th className="py-2 pr-4 print:hidden"></th>
+                {isAdmin && <th className="py-2 pr-4 print:hidden"></th>}
               </tr>
             </thead>
             <tbody>
@@ -168,18 +186,20 @@ export default function PatientsListPage() {
                   <td className="py-2 pr-4">{p.blood_type ?? "-"}</td>
                   <td className="py-2 pr-4">{p.chronic_conditions ?? "-"}</td>
                   <td className="py-2 pr-4">{p.assigned_staff_name ?? "-"}</td>
-                  <td className="py-2 pr-4 text-right print:hidden">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(p);
-                      }}
-                      disabled={deletingId === p.id}
-                      className="text-xs font-medium text-red-700 underline disabled:opacity-50"
-                    >
-                      Futa
-                    </button>
-                  </td>
+                  {isAdmin && (
+                    <td className="py-2 pr-4 text-right print:hidden">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(p);
+                        }}
+                        disabled={deletingId === p.id}
+                        className="text-xs font-medium text-red-700 underline disabled:opacity-50"
+                      >
+                        Futa
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

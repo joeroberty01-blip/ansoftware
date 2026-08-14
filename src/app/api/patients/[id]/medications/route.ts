@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { addMedicationSchema } from "@/lib/validation/patients";
 import { addMedication, listMedications } from "@/lib/repo/patients";
+import { assertPatientAccess } from "@/lib/patient-access";
 
 export async function GET(
   _req: Request,
@@ -16,6 +17,9 @@ export async function GET(
   }
 
   const { id } = await ctx.params;
+  const denied = await assertPatientAccess(session, id);
+  if (denied) return denied;
+
   const medications = await listMedications(id);
   return NextResponse.json({ medications });
 }
@@ -33,6 +37,9 @@ export async function POST(
   }
 
   const { id } = await ctx.params;
+  const denied = await assertPatientAccess(session, id);
+  if (denied) return denied;
+
   const body = await req.json();
   const parsed = addMedicationSchema.safeParse(body);
   if (!parsed.success) {

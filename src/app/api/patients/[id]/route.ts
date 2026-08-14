@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { updatePatientSchema } from "@/lib/validation/patients";
 import { deletePatient, getPatientById, updatePatient } from "@/lib/repo/patients";
+import { assertPatientAccess } from "@/lib/patient-access";
 
 export async function GET(
   _req: Request,
@@ -16,6 +17,9 @@ export async function GET(
   }
 
   const { id } = await ctx.params;
+  const denied = await assertPatientAccess(session, id);
+  if (denied) return denied;
+
   const patient = await getPatientById(id);
   if (!patient) {
     return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
@@ -37,6 +41,9 @@ export async function PATCH(
   }
 
   const { id } = await ctx.params;
+  const denied = await assertPatientAccess(session, id);
+  if (denied) return denied;
+
   const body = await req.json();
   const parsed = updatePatientSchema.safeParse(body);
   if (!parsed.success) {

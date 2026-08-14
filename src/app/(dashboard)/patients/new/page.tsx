@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function NewPatientPage() {
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("FEMALE");
@@ -18,6 +19,13 @@ export default function NewPatientPage() {
   const [chronicConditions, setChronicConditions] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +61,23 @@ export default function NewPatientPage() {
       setSubmitting(false);
     }
   };
+
+  if (isAdmin === null) {
+    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col gap-3 p-6">
+        <h1 className="text-xl font-semibold text-zinc-900">
+          Ongeza Mgonjwa Mpya
+        </h1>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          Huna ruhusa ya kusajili mgonjwa mpya. Wasiliana na Admin.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex max-w-2xl flex-col gap-6 p-6">
