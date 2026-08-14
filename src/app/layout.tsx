@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -16,6 +16,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Afya Nyumbani ERP",
   description: "Afya Nyumbani Home Care Services — management system",
+};
+
+// Explicitly declares this app as light-only. Without this, some mobile
+// browsers (notably Chrome on Android with "Force dark" enabled) heuristically
+// re-theme pages that don't declare a color-scheme, which can invert form
+// input backgrounds/text independently of our own CSS and make typed text
+// invisible.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

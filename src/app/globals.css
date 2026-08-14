@@ -28,3 +28,26 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+/* Belt-and-suspenders on top of `color-scheme: light` above: pin form
+   control text/background explicitly so no browser dark-mode heuristic
+   (e.g. Chrome for Android's "force dark") can invert them independently
+   of the rest of the page. iOS Safari also needs -webkit-appearance reset
+   to stop it applying native (dark-aware) chrome to inputs/selects. */
+input,
+textarea,
+select {
+  background-color: #ffffff;
+  color: #171717;
+}
+
+input,
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #a1a1aa;
+}
