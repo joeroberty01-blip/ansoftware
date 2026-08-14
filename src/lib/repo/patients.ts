@@ -1,4 +1,4 @@
-import { query, queryOne } from "../db";
+import { query, queryOne, withTransaction } from "../db";
 import type {
   PatientDocumentRow,
   PatientMedicationRow,
@@ -120,6 +120,23 @@ export async function updatePatient(
      RETURNING *`,
     params
   );
+}
+
+/**
+ * Deletes a patient permanently. patient_medications and patient_documents
+ * cascade at the DB level; home_visits does not (it has no ON DELETE
+ * clause on patient_id, by design — visits are clinical history), so we
+ * remove those explicitly here in the same transaction.
+ */
+export async function deletePatient(id: string): Promise<boolean> {
+  return withTransaction(async (client) => {
+    await client.query(`DELETE FROM home_visits WHERE patient_id = $1`, [id]);
+    const res = await client.query(
+      `DELETE FROM patients WHERE id = $1 RETURNING id`,
+      [id]
+    );
+    return res.rows.length > 0;
+  });
 }
 
 export async function addMedication(input: {

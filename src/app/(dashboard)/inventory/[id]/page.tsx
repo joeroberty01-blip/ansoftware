@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 interface Item {
   id: string;
@@ -26,11 +26,33 @@ interface Movement {
 
 export default function InventoryItemDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params.id;
 
   const [item, setItem] = useState<Item | null>(null);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingItem, setDeletingItem] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const onDeleteItem = async () => {
+    if (!window.confirm(`Futa item "${item?.name}" KABISA?`)) return;
+    setDeleteError(null);
+    setDeletingItem(true);
+    try {
+      const res = await fetch(`/api/inventory/items/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json();
+        setDeleteError(json.error ?? "Imeshindwa kufuta item.");
+        setDeletingItem(false);
+        return;
+      }
+      router.push("/inventory");
+    } catch {
+      setDeleteError("Hitilafu ya mtandao.");
+      setDeletingItem(false);
+    }
+  };
 
   // --- Edit item ---
   const [editing, setEditing] = useState(false);
@@ -151,14 +173,28 @@ export default function InventoryItemDetailPage() {
           </p>
         </div>
         {!editing && (
-          <button
-            onClick={startEditing}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Hariri
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={startEditing}
+              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            >
+              Hariri
+            </button>
+            <button
+              onClick={onDeleteItem}
+              disabled={deletingItem}
+              className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            >
+              {deletingItem ? "Inafuta..." : "Futa"}
+            </button>
+          </div>
         )}
       </div>
+      {deleteError && (
+        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          {deleteError}
+        </p>
+      )}
 
       {editing ? (
         <form

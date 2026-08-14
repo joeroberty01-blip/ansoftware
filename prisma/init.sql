@@ -19,6 +19,8 @@ CREATE TYPE expense_category AS ENUM ('MISHAHARA', 'VIFAA', 'USAFIRI', 'UENDESHA
 CREATE TYPE stock_movement_type AS ENUM ('IN', 'OUT');
 CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE home_visit_status AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED');
+CREATE TYPE duty_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
+CREATE TYPE bill_status AS ENUM ('PENDING', 'PAID', 'OVERDUE');
 
 -- ================= USERS (AUTH) =================
 CREATE TABLE users (
@@ -64,6 +66,19 @@ CREATE TABLE leave_requests (
   decision_note  TEXT,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE staff_duties (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  staff_id       TEXT NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  title          TEXT NOT NULL,
+  description    TEXT,
+  status         duty_status NOT NULL DEFAULT 'PENDING',
+  due_date       DATE,
+  assigned_by_id TEXT NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_staff_duties_staff_id ON staff_duties(staff_id);
 
 CREATE TABLE payrolls (
   id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -146,6 +161,21 @@ CREATE TABLE expenses (
   created_by_id  TEXT NOT NULL REFERENCES users(id),
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE company_bills (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name           TEXT NOT NULL,
+  category       TEXT NOT NULL,
+  amount         DECIMAL(14,2) NOT NULL CHECK (amount >= 0),
+  due_date       DATE NOT NULL,
+  status         bill_status NOT NULL DEFAULT 'PENDING',
+  paid_at        TIMESTAMPTZ,
+  notes          TEXT,
+  created_by_id  TEXT NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_company_bills_status ON company_bills(status);
 
 -- ================= INVENTORY =================
 CREATE TABLE inventory_items (

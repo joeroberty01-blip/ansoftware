@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { updateHomeVisitSchema } from "@/lib/validation/home-visits";
-import { getHomeVisitById, updateHomeVisit } from "@/lib/repo/home-visits";
+import {
+  deleteHomeVisit,
+  getHomeVisitById,
+  updateHomeVisit,
+} from "@/lib/repo/home-visits";
 
 export async function GET(
   _req: Request,
@@ -64,4 +68,25 @@ export async function PATCH(
   }
 
   return NextResponse.json({ visit });
+}
+
+export async function DELETE(
+  _req: Request,
+  ctx: RouteContext<"/api/home-visits/[id]">
+) {
+  const session = await getCurrentUser();
+  if (!session) {
+    return NextResponse.json(
+      { error: "Unahitaji kuingia kwanza." },
+      { status: 401 }
+    );
+  }
+
+  const { id } = await ctx.params;
+  const deleted = await deleteHomeVisit(id);
+  if (!deleted) {
+    return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true });
 }

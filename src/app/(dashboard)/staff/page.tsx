@@ -113,7 +113,7 @@ export default function StaffListPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Staff</h1>
+        <h1 className="text-xl font-semibold text-zinc-900">Staff Management</h1>
         <div className="flex gap-2">
           <ListToolbar
             filename="staff"

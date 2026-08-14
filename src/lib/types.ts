@@ -150,6 +150,22 @@ export interface ExpenseRow {
   created_at: string;
 }
 
+export type BillStatus = "PENDING" | "PAID" | "OVERDUE";
+
+export interface CompanyBillRow {
+  id: string;
+  name: string;
+  category: string;
+  amount: string;
+  due_date: string;
+  status: BillStatus;
+  paid_at: string | null;
+  notes: string | null;
+  created_by_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type StockMovementType = "IN" | "OUT";
 
 export interface InventoryItemRow {
@@ -219,6 +235,20 @@ export interface PatientDocumentRow {
 }
 
 export type HomeVisitStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
+
+export type DutyStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
+
+export interface StaffDutyRow {
+  id: string;
+  staff_id: string;
+  title: string;
+  description: string | null;
+  status: DutyStatus;
+  due_date: string | null;
+  assigned_by_id: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface HomeVisitRow {
   id: string;

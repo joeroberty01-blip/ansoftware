@@ -23,6 +23,14 @@ const PROTECTED_PREFIXES = [
   "/home-visits",
   "/api/home-visits",
   "/print",
+  "/receipts",
+  "/api/payments",
+  "/expenses",
+  "/api/bills",
+  "/marketing",
+  "/api/marketing",
+  "/settings",
+  "/api/settings",
 ];
 
 const ADMIN_ONLY_PREFIXES = [
@@ -33,6 +41,10 @@ const ADMIN_ONLY_PREFIXES = [
   "/api/expenses",
   "/api/finance",
   "/api/dashboard",
+  "/expenses",
+  "/api/bills",
+  "/marketing",
+  "/api/marketing",
 ];
 
 // "My own profile" routes: STAFF must be able to reach these even though
@@ -106,5 +118,13 @@ export const config = {
     "/home-visits/:path*",
     "/api/home-visits/:path*",
     "/print/:path*",
+    "/receipts/:path*",
+    "/api/payments/:path*",
+    "/expenses/:path*",
+    "/api/bills/:path*",
+    "/marketing/:path*",
+    "/api/marketing/:path*",
+    "/settings/:path*",
+    "/api/settings/:path*",
   ],
 };

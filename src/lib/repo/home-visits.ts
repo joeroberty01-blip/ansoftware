@@ -125,6 +125,11 @@ export async function getHomeVisitById(
   );
 }
 
+export async function deleteHomeVisit(id: string): Promise<boolean> {
+  const rows = await query(`DELETE FROM home_visits WHERE id = $1 RETURNING id`, [id]);
+  return rows.length > 0;
+}
+
 export async function updateHomeVisit(
   id: string,
   patch: {

@@ -138,6 +138,33 @@ export async function createStaffWithUser(input: {
   });
 }
 
+/**
+ * Staff records are never hard-deleted — payrolls.staff_id cascades on
+ * delete, which would erase the person's entire paid-salary history (a
+ * financial audit trail). "Removing" a staff member instead deactivates
+ * them: employment_status -> TERMINATED and their login is blocked
+ * (users.status -> SUSPENDED), in one transaction.
+ */
+export async function deactivateStaff(staffId: string): Promise<StaffRow | null> {
+  return withTransaction(async (client) => {
+    const staffRes = await client.query<StaffRow>(
+      `UPDATE staff SET employment_status = 'TERMINATED', updated_at = now()
+       WHERE id = $1
+       RETURNING *`,
+      [staffId]
+    );
+    const staff = staffRes.rows[0];
+    if (!staff) return null;
+
+    await client.query(
+      `UPDATE users SET status = 'SUSPENDED', updated_at = now() WHERE id = $1`,
+      [staff.user_id]
+    );
+
+    return staff;
+  });
+}
+
 export async function updateStaffProfile(
   staffId: string,
   patch: {

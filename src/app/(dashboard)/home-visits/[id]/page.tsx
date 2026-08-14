@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 interface Visit {
   id: string;
@@ -20,11 +20,13 @@ interface Visit {
 
 export default function HomeVisitDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params.id;
 
   const [visit, setVisit] = useState<Visit | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [status, setStatus] = useState("SCHEDULED");
   const [location, setLocation] = useState("");
@@ -92,6 +94,26 @@ export default function HomeVisitDetailPage() {
     }
   };
 
+  const onDelete = async () => {
+    if (!window.confirm("Futa home visit hii? Hatua hii haiwezi kutenduliwa.")) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/home-visits/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json();
+        setError(json.error ?? "Imeshindwa kufuta.");
+        setDeleting(false);
+        return;
+      }
+      router.push("/home-visits");
+    } catch {
+      setError("Hitilafu ya mtandao.");
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
   }
@@ -112,12 +134,21 @@ export default function HomeVisitDetailPage() {
           </p>
         </div>
         {!editing && (
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Hariri
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            >
+              Hariri
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={deleting}
+              className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            >
+              {deleting ? "Inafuta..." : "Futa"}
+            </button>
+          </div>
         )}
       </div>
 

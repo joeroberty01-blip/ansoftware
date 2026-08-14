@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Patient {
@@ -53,6 +53,7 @@ interface HomeVisit {
 
 export default function PatientDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params.id;
 
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -60,6 +61,39 @@ export default function PatientDetailPage() {
   const [tab, setTab] = useState<"medications" | "documents" | "homeVisits">(
     "medications"
   );
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deletingPatient, setDeletingPatient] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
+      .catch(() => {});
+  }, []);
+
+  const onDeletePatient = async () => {
+    if (
+      !window.confirm(
+        "Futa mgonjwa huyu KABISA? Hii itafuta pia dawa, documents, na home visits zote za mgonjwa huyu. Hatua hii haiwezi kutenduliwa."
+      )
+    ) {
+      return;
+    }
+    setDeletingPatient(true);
+    try {
+      const res = await fetch(`/api/patients/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json();
+        alert(json.error ?? "Imeshindwa kufuta mgonjwa.");
+        setDeletingPatient(false);
+        return;
+      }
+      router.push("/patients");
+    } catch {
+      alert("Hitilafu ya mtandao.");
+      setDeletingPatient(false);
+    }
+  };
 
   const loadPatient = useCallback(async () => {
     setLoading(true);
@@ -256,6 +290,55 @@ export default function PatientDetailPage() {
     loadHomeVisits();
   }, [loadHomeVisits]);
 
+  // --- Quick daily report (add today's visit without leaving this page) ---
+  const [showQuickReport, setShowQuickReport] = useState(false);
+  const [qrBloodPressure, setQrBloodPressure] = useState("");
+  const [qrTemperature, setQrTemperature] = useState("");
+  const [qrPulse, setQrPulse] = useState("");
+  const [qrWeight, setQrWeight] = useState("");
+  const [qrTreatmentNotes, setQrTreatmentNotes] = useState("");
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [qrSubmitting, setQrSubmitting] = useState(false);
+
+  const onAddQuickReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setQrError(null);
+    setQrSubmitting(true);
+    try {
+      const res = await fetch(`/api/home-visits`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId: id,
+          visitDate: new Date().toISOString().slice(0, 10),
+          status: "COMPLETED",
+          location: patient?.address || undefined,
+          bloodPressure: qrBloodPressure || undefined,
+          temperature: qrTemperature || undefined,
+          pulse: qrPulse ? Number(qrPulse) : undefined,
+          weight: qrWeight || undefined,
+          treatmentNotes: qrTreatmentNotes || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setQrError(json.error ?? "Imeshindwa kuongeza ripoti.");
+        return;
+      }
+      setQrBloodPressure("");
+      setQrTemperature("");
+      setQrPulse("");
+      setQrWeight("");
+      setQrTreatmentNotes("");
+      setShowQuickReport(false);
+      await loadHomeVisits();
+    } catch {
+      setQrError("Hitilafu ya mtandao.");
+    } finally {
+      setQrSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
   }
@@ -290,6 +373,15 @@ export default function PatientDetailPage() {
           >
             Print Ripoti (kwa Familia)
           </Link>
+          {isAdmin && !editing && (
+            <button
+              onClick={onDeletePatient}
+              disabled={deletingPatient}
+              className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            >
+              {deletingPatient ? "Inafuta..." : "Futa"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -670,6 +762,100 @@ export default function PatientDetailPage() {
 
       {tab === "homeVisits" && (
         <div className="rounded-lg border border-zinc-200 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-900">
+              Historia ya Ziara
+            </h2>
+            <button
+              onClick={() => setShowQuickReport((v) => !v)}
+              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            >
+              {showQuickReport ? "Funga" : "+ Ripoti ya Leo"}
+            </button>
+          </div>
+
+          {showQuickReport && (
+            <form
+              onSubmit={onAddQuickReport}
+              className="mb-4 flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+            >
+              <p className="text-xs text-zinc-500">
+                Rekodi ripoti/vitals za leo ({new Date().toISOString().slice(0, 10)})
+                kwa mgonjwa huyu bila kuondoka ukurasa huu.
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Blood Pressure
+                  </label>
+                  <input
+                    value={qrBloodPressure}
+                    onChange={(e) => setQrBloodPressure(e.target.value)}
+                    placeholder="mf. 120/80"
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Temp (°C)
+                  </label>
+                  <input
+                    value={qrTemperature}
+                    onChange={(e) => setQrTemperature(e.target.value)}
+                    inputMode="decimal"
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Pulse
+                  </label>
+                  <input
+                    value={qrPulse}
+                    onChange={(e) => setQrPulse(e.target.value)}
+                    inputMode="numeric"
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Weight (kg)
+                  </label>
+                  <input
+                    value={qrWeight}
+                    onChange={(e) => setQrWeight(e.target.value)}
+                    inputMode="decimal"
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-600">
+                  Ripoti ya Matibabu / Taratibu Zilizofanyika (Procedures)
+                </label>
+                <textarea
+                  value={qrTreatmentNotes}
+                  onChange={(e) => setQrTreatmentNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Andika ripoti ya leo na taratibu zilizofanyika kwa mgonjwa..."
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                />
+              </div>
+              {qrError && (
+                <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {qrError}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={qrSubmitting}
+                className="self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              >
+                {qrSubmitting ? "Inahifadhi..." : "Hifadhi Ripoti ya Leo"}
+              </button>
+            </form>
+          )}
+
           {homeVisits.length === 0 ? (
             <p className="text-sm text-zinc-500">
               Hakuna home visits zilizorekodiwa bado.

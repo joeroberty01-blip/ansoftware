@@ -35,3 +35,9 @@ export async function listRecentExpenses(limit = 20): Promise<ExpenseRow[]> {
     [limit]
   );
 }
+
+export async function listAllExpenses(): Promise<ExpenseRow[]> {
+  return query<ExpenseRow>(
+    `SELECT * FROM expenses ORDER BY date DESC, created_at DESC`
+  );
+}

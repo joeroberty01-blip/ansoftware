@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { createExpenseSchema } from "@/lib/validation/expenses";
-import { createExpense, listAllExpenses, listRecentExpenses } from "@/lib/repo/expenses";
+import { createBillSchema } from "@/lib/validation/bills";
+import { createBill, listBills } from "@/lib/repo/bills";
 
 async function requireAdmin() {
   const session = await getCurrentUser();
@@ -27,13 +27,12 @@ async function requireAdmin() {
   return { session, response: null };
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const { session, response } = await requireAdmin();
   if (!session) return response;
 
-  const all = req.nextUrl.searchParams.get("all") === "true";
-  const expenses = all ? await listAllExpenses() : await listRecentExpenses(20);
-  return NextResponse.json({ expenses });
+  const bills = await listBills();
+  return NextResponse.json({ bills });
 }
 
 export async function POST(req: NextRequest) {
@@ -41,7 +40,7 @@ export async function POST(req: NextRequest) {
   if (!session) return response;
 
   const body = await req.json();
-  const parsed = createExpenseSchema.safeParse(body);
+  const parsed = createBillSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
@@ -49,10 +48,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const expense = await createExpense({
+  const bill = await createBill({
     ...parsed.data,
+    notes: parsed.data.notes ? parsed.data.notes : null,
     createdById: session.id,
   });
 
-  return NextResponse.json({ expense }, { status: 201 });
+  return NextResponse.json({ bill }, { status: 201 });
 }

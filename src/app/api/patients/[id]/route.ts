@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { updatePatientSchema } from "@/lib/validation/patients";
-import { getPatientById, updatePatient } from "@/lib/repo/patients";
+import { deletePatient, getPatientById, updatePatient } from "@/lib/repo/patients";
 
 export async function GET(
   _req: Request,
@@ -70,4 +70,28 @@ export async function PATCH(
   }
 
   return NextResponse.json({ patient });
+}
+
+export async function DELETE(
+  _req: Request,
+  ctx: RouteContext<"/api/patients/[id]">
+) {
+  const session = await getCurrentUser();
+  if (!session) {
+    return NextResponse.json(
+      { error: "Unahitaji kuingia kwanza." },
+      { status: 401 }
+    );
+  }
+  if (session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+  }
+
+  const { id } = await ctx.params;
+  const deleted = await deletePatient(id);
+  if (!deleted) {
+    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true });
 }

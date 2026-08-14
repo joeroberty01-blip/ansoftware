@@ -65,6 +65,69 @@ export async function createPayrollForStaff(input: {
   });
 }
 
+/**
+ * Marks a payroll as PAID and, in the same transaction, records the payout
+ * as a company expense (category MISHAHARA) so it flows into the finance
+ * summary automatically. Refused if already paid.
+ */
+export async function paySalary(
+  payrollId: string,
+  paidById: string
+): Promise<PayrollRow> {
+  return withTransaction(async (client) => {
+    const res = await client.query(
+      `SELECT p.*, u.full_name AS staff_name
+       FROM payrolls p
+       JOIN staff s ON s.id = p.staff_id
+       JOIN users u ON u.id = s.user_id
+       WHERE p.id = $1
+       FOR UPDATE`,
+      [payrollId]
+    );
+    const payroll = res.rows[0];
+    if (!payroll) throw new Error("NOT_FOUND");
+    if (payroll.status === "PAID") throw new Error("ALREADY_PAID");
+
+    const updatedRes = await client.query<PayrollRow>(
+      `UPDATE payrolls SET status = 'PAID', paid_at = now(), updated_at = now()
+       WHERE id = $1
+       RETURNING *`,
+      [payrollId]
+    );
+
+    const monthLabel = `${payroll.month}/${payroll.year}`;
+    const expenseRes = await client.query(
+      `INSERT INTO expenses (category, amount, date, description, created_by_id)
+       VALUES ('MISHAHARA', $1, CURRENT_DATE, $2, $3)
+       RETURNING id`,
+      [
+        payroll.net_pay,
+        `Mshahara wa ${payroll.staff_name} — ${monthLabel}`,
+        paidById,
+      ]
+    );
+
+    await logAudit(
+      {
+        userId: paidById,
+        action: "SALARY_PAID",
+        entity: "payroll",
+        entityId: payrollId,
+        amount: payroll.net_pay,
+        meta: {
+          staffId: payroll.staff_id,
+          month: payroll.month,
+          year: payroll.year,
+          expenseId: expenseRes.rows[0].id,
+        },
+      },
+      client
+    );
+
+    return updatedRes.rows[0];
+  });
+}
+
 export async function listPayrollHistory(
   staffId: string,
   year?: number

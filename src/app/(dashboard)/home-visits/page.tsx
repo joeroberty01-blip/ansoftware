@@ -50,6 +50,30 @@ export default function HomeVisitsListPage() {
     load();
   }, [load]);
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const onDelete = async (v: Visit) => {
+    if (
+      !window.confirm(`Futa home visit ya ${v.patient_name} (${v.visit_date.slice(0, 10)})?`)
+    ) {
+      return;
+    }
+    setDeletingId(v.id);
+    try {
+      const res = await fetch(`/api/home-visits/${v.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json();
+        alert(json.error ?? "Imeshindwa kufuta.");
+        return;
+      }
+      await load();
+    } catch {
+      alert("Hitilafu ya mtandao.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
@@ -96,6 +120,7 @@ export default function HomeVisitsListPage() {
                 <th className="py-2 pr-4">Location</th>
                 <th className="py-2 pr-4">BP</th>
                 <th className="py-2 pr-4">Status</th>
+                <th className="py-2 pr-4 print:hidden"></th>
               </tr>
             </thead>
             <tbody>
@@ -117,6 +142,15 @@ export default function HomeVisitsListPage() {
                   <td className="py-2 pr-4">{v.location ?? "-"}</td>
                   <td className="py-2 pr-4">{v.blood_pressure ?? "-"}</td>
                   <td className="py-2 pr-4">{v.status}</td>
+                  <td className="py-2 pr-4 text-right print:hidden">
+                    <button
+                      onClick={() => onDelete(v)}
+                      disabled={deletingId === v.id}
+                      className="text-xs font-medium text-red-700 underline disabled:opacity-50"
+                    >
+                      Futa
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

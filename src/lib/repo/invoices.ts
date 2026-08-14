@@ -429,3 +429,15 @@ export async function getPaymentWithContext(
     [invoiceId, paymentId]
   );
 }
+
+export async function listAllPayments(): Promise<PaymentWithContext[]> {
+  return query<PaymentWithContext>(
+    `SELECT p.*, i.document_number, i.doc_type, i.total_amount, i.amount_paid,
+            c.name AS client_name, u.full_name AS received_by_name
+     FROM payments p
+     JOIN invoices i ON i.id = p.invoice_id
+     JOIN clients c ON c.id = i.client_id
+     JOIN users u ON u.id = p.received_by_id
+     ORDER BY p.paid_at DESC`
+  );
+}

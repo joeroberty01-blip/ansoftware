@@ -44,6 +44,16 @@ interface LeaveRequest {
   decision_note: string | null;
 }
 
+interface Duty {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  due_date: string | null;
+}
+
+const DUTY_STATUSES = ["PENDING", "IN_PROGRESS", "COMPLETED"];
+
 const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"];
 const EMPLOYMENT_STATUSES = ["ACTIVE", "INACTIVE", "TERMINATED"];
 
@@ -69,7 +79,9 @@ export function StaffDetailView({
   isOwnProfile: boolean;
 }) {
   const [staff, setStaff] = useState<Staff>(initialStaff);
-  const [tab, setTab] = useState<"payroll" | "leave" | "performance">("payroll");
+  const [tab, setTab] = useState<"payroll" | "leave" | "duties" | "performance">(
+    "payroll"
+  );
 
   // --- Edit profile (Admin only) ---
   const [editing, setEditing] = useState(false);
@@ -123,6 +135,40 @@ export function StaffDetailView({
     }
   };
 
+  // --- Deactivate (Admin only, not own profile) ---
+  const [deactivating, setDeactivating] = useState(false);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
+
+  const onDeactivate = async () => {
+    if (
+      !window.confirm(
+        `Ondoa ${staff.full_name} kwenye timu? Ataondolewa kwenye orodha ya active staff na hataweza kuingia tena. Historia yake ya payroll haitafutwa.`
+      )
+    ) {
+      return;
+    }
+    setDeactivateError(null);
+    setDeactivating(true);
+    try {
+      const res = await fetch(`/api/staff/${staff.id}/deactivate`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setDeactivateError(json.error ?? "Imeshindwa kuondoa staff.");
+        return;
+      }
+      setStaff((prev) => ({
+        ...prev,
+        employment_status: json.staff.employment_status,
+      }));
+    } catch {
+      setDeactivateError("Hitilafu ya mtandao.");
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
   // --- Photo upload (Admin only) ---
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -161,6 +207,34 @@ export function StaffDetailView({
   const [otherDeductions, setOtherDeductions] = useState("0");
   const [payrollError, setPayrollError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  const onPaySalary = async (payrollId: string) => {
+    if (
+      !window.confirm(
+        "Lipa mshahara huu sasa? Kiasi kitaongezwa kwenye Expenses moja kwa moja."
+      )
+    ) {
+      return;
+    }
+    setPayrollError(null);
+    setPayingId(payrollId);
+    try {
+      const res = await fetch(`/api/payroll/${payrollId}/pay`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPayrollError(json.error ?? "Imeshindwa kulipa mshahara.");
+        return;
+      }
+      await loadPayrolls();
+    } catch {
+      setPayrollError("Hitilafu ya mtandao.");
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   const loadPayrolls = useCallback(async () => {
     setLoadingPayroll(true);
@@ -287,6 +361,105 @@ export function StaffDetailView({
     }
   };
 
+  // --- Duties ---
+  const [duties, setDuties] = useState<Duty[]>([]);
+  const [loadingDuties, setLoadingDuties] = useState(true);
+  const [dutyTitle, setDutyTitle] = useState("");
+  const [dutyDescription, setDutyDescription] = useState("");
+  const [dutyDueDate, setDutyDueDate] = useState("");
+  const [dutyError, setDutyError] = useState<string | null>(null);
+  const [addingDuty, setAddingDuty] = useState(false);
+  const [dutyBusyId, setDutyBusyId] = useState<string | null>(null);
+
+  const dutiesBaseUrl = viewerIsAdmin
+    ? `/api/staff/${staff.id}/duties`
+    : `/api/staff/me/duties`;
+
+  const loadDuties = useCallback(async () => {
+    setLoadingDuties(true);
+    const res = await fetch(dutiesBaseUrl);
+    const json = await res.json();
+    setDuties(json.duties ?? []);
+    setLoadingDuties(false);
+  }, [dutiesBaseUrl]);
+
+  useEffect(() => {
+    loadDuties();
+  }, [loadDuties]);
+
+  const onAddDuty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDutyError(null);
+    setAddingDuty(true);
+    try {
+      const res = await fetch(dutiesBaseUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: dutyTitle,
+          description: dutyDescription || undefined,
+          dueDate: dutyDueDate || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setDutyError(json.error ?? "Imeshindwa kuongeza jukumu.");
+        return;
+      }
+      setDutyTitle("");
+      setDutyDescription("");
+      setDutyDueDate("");
+      await loadDuties();
+    } catch {
+      setDutyError("Hitilafu ya mtandao.");
+    } finally {
+      setAddingDuty(false);
+    }
+  };
+
+  const onDutyStatusChange = async (dutyId: string, status: string) => {
+    setDutyError(null);
+    setDutyBusyId(dutyId);
+    try {
+      const res = await fetch(`${dutiesBaseUrl}/${dutyId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setDutyError(json.error ?? "Imeshindwa kubadili status.");
+        return;
+      }
+      await loadDuties();
+    } catch {
+      setDutyError("Hitilafu ya mtandao.");
+    } finally {
+      setDutyBusyId(null);
+    }
+  };
+
+  const onDeleteDuty = async (dutyId: string) => {
+    if (!window.confirm("Futa jukumu hili?")) return;
+    setDutyError(null);
+    setDutyBusyId(dutyId);
+    try {
+      const res = await fetch(`${dutiesBaseUrl}/${dutyId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        setDutyError(json.error ?? "Imeshindwa kufuta jukumu.");
+        return;
+      }
+      await loadDuties();
+    } catch {
+      setDutyError("Hitilafu ya mtandao.");
+    } finally {
+      setDutyBusyId(null);
+    }
+  };
+
   return (
     <div className="flex max-w-3xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between gap-3">
@@ -332,7 +505,19 @@ export function StaffDetailView({
                 Pakua ID Card (PDF)
               </a>
             )}
+            {viewerIsAdmin && !isOwnProfile && staff.employment_status !== "TERMINATED" && (
+              <button
+                onClick={onDeactivate}
+                disabled={deactivating}
+                className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deactivating ? "Inaondoa..." : "Ondoa Staff"}
+              </button>
+            )}
           </div>
+          {deactivateError && (
+            <p className="text-xs text-red-600">{deactivateError}</p>
+          )}
           {viewerIsAdmin && (
             <label className="cursor-pointer text-xs font-medium text-brand-blue underline">
               {uploadingPhoto ? "Inapakia picha..." : "Pakia/Badilisha Picha"}
@@ -508,6 +693,16 @@ export function StaffDetailView({
           Leave Requests
         </button>
         <button
+          onClick={() => setTab("duties")}
+          className={`px-3 py-2 text-sm font-medium ${
+            tab === "duties"
+              ? "border-b-2 border-zinc-900 text-zinc-900"
+              : "text-zinc-500"
+          }`}
+        >
+          Duties
+        </button>
+        <button
           onClick={() => setTab("performance")}
           className={`px-3 py-2 text-sm font-medium ${
             tab === "performance"
@@ -578,6 +773,7 @@ export function StaffDetailView({
                   <th className="py-2 pr-4 text-right">PAYE</th>
                   <th className="py-2 pr-4 text-right">Net Pay</th>
                   <th className="py-2 pr-4">Status</th>
+                  {viewerIsAdmin && <th className="py-2 pr-4"></th>}
                 </tr>
               </thead>
               <tbody>
@@ -592,7 +788,30 @@ export function StaffDetailView({
                     <td className="py-2 pr-4 text-right font-medium">
                       {fmt(p.net_pay)}
                     </td>
-                    <td className="py-2 pr-4">{p.status}</td>
+                    <td className="py-2 pr-4">
+                      <span
+                        className={
+                          p.status === "PAID"
+                            ? "font-medium text-green-700"
+                            : "font-medium text-amber-700"
+                        }
+                      >
+                        {p.status}
+                      </span>
+                    </td>
+                    {viewerIsAdmin && (
+                      <td className="py-2 pr-4 text-right">
+                        {p.status === "PENDING" && (
+                          <button
+                            onClick={() => onPaySalary(p.id)}
+                            disabled={payingId === p.id}
+                            className="rounded bg-brand-blue px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+                          >
+                            {payingId === p.id ? "Inalipa..." : "Lipa Mshahara"}
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -686,6 +905,101 @@ export function StaffDetailView({
                         )}
                       </td>
                     )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === "duties" && (
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+          {viewerIsAdmin && (
+            <form
+              onSubmit={onAddDuty}
+              className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              <input
+                value={dutyTitle}
+                onChange={(e) => setDutyTitle(e.target.value)}
+                placeholder="Kichwa cha Jukumu"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+              <input
+                value={dutyDescription}
+                onChange={(e) => setDutyDescription(e.target.value)}
+                placeholder="Maelezo (hiari)"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+              <input
+                type="date"
+                value={dutyDueDate}
+                onChange={(e) => setDutyDueDate(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+              <button
+                type="submit"
+                disabled={addingDuty}
+                className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              >
+                {addingDuty ? "Inaongeza..." : "Panga Jukumu"}
+              </button>
+            </form>
+          )}
+          {dutyError && (
+            <p className="mb-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+              {dutyError}
+            </p>
+          )}
+          {loadingDuties ? (
+            <p className="text-sm text-zinc-500">Inapakia...</p>
+          ) : duties.length === 0 ? (
+            <p className="text-sm text-zinc-500">Hakuna majukumu yaliyopangwa.</p>
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                  <th className="py-2 pr-4">Jukumu</th>
+                  <th className="py-2 pr-4">Maelezo</th>
+                  <th className="py-2 pr-4">Deadline</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {duties.map((d) => (
+                  <tr key={d.id} className="border-b border-zinc-100 last:border-0">
+                    <td className="py-2 pr-4 font-medium">{d.title}</td>
+                    <td className="py-2 pr-4">{d.description ?? "-"}</td>
+                    <td className="py-2 pr-4">
+                      {d.due_date?.slice(0, 10) ?? "-"}
+                    </td>
+                    <td className="py-2 pr-4">
+                      <select
+                        value={d.status}
+                        onChange={(e) => onDutyStatusChange(d.id, e.target.value)}
+                        disabled={dutyBusyId === d.id}
+                        className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                      >
+                        {DUTY_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-2 pr-4 text-right">
+                      {viewerIsAdmin && (
+                        <button
+                          onClick={() => onDeleteDuty(d.id)}
+                          disabled={dutyBusyId === d.id}
+                          className="text-xs font-medium text-red-700 underline disabled:opacity-50"
+                        >
+                          Futa
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

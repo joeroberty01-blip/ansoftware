@@ -40,6 +40,28 @@ export default function InventoryListPage() {
 
   const lowStockCount = items.filter((i) => i.is_low_stock).length;
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const onDelete = async (item: Item) => {
+    if (!window.confirm(`Futa item "${item.name}" KABISA?`)) return;
+    setDeletingId(item.id);
+    try {
+      const res = await fetch(`/api/inventory/items/${item.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        alert(json.error ?? "Imeshindwa kufuta.");
+        return;
+      }
+      await load();
+    } catch {
+      alert("Hitilafu ya mtandao.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
@@ -84,6 +106,7 @@ export default function InventoryListPage() {
                 <th className="py-2 pr-4">Unit</th>
                 <th className="py-2 pr-4 text-right">Stock ya Sasa</th>
                 <th className="py-2 pr-4 text-right">Reorder Level</th>
+                <th className="py-2 pr-4 print:hidden"></th>
               </tr>
             </thead>
             <tbody>
@@ -113,6 +136,15 @@ export default function InventoryListPage() {
                     )}
                   </td>
                   <td className="py-2 pr-4 text-right">{item.reorder_level}</td>
+                  <td className="py-2 pr-4 text-right print:hidden">
+                    <button
+                      onClick={() => onDelete(item)}
+                      disabled={deletingId === item.id}
+                      className="text-xs font-medium text-red-700 underline disabled:opacity-50"
+                    >
+                      Futa
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -49,6 +49,47 @@ export async function listPendingStaff(): Promise<UserRow[]> {
   );
 }
 
+export async function updateUserProfile(
+  userId: string,
+  patch: { fullName?: string; phone?: string }
+): Promise<UserRow | null> {
+  const columnMap: Record<string, unknown> = {
+    full_name: patch.fullName,
+    phone: patch.phone,
+  };
+
+  const fields: string[] = [];
+  const params: unknown[] = [];
+  for (const [column, value] of Object.entries(columnMap)) {
+    if (value !== undefined) {
+      params.push(value);
+      fields.push(`${column} = $${params.length}`);
+    }
+  }
+
+  if (fields.length === 0) {
+    return findUserById(userId);
+  }
+
+  params.push(userId);
+  return queryOne<UserRow>(
+    `UPDATE users SET ${fields.join(", ")}, updated_at = now()
+     WHERE id = $${params.length}
+     RETURNING *`,
+    params
+  );
+}
+
+export async function updateUserPassword(
+  userId: string,
+  passwordHash: string
+): Promise<void> {
+  await query(`UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1`, [
+    userId,
+    passwordHash,
+  ]);
+}
+
 export async function updateUserStatus(
   userId: string,
   status: "APPROVED" | "REJECTED" | "SUSPENDED"

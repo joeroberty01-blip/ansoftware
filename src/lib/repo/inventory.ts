@@ -70,6 +70,26 @@ export async function updateItem(
   );
 }
 
+/**
+ * Deletes an item only if it has zero recorded stock movements — otherwise
+ * the item's movement history (the inventory audit trail) would be lost.
+ * Blocked, not silently cascaded, same policy as invoice cancellation.
+ */
+export async function deleteItem(id: string): Promise<void> {
+  const item = await queryOne(`SELECT id FROM inventory_items WHERE id = $1`, [id]);
+  if (!item) throw new Error("NOT_FOUND");
+
+  const movementCount = await queryOne<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM stock_movements WHERE item_id = $1`,
+    [id]
+  );
+  if (Number(movementCount?.count ?? "0") > 0) {
+    throw new Error("HAS_MOVEMENTS");
+  }
+
+  await query(`DELETE FROM inventory_items WHERE id = $1`, [id]);
+}
+
 export async function listItemsWithStock(): Promise<InventoryItemWithStock[]> {
   return query<InventoryItemWithStock>(
     `SELECT ${STOCK_SELECT}

@@ -48,6 +48,32 @@ export default function PatientsListPage() {
     load(search);
   };
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const onDelete = async (p: Patient) => {
+    if (
+      !window.confirm(
+        `Futa mgonjwa "${p.full_name}" KABISA? Hii itafuta pia dawa, documents, na home visits zake zote.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(p.id);
+    try {
+      const res = await fetch(`/api/patients/${p.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json();
+        alert(json.error ?? "Imeshindwa kufuta.");
+        return;
+      }
+      await load(search);
+    } catch {
+      alert("Hitilafu ya mtandao.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
@@ -97,6 +123,7 @@ export default function PatientsListPage() {
                 <th className="py-2 pr-4">Simu</th>
                 <th className="py-2 pr-4">Blood Type</th>
                 <th className="py-2 pr-4">Chronic Conditions</th>
+                <th className="py-2 pr-4 print:hidden"></th>
               </tr>
             </thead>
             <tbody>
@@ -120,6 +147,15 @@ export default function PatientsListPage() {
                   <td className="py-2 pr-4">{p.phone ?? "-"}</td>
                   <td className="py-2 pr-4">{p.blood_type ?? "-"}</td>
                   <td className="py-2 pr-4">{p.chronic_conditions ?? "-"}</td>
+                  <td className="py-2 pr-4 text-right print:hidden">
+                    <button
+                      onClick={() => onDelete(p)}
+                      disabled={deletingId === p.id}
+                      className="text-xs font-medium text-red-700 underline disabled:opacity-50"
+                    >
+                      Futa
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
