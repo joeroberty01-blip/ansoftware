@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 interface Payment {
@@ -34,6 +35,7 @@ function fmt(value: string) {
 }
 
 export default function ReceiptsPage() {
+  const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [methodFilter, setMethodFilter] = useState("");
@@ -102,11 +104,16 @@ export default function ReceiptsPage() {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-zinc-100 last:border-0">
+                <tr
+                  key={p.id}
+                  onClick={() => router.push(`/billing/${p.invoice_id}`)}
+                  className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                >
                   <td className="py-2 pr-4">{p.paid_at.slice(0, 10)}</td>
                   <td className="py-2 pr-4">
                     <a
                       href={`/billing/${p.invoice_id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-zinc-900 underline"
                     >
                       {p.document_number}
@@ -123,6 +130,7 @@ export default function ReceiptsPage() {
                       href={`/print/receipts/${p.invoice_id}/${p.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="text-xs font-medium text-zinc-900 underline"
                     >
                       Print

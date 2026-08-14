@@ -21,6 +21,7 @@ CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE home_visit_status AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED');
 CREATE TYPE duty_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
 CREATE TYPE bill_status AS ENUM ('PENDING', 'PAID', 'OVERDUE');
+CREATE TYPE marketing_platform AS ENUM ('FACEBOOK', 'INSTAGRAM', 'WHATSAPP', 'TIKTOK', 'X', 'OTHER');
 
 -- ================= USERS (AUTH) =================
 CREATE TABLE users (
@@ -272,6 +273,26 @@ CREATE TABLE audit_logs (
   amount     DECIMAL(14,2),
   meta       JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ================= MARKETING =================
+CREATE TABLE marketing_posts (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  title          TEXT NOT NULL,
+  content        TEXT NOT NULL,
+  platform       marketing_platform NOT NULL DEFAULT 'OTHER',
+  ai_generated   BOOLEAN NOT NULL DEFAULT false,
+  created_by_id  TEXT NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_marketing_posts_created_at ON marketing_posts(created_at);
+
+-- ================= APP SETTINGS (generic key/value) =================
+CREATE TABLE app_settings (
+  key         TEXT PRIMARY KEY,
+  value       TEXT,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ================= INDEXES =================

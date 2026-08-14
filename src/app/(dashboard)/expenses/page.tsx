@@ -127,6 +127,12 @@ export default function ExpensesPage() {
   const [billError, setBillError] = useState<string | null>(null);
   const [addingBill, setAddingBill] = useState(false);
   const [billBusyId, setBillBusyId] = useState<string | null>(null);
+  const [editingBillId, setEditingBillId] = useState<string | null>(null);
+  const [editBillName, setEditBillName] = useState("");
+  const [editBillCategory, setEditBillCategory] = useState("");
+  const [editBillAmount, setEditBillAmount] = useState("");
+  const [editBillDueDate, setEditBillDueDate] = useState("");
+  const [savingBillEdit, setSavingBillEdit] = useState(false);
 
   const loadBills = useCallback(async () => {
     setLoadingBills(true);
@@ -193,6 +199,45 @@ export default function ExpensesPage() {
       setBillError("Hitilafu ya mtandao.");
     } finally {
       setBillBusyId(null);
+    }
+  };
+
+  const startEditingBill = (b: Bill) => {
+    setEditingBillId(b.id);
+    setEditBillName(b.name);
+    setEditBillCategory(b.category);
+    setEditBillAmount(b.amount);
+    setEditBillDueDate(b.due_date.slice(0, 10));
+    setBillError(null);
+  };
+
+  const onSaveBillEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBillId) return;
+    setBillError(null);
+    setSavingBillEdit(true);
+    try {
+      const res = await fetch(`/api/bills/${editingBillId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editBillName,
+          category: editBillCategory,
+          amount: editBillAmount,
+          dueDate: editBillDueDate,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setBillError(json.error ?? "Imeshindwa kuhifadhi.");
+        return;
+      }
+      setEditingBillId(null);
+      await loadBills();
+    } catch {
+      setBillError("Hitilafu ya mtandao.");
+    } finally {
+      setSavingBillEdit(false);
     }
   };
 
@@ -408,7 +453,59 @@ export default function ExpensesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bills.map((b) => (
+                  {bills.map((b) =>
+                    editingBillId === b.id ? (
+                      <tr key={b.id} className="border-b border-zinc-100 last:border-0 bg-brand-blue-light/30">
+                        <td className="py-2 pr-4">
+                          <input
+                            type="date"
+                            value={editBillDueDate}
+                            onChange={(e) => setEditBillDueDate(e.target.value)}
+                            className="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+                          />
+                        </td>
+                        <td className="py-2 pr-4">
+                          <input
+                            value={editBillName}
+                            onChange={(e) => setEditBillName(e.target.value)}
+                            className="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+                          />
+                        </td>
+                        <td className="py-2 pr-4">
+                          <input
+                            value={editBillCategory}
+                            onChange={(e) => setEditBillCategory(e.target.value)}
+                            className="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+                          />
+                        </td>
+                        <td className="py-2 pr-4">
+                          <input
+                            value={editBillAmount}
+                            onChange={(e) => setEditBillAmount(e.target.value)}
+                            inputMode="decimal"
+                            className="w-full rounded border border-zinc-300 px-2 py-1 text-right text-sm"
+                          />
+                        </td>
+                        <td className="py-2 pr-4 text-xs text-zinc-500">PENDING</td>
+                        <td className="py-2 pr-4 text-right print:hidden">
+                          <div className="flex justify-end gap-3">
+                            <button
+                              onClick={onSaveBillEdit}
+                              disabled={savingBillEdit}
+                              className="text-xs font-medium text-brand-blue underline disabled:opacity-50"
+                            >
+                              Hifadhi
+                            </button>
+                            <button
+                              onClick={() => setEditingBillId(null)}
+                              className="text-xs font-medium text-zinc-600 underline"
+                            >
+                              Ghairi
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
                     <tr key={b.id} className="border-b border-zinc-100 last:border-0">
                       <td className="py-2 pr-4">{b.due_date.slice(0, 10)}</td>
                       <td className="py-2 pr-4 font-medium">{b.name}</td>
@@ -438,6 +535,13 @@ export default function ExpensesPage() {
                               Lipa
                             </button>
                             <button
+                              onClick={() => startEditingBill(b)}
+                              disabled={billBusyId === b.id}
+                              className="text-xs font-medium text-zinc-700 underline disabled:opacity-50"
+                            >
+                              Hariri
+                            </button>
+                            <button
                               onClick={() => onDeleteBill(b.id)}
                               disabled={billBusyId === b.id}
                               className="text-xs font-medium text-red-700 underline disabled:opacity-50"
@@ -448,7 +552,8 @@ export default function ExpensesPage() {
                         )}
                       </td>
                     </tr>
-                  ))}
+                    )
+                  )}
                 </tbody>
               </table>
             )}

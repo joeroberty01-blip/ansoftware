@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 interface Item {
@@ -23,6 +24,7 @@ const CSV_COLUMNS = [
 ];
 
 export default function InventoryListPage() {
+  const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,13 +115,15 @@ export default function InventoryListPage() {
               {items.map((item) => (
                 <tr
                   key={item.id}
-                  className={`border-b border-zinc-100 last:border-0 hover:bg-zinc-50 ${
+                  onClick={() => router.push(`/inventory/${item.id}`)}
+                  className={`cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50 ${
                     item.is_low_stock ? "bg-amber-50" : ""
                   }`}
                 >
                   <td className="py-2 pr-4">
                     <Link
                       href={`/inventory/${item.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-zinc-900 underline"
                     >
                       {item.name}
@@ -138,7 +142,10 @@ export default function InventoryListPage() {
                   <td className="py-2 pr-4 text-right">{item.reorder_level}</td>
                   <td className="py-2 pr-4 text-right print:hidden">
                     <button
-                      onClick={() => onDelete(item)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(item);
+                      }}
                       disabled={deletingId === item.id}
                       className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                     >

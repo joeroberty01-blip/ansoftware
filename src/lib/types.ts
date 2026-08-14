@@ -279,6 +279,25 @@ export interface AuditLogRow {
   created_at: string;
 }
 
+export type MarketingPlatform =
+  | "FACEBOOK"
+  | "INSTAGRAM"
+  | "WHATSAPP"
+  | "TIKTOK"
+  | "X"
+  | "OTHER";
+
+export interface MarketingPostRow {
+  id: string;
+  title: string;
+  content: string;
+  platform: MarketingPlatform;
+  ai_generated: boolean;
+  created_by_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SessionUser {
   id: string;
   email: string;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 const CSV_COLUMNS = [
@@ -32,6 +33,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function HomeVisitsListPage() {
+  const router = useRouter();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
@@ -127,12 +129,14 @@ export default function HomeVisitsListPage() {
               {visits.map((v) => (
                 <tr
                   key={v.id}
-                  className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                  onClick={() => router.push(`/home-visits/${v.id}`)}
+                  className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
                 >
                   <td className="py-2 pr-4">{v.visit_date.slice(0, 10)}</td>
                   <td className="py-2 pr-4">
                     <Link
                       href={`/home-visits/${v.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-zinc-900 underline"
                     >
                       {v.patient_name}
@@ -144,7 +148,10 @@ export default function HomeVisitsListPage() {
                   <td className="py-2 pr-4">{v.status}</td>
                   <td className="py-2 pr-4 text-right print:hidden">
                     <button
-                      onClick={() => onDelete(v)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(v);
+                      }}
                       disabled={deletingId === v.id}
                       className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                     >

@@ -26,6 +26,62 @@ export async function getClientById(id: string): Promise<ClientRow | null> {
   return queryOne<ClientRow>(`SELECT * FROM clients WHERE id = $1`, [id]);
 }
 
+export async function updateClient(
+  id: string,
+  patch: {
+    name?: string;
+    phone?: string;
+    email?: string | null;
+    type?: string;
+    address?: string | null;
+  }
+): Promise<ClientRow | null> {
+  const columnMap: Record<string, unknown> = {
+    name: patch.name,
+    phone: patch.phone,
+    email: patch.email,
+    type: patch.type,
+    address: patch.address,
+  };
+
+  const fields: string[] = [];
+  const params: unknown[] = [];
+  for (const [column, value] of Object.entries(columnMap)) {
+    if (value !== undefined) {
+      params.push(value);
+      fields.push(`${column} = $${params.length}`);
+    }
+  }
+
+  if (fields.length === 0) {
+    return getClientById(id);
+  }
+
+  params.push(id);
+  return queryOne<ClientRow>(
+    `UPDATE clients SET ${fields.join(", ")}, updated_at = now()
+     WHERE id = $${params.length}
+     RETURNING *`,
+    params
+  );
+}
+
+/** Blocked if any invoice references this client — same "no history loss" policy as elsewhere. */
+export async function deleteClient(id: string): Promise<void> {
+  const client = await getClientById(id);
+  if (!client) throw new Error("NOT_FOUND");
+
+  const invoiceCount = await queryOne<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM invoices WHERE client_id = $1`,
+    [id]
+  );
+  if (Number(invoiceCount?.count ?? "0") > 0) {
+    throw new Error("HAS_INVOICES");
+  }
+
+  await query(`DELETE FROM clients WHERE id = $1`, [id]);
+}
+
 export interface ClientPaymentHistoryRow {
   id: string;
   amount: string;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 const CSV_COLUMNS = [
@@ -24,6 +25,7 @@ interface Patient {
 }
 
 export default function PatientsListPage() {
+  const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -130,11 +132,13 @@ export default function PatientsListPage() {
               {patients.map((p) => (
                 <tr
                   key={p.id}
-                  className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                  onClick={() => router.push(`/patients/${p.id}`)}
+                  className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
                 >
                   <td className="py-2 pr-4">
                     <Link
                       href={`/patients/${p.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-zinc-900 underline"
                     >
                       {p.full_name}
@@ -149,7 +153,10 @@ export default function PatientsListPage() {
                   <td className="py-2 pr-4">{p.chronic_conditions ?? "-"}</td>
                   <td className="py-2 pr-4 text-right print:hidden">
                     <button
-                      onClick={() => onDelete(p)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(p);
+                      }}
                       disabled={deletingId === p.id}
                       className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                     >

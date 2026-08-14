@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 interface Staff {
@@ -43,6 +44,7 @@ function todayDateInput() {
 }
 
 export default function StaffListPage() {
+  const router = useRouter();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -233,11 +235,13 @@ export default function StaffListPage() {
               {staffList.map((s) => (
                 <tr
                   key={s.id}
-                  className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                  onClick={() => router.push(`/staff/${s.id}`)}
+                  className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
                 >
                   <td className="py-2 pr-4">
                     <Link
                       href={`/staff/${s.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-zinc-900 underline"
                     >
                       {s.full_name}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 const CSV_COLUMNS = [
@@ -51,6 +52,7 @@ function formatMoney(value: string) {
 }
 
 export default function BillingPage() {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [docType, setDocType] = useState("");
   const [status, setStatus] = useState("");
@@ -149,18 +151,20 @@ export default function BillingPage() {
               {invoices.map((inv) => (
                 <tr
                   key={inv.id}
-                  className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                  onClick={() => router.push(`/billing/${inv.id}`)}
+                  className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
                 >
                   <td className="py-2 pr-4">
                     <Link
                       href={`/billing/${inv.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-zinc-900 underline"
                     >
                       {inv.document_number}
                     </Link>
                   </td>
                   <td className="py-2 pr-4">{inv.doc_type}</td>
-                  <td className="py-2 pr-4">
+                  <td className="py-2 pr-4" onClick={(e) => e.stopPropagation()}>
                     <Link
                       href={`/billing/clients/${inv.client_id}`}
                       className="text-zinc-700 underline"

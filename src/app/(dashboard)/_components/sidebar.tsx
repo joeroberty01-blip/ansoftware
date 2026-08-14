@@ -90,6 +90,13 @@ const NAV_ITEMS: NavItem[] = [
     group: "other",
   },
   {
+    label: "Marketing Tools",
+    href: "/marketing",
+    icon: Megaphone,
+    hideForStaff: true,
+    group: "other",
+  },
+  {
     label: "Settings",
     href: "/settings",
     icon: Settings,

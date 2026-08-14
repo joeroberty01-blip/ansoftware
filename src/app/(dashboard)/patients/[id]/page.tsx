@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { ClipboardPlus, Stethoscope } from "lucide-react";
 
 interface Patient {
   id: string;
@@ -59,7 +60,7 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"medications" | "documents" | "homeVisits">(
-    "medications"
+    "homeVisits"
   );
   const [isAdmin, setIsAdmin] = useState(false);
   const [deletingPatient, setDeletingPatient] = useState(false);
@@ -768,9 +769,14 @@ export default function PatientDetailPage() {
             </h2>
             <button
               onClick={() => setShowQuickReport((v) => !v)}
-              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm transition-colors ${
+                showQuickReport
+                  ? "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+                  : "bg-brand-blue text-white hover:bg-brand-blue-dark"
+              }`}
             >
-              {showQuickReport ? "Funga" : "+ Ripoti ya Leo"}
+              <ClipboardPlus className="h-4 w-4" />
+              {showQuickReport ? "Funga" : "Ripoti ya Leo"}
             </button>
           </div>
 
@@ -857,9 +863,21 @@ export default function PatientDetailPage() {
           )}
 
           {homeVisits.length === 0 ? (
-            <p className="text-sm text-zinc-500">
-              Hakuna home visits zilizorekodiwa bado.
-            </p>
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-zinc-300 py-10 text-center">
+              <Stethoscope className="h-8 w-8 text-zinc-300" />
+              <p className="text-sm text-zinc-500">
+                Hakuna ziara/ripoti zilizorekodiwa bado kwa mgonjwa huyu.
+              </p>
+              {!showQuickReport && (
+                <button
+                  onClick={() => setShowQuickReport(true)}
+                  className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-blue-dark"
+                >
+                  <ClipboardPlus className="h-4 w-4" />
+                  Andika Ripoti ya Kwanza
+                </button>
+              )}
+            </div>
           ) : (
             <table className="w-full text-left text-sm">
               <thead>

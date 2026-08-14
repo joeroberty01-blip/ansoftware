@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -18,13 +19,6 @@
   --color-brand-orange: #f58220;
   --color-brand-orange-dark: #d96f10;
   --color-brand-orange-light: #fef1e5;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
