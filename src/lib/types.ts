@@ -207,6 +207,7 @@ export interface PatientRow {
   allergies: string | null;
   chronic_conditions: string | null;
   notes: string | null;
+  assigned_staff_id: string | null;
   created_by_id: string;
   created_at: string;
   updated_at: string;

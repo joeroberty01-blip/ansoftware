@@ -26,7 +26,9 @@ export const createPatientSchema = z.object({
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;
 
-export const updatePatientSchema = createPatientSchema.partial();
+export const updatePatientSchema = createPatientSchema.partial().extend({
+  assignedStaffId: z.string().optional().or(z.literal("")),
+});
 
 export const addMedicationSchema = z.object({
   medicationName: z.string().trim().min(2, "Jina la dawa linahitajika"),

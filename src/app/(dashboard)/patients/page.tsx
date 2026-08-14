@@ -12,6 +12,7 @@ const CSV_COLUMNS = [
   { key: "phone", label: "Simu" },
   { key: "blood_type", label: "Blood Type" },
   { key: "chronic_conditions", label: "Chronic Conditions" },
+  { key: "assigned_staff_name", label: "Nurse Aliyepangiwa" },
 ];
 
 interface Patient {
@@ -22,6 +23,7 @@ interface Patient {
   phone: string | null;
   blood_type: string | null;
   chronic_conditions: string | null;
+  assigned_staff_name: string | null;
 }
 
 export default function PatientsListPage() {
@@ -29,11 +31,13 @@ export default function PatientsListPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [mineOnly, setMineOnly] = useState(false);
 
-  const load = useCallback(async (q: string) => {
+  const load = useCallback(async (q: string, mine: boolean) => {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("search", q);
+    if (mine) params.set("assignedToMe", "true");
     const res = await fetch(`/api/patients?${params.toString()}`);
     const json = await res.json();
     setPatients(json.patients ?? []);
@@ -41,13 +45,13 @@ export default function PatientsListPage() {
   }, []);
 
   useEffect(() => {
-    load(search);
+    load(search, mineOnly);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mineOnly]);
 
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    load(search);
+    load(search, mineOnly);
   };
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -68,7 +72,7 @@ export default function PatientsListPage() {
         alert(json.error ?? "Imeshindwa kufuta.");
         return;
       }
-      await load(search);
+      await load(search, mineOnly);
     } catch {
       alert("Hitilafu ya mtandao.");
     } finally {
@@ -95,7 +99,7 @@ export default function PatientsListPage() {
         </div>
       </div>
 
-      <form onSubmit={onSearchSubmit} className="flex gap-2 print:hidden">
+      <form onSubmit={onSearchSubmit} className="flex flex-wrap items-center gap-2 print:hidden">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -107,6 +111,17 @@ export default function PatientsListPage() {
           className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
         >
           Tafuta
+        </button>
+        <button
+          type="button"
+          onClick={() => setMineOnly((v) => !v)}
+          className={`rounded px-3 py-1.5 text-sm font-medium ${
+            mineOnly
+              ? "bg-brand-blue text-white"
+              : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+          }`}
+        >
+          {mineOnly ? "✓ Wagonjwa Wangu" : "Wagonjwa Wangu"}
         </button>
       </form>
 
@@ -125,6 +140,7 @@ export default function PatientsListPage() {
                 <th className="py-2 pr-4">Simu</th>
                 <th className="py-2 pr-4">Blood Type</th>
                 <th className="py-2 pr-4">Chronic Conditions</th>
+                <th className="py-2 pr-4">Nurse Aliyepangiwa</th>
                 <th className="py-2 pr-4 print:hidden"></th>
               </tr>
             </thead>
@@ -151,6 +167,7 @@ export default function PatientsListPage() {
                   <td className="py-2 pr-4">{p.phone ?? "-"}</td>
                   <td className="py-2 pr-4">{p.blood_type ?? "-"}</td>
                   <td className="py-2 pr-4">{p.chronic_conditions ?? "-"}</td>
+                  <td className="py-2 pr-4">{p.assigned_staff_name ?? "-"}</td>
                   <td className="py-2 pr-4 text-right print:hidden">
                     <button
                       onClick={(e) => {

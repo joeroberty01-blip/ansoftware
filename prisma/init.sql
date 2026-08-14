@@ -217,10 +217,12 @@ CREATE TABLE patients (
   allergies               TEXT,
   chronic_conditions      TEXT,
   notes                   TEXT,
+  assigned_staff_id       TEXT REFERENCES staff(id) ON DELETE SET NULL,
   created_by_id           TEXT NOT NULL REFERENCES users(id),
   created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE INDEX idx_patients_assigned_staff ON patients(assigned_staff_id);
 
 CREATE TABLE patient_medications (
   id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,

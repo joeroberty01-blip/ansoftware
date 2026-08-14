@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createPatientSchema } from "@/lib/validation/patients";
 import { createPatient, listPatients } from "@/lib/repo/patients";
+import { getStaffByUserId } from "@/lib/repo/staff";
 
 export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
@@ -14,7 +15,18 @@ export async function GET(req: NextRequest) {
   }
 
   const search = req.nextUrl.searchParams.get("search") ?? undefined;
-  const patients = await listPatients(search);
+  const assignedToMe = req.nextUrl.searchParams.get("assignedToMe") === "true";
+
+  let assignedStaffId: string | undefined;
+  if (assignedToMe) {
+    const ownStaff = await getStaffByUserId(session.id);
+    if (!ownStaff) {
+      return NextResponse.json({ patients: [] });
+    }
+    assignedStaffId = ownStaff.id;
+  }
+
+  const patients = await listPatients({ search, assignedStaffId });
   return NextResponse.json({ patients });
 }
 

@@ -47,6 +47,14 @@ export async function PATCH(
   }
 
   const d = parsed.data;
+
+  if (d.assignedStaffId !== undefined && session.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Ruhusa hairuhusiwi kubadili nurse aliyepangiwa." },
+      { status: 403 }
+    );
+  }
+
   const patient = await updatePatient(id, {
     fullName: d.fullName,
     dateOfBirth: d.dateOfBirth === undefined ? undefined : d.dateOfBirth || null,
@@ -63,6 +71,8 @@ export async function PATCH(
     chronicConditions:
       d.chronicConditions === undefined ? undefined : d.chronicConditions || null,
     notes: d.notes === undefined ? undefined : d.notes || null,
+    assignedStaffId:
+      d.assignedStaffId === undefined ? undefined : d.assignedStaffId || null,
   });
 
   if (!patient) {

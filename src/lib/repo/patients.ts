@@ -73,18 +73,55 @@ export async function countActivePatients(): Promise<number> {
   return parseInt(rows[0]?.count ?? "0", 10);
 }
 
-export async function listPatients(search?: string): Promise<PatientRow[]> {
-  if (search) {
-    return query<PatientRow>(
-      `SELECT * FROM patients WHERE full_name ILIKE $1 ORDER BY full_name ASC`,
-      [`%${search}%`]
-    );
-  }
-  return query<PatientRow>(`SELECT * FROM patients ORDER BY full_name ASC`);
+export interface PatientWithAssignment extends PatientRow {
+  assigned_staff_name: string | null;
 }
 
-export async function getPatientById(id: string): Promise<PatientRow | null> {
-  return queryOne<PatientRow>(`SELECT * FROM patients WHERE id = $1`, [id]);
+const PATIENT_SELECT_WITH_ASSIGNMENT = `
+  p.*,
+  su.full_name AS assigned_staff_name
+`;
+
+export async function listPatients(filters?: {
+  search?: string;
+  assignedStaffId?: string;
+}): Promise<PatientWithAssignment[]> {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters?.search) {
+    params.push(`%${filters.search}%`);
+    conditions.push(`p.full_name ILIKE $${params.length}`);
+  }
+  if (filters?.assignedStaffId) {
+    params.push(filters.assignedStaffId);
+    conditions.push(`p.assigned_staff_id = $${params.length}`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  return query<PatientWithAssignment>(
+    `SELECT ${PATIENT_SELECT_WITH_ASSIGNMENT}
+     FROM patients p
+     LEFT JOIN staff s ON s.id = p.assigned_staff_id
+     LEFT JOIN users su ON su.id = s.user_id
+     ${where}
+     ORDER BY p.full_name ASC`,
+    params
+  );
+}
+
+export async function getPatientById(
+  id: string
+): Promise<PatientWithAssignment | null> {
+  return queryOne<PatientWithAssignment>(
+    `SELECT ${PATIENT_SELECT_WITH_ASSIGNMENT}
+     FROM patients p
+     LEFT JOIN staff s ON s.id = p.assigned_staff_id
+     LEFT JOIN users su ON su.id = s.user_id
+     WHERE p.id = $1`,
+    [id]
+  );
 }
 
 export async function updatePatient(
@@ -102,6 +139,7 @@ export async function updatePatient(
     allergies?: string | null;
     chronicConditions?: string | null;
     notes?: string | null;
+    assignedStaffId?: string | null;
   }
 ): Promise<PatientRow | null> {
   const columnMap: Record<string, unknown> = {
@@ -117,6 +155,7 @@ export async function updatePatient(
     allergies: patch.allergies,
     chronic_conditions: patch.chronicConditions,
     notes: patch.notes,
+    assigned_staff_id: patch.assignedStaffId,
   };
 
   const fields: string[] = [];

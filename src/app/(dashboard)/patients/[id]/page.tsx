@@ -19,6 +19,13 @@ interface Patient {
   allergies: string | null;
   chronic_conditions: string | null;
   notes: string | null;
+  assigned_staff_id: string | null;
+  assigned_staff_name: string | null;
+}
+
+interface StaffOption {
+  id: string;
+  full_name: string;
 }
 
 interface Medication {
@@ -122,8 +129,18 @@ export default function PatientDetailPage() {
   const [editAllergies, setEditAllergies] = useState("");
   const [editChronic, setEditChronic] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editAssignedStaffId, setEditAssignedStaffId] = useState("");
+  const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/staff")
+      .then((r) => r.json())
+      .then((json: { staff?: StaffOption[] }) => setStaffOptions(json.staff ?? []))
+      .catch(() => {});
+  }, [isAdmin]);
 
   const startEditing = () => {
     if (!patient) return;
@@ -139,6 +156,7 @@ export default function PatientDetailPage() {
     setEditAllergies(patient.allergies ?? "");
     setEditChronic(patient.chronic_conditions ?? "");
     setEditNotes(patient.notes ?? "");
+    setEditAssignedStaffId(patient.assigned_staff_id ?? "");
     setEditError(null);
     setEditing(true);
   };
@@ -164,6 +182,7 @@ export default function PatientDetailPage() {
           allergies: editAllergies || undefined,
           chronicConditions: editChronic || undefined,
           notes: editNotes || undefined,
+          ...(isAdmin ? { assignedStaffId: editAssignedStaffId || "" } : {}),
         }),
       });
       const json = await res.json();
@@ -489,6 +508,25 @@ export default function PatientDetailPage() {
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
+            {isAdmin && (
+              <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
+                <label className="text-xs font-medium text-zinc-600">
+                  Nurse Aliyepangiwa (Assigned Nurse)
+                </label>
+                <select
+                  value={editAssignedStaffId}
+                  onChange={(e) => setEditAssignedStaffId(e.target.value)}
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                >
+                  <option value="">-- hakuna --</option>
+                  {staffOptions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
@@ -570,6 +608,10 @@ export default function PatientDetailPage() {
                   ? ` (${patient.emergency_contact_phone})`
                   : ""}
               </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Nurse Aliyepangiwa</p>
+              <p className="font-medium">{patient.assigned_staff_name ?? "-"}</p>
             </div>
             <div className="col-span-2 sm:col-span-3">
               <p className="text-xs text-zinc-500">Mzio (Allergies)</p>
