@@ -13,6 +13,7 @@ import {
   MoreVertical,
   RotateCcw,
   UserPlus,
+  ClipboardList,
   X,
   ArrowUpDown,
 } from "lucide-react";
@@ -261,6 +262,12 @@ export default function StaffListPage() {
   const [assigning, setAssigning] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
+  const [dutyMenuStaffId, setDutyMenuStaffId] = useState<string | null>(null);
+  const [dutyTitle, setDutyTitle] = useState("");
+  const [dutyDueDate, setDutyDueDate] = useState("");
+  const [assigningDuty, setAssigningDuty] = useState(false);
+  const [dutyError, setDutyError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [deptFilter, setDeptFilter] = useState("ALL");
@@ -379,6 +386,40 @@ export default function StaffListPage() {
       alert("Network error.");
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const openDutyMenu = (staffId: string) => {
+    setDutyMenuStaffId(staffId);
+    setDutyTitle("");
+    setDutyDueDate(todayDateInput());
+    setDutyError(null);
+    setOpenMenuId(null);
+  };
+
+  const onAssignDuty = async (staffId: string) => {
+    if (!dutyTitle.trim()) {
+      setDutyError("Task title is required.");
+      return;
+    }
+    setAssigningDuty(true);
+    setDutyError(null);
+    try {
+      const res = await fetch(`/api/staff/${staffId}/duties`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: dutyTitle, dueDate: dutyDueDate }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setDutyError(json.error ?? "Failed to assign task.");
+        return;
+      }
+      setDutyMenuStaffId(null);
+    } catch {
+      setDutyError("Network error.");
+    } finally {
+      setAssigningDuty(false);
     }
   };
 
@@ -776,7 +817,15 @@ export default function StaffListPage() {
                                 className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-sm text-zinc-700 hover:bg-zinc-50"
                               >
                                 <UserPlus className="h-3.5 w-3.5" />
-                                Assign Nurse
+                                Assign Patient
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openDutyMenu(s.id)}
+                                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-sm text-zinc-700 hover:bg-zinc-50"
+                              >
+                                <ClipboardList className="h-3.5 w-3.5" />
+                                Assign Duty
                               </button>
                             </div>
                           </>
@@ -816,6 +865,44 @@ export default function StaffListPage() {
                                 className="mt-3 w-full rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-50"
                               >
                                 {assigning ? "Assigning..." : `Assign (${selectedPatientIds.size})`}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                        {dutyMenuStaffId === s.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setDutyMenuStaffId(null)} />
+                            <div className="absolute right-5 z-20 mt-1 w-72 rounded-lg border border-zinc-200 bg-white p-3 text-left shadow-lg">
+                              <div className="mb-2 flex items-center justify-between">
+                                <p className="text-xs font-semibold text-zinc-700">Assign duty to {s.full_name}</p>
+                                <button type="button" onClick={() => setDutyMenuStaffId(null)} className="text-zinc-400 hover:text-zinc-600">
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <input
+                                  value={dutyTitle}
+                                  onChange={(e) => setDutyTitle(e.target.value)}
+                                  placeholder="Task title"
+                                  className="rounded border border-zinc-300 px-2 py-1.5 text-xs"
+                                />
+                                <input
+                                  type="date"
+                                  value={dutyDueDate}
+                                  onChange={(e) => setDutyDueDate(e.target.value)}
+                                  className="rounded border border-zinc-300 px-2 py-1.5 text-xs"
+                                />
+                              </div>
+                              {dutyError && (
+                                <p className="mt-2 text-xs text-red-600">{dutyError}</p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => onAssignDuty(s.id)}
+                                disabled={assigningDuty}
+                                className="mt-3 w-full rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-50"
+                              >
+                                {assigningDuty ? "Assigning..." : "Assign Duty"}
                               </button>
                             </div>
                           </>
