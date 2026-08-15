@@ -3,7 +3,73 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ClipboardPlus, Stethoscope } from "lucide-react";
+import {
+  ClipboardPlus,
+  User,
+  Phone,
+  Droplet,
+  MapPin,
+  UserRound,
+  Sun,
+  ClipboardList,
+  Pencil,
+  Printer,
+  LogOut,
+  Pill,
+  FileText,
+  Info,
+  Heart,
+  Home,
+  type LucideIcon,
+} from "lucide-react";
+
+function calculateAge(dob: string | null): number | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+function InfoField({
+  icon: Icon,
+  label,
+  value,
+  emptyText = "-",
+  emptyIsWarning = false,
+  className = "",
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string | null | undefined;
+  emptyText?: string;
+  emptyIsWarning?: boolean;
+  className?: string;
+}) {
+  const isEmpty = !value;
+  return (
+    <div className={`flex items-start gap-2.5 ${className}`}>
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-blue-light text-brand-blue">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div>
+        <p className="text-xs text-zinc-500">{label}</p>
+        <p
+          className={`font-medium ${
+            isEmpty && emptyIsWarning ? "text-red-700" : "text-zinc-900"
+          }`}
+        >
+          {value || emptyText}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 interface Patient {
   id: string;
@@ -386,40 +452,57 @@ export default function PatientDetailPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6 p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-            {patient.full_name}
-          </h1>
-          <p className="text-sm text-zinc-600">
-            {patient.gender ?? "-"} — {patient.date_of_birth?.slice(0, 10) ?? "-"}
-          </p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          {!editing && (
-            <button
-              onClick={startEditing}
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
+      <div className="relative overflow-hidden rounded-xl border border-zinc-200 bg-gradient-to-br from-brand-blue-light via-white to-white p-5 shadow-sm">
+        <Heart
+          className="pointer-events-none absolute -top-6 -right-6 h-36 w-36 text-brand-blue/5"
+          strokeWidth={1.5}
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-blue text-white shadow-sm">
+              <User className="h-7 w-7" />
+            </span>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+                {patient.full_name}
+              </h1>
+              <p className="text-sm text-zinc-500">
+                {patient.gender ?? "-"}
+                {calculateAge(patient.date_of_birth) !== null
+                  ? ` · ${calculateAge(patient.date_of_birth)} years`
+                  : ""}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            {!editing && (
+              <button
+                onClick={startEditing}
+                className="flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Hariri
+              </button>
+            )}
+            <Link
+              href={`/print/patients/${id}/report`}
+              target="_blank"
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
-              Hariri
-            </button>
-          )}
-          <Link
-            href={`/print/patients/${id}/report`}
-            target="_blank"
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
-          >
-            Print Ripoti (kwa Familia)
-          </Link>
-          {isAdmin && !editing && (
-            <button
-              onClick={onDeletePatient}
-              disabled={deletingPatient}
-              className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-            >
-              {deletingPatient ? "Inafuta..." : "Futa"}
-            </button>
-          )}
+              <Printer className="h-3.5 w-3.5" />
+              Print Ripoti (kwa Familia)
+            </Link>
+            {isAdmin && !editing && (
+              <button
+                onClick={onDeletePatient}
+                disabled={deletingPatient}
+                className="flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                {deletingPatient ? "Inafuta..." : "Futa"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -605,79 +688,68 @@ export default function PatientDetailPage() {
         </form>
       ) : (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            <div>
-              <p className="text-xs text-zinc-500">Simu</p>
-              <p className="font-medium">{patient.phone ?? "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">Blood Type</p>
-              <p className="font-medium">{patient.blood_type ?? "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">Anwani</p>
-              <p className="font-medium">{patient.address ?? "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">Emergency Contact</p>
-              <p className="font-medium">
-                {patient.emergency_contact_name ?? "-"}
-                {patient.emergency_contact_phone
-                  ? ` (${patient.emergency_contact_phone})`
-                  : ""}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">Nurse Aliyepangiwa</p>
-              <p className="font-medium">{patient.assigned_staff_name ?? "-"}</p>
-            </div>
-            <div className="col-span-2 sm:col-span-3">
-              <p className="text-xs text-zinc-500">Mzio (Allergies)</p>
-              <p className="font-medium text-red-700">
-                {patient.allergies || "Hakuna kilichorekodiwa"}
-              </p>
-            </div>
-            <div className="col-span-2 sm:col-span-3">
-              <p className="text-xs text-zinc-500">Magonjwa Sugu</p>
-              <p className="font-medium">
-                {patient.chronic_conditions || "Hakuna kilichorekodiwa"}
-              </p>
-            </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 text-sm sm:grid-cols-3">
+            <InfoField icon={Phone} label="Simu" value={patient.phone} />
+            <InfoField icon={Droplet} label="Blood Type" value={patient.blood_type} />
+            <InfoField icon={MapPin} label="Anwani" value={patient.address} />
+            <InfoField
+              icon={Phone}
+              label="Emergency Contact"
+              value={
+                patient.emergency_contact_name
+                  ? `${patient.emergency_contact_name}${
+                      patient.emergency_contact_phone
+                        ? ` (${patient.emergency_contact_phone})`
+                        : ""
+                    }`
+                  : null
+              }
+            />
+            <InfoField
+              icon={UserRound}
+              label="Nurse Aliyepangiwa"
+              value={patient.assigned_staff_name}
+            />
+            <InfoField
+              icon={Sun}
+              label="Mzio (Allergies)"
+              value={patient.allergies}
+              emptyText="Hakuna kilichorekodiwa"
+              emptyIsWarning
+            />
+            <InfoField
+              icon={ClipboardList}
+              label="Magonjwa Sugu"
+              value={patient.chronic_conditions}
+              emptyText="Hakuna kilichorekodiwa"
+              emptyIsWarning
+              className="col-span-2 sm:col-span-3"
+            />
           </div>
         </div>
       )}
 
-      <div className="flex gap-2 border-b border-zinc-200">
-        <button
-          onClick={() => setTab("medications")}
-          className={`px-3 py-2 text-sm font-medium ${
-            tab === "medications"
-              ? "border-b-2 border-zinc-900 text-zinc-900"
-              : "text-zinc-500"
-          }`}
-        >
-          Medications
-        </button>
-        <button
-          onClick={() => setTab("documents")}
-          className={`px-3 py-2 text-sm font-medium ${
-            tab === "documents"
-              ? "border-b-2 border-zinc-900 text-zinc-900"
-              : "text-zinc-500"
-          }`}
-        >
-          Documents
-        </button>
-        <button
-          onClick={() => setTab("homeVisits")}
-          className={`px-3 py-2 text-sm font-medium ${
-            tab === "homeVisits"
-              ? "border-b-2 border-zinc-900 text-zinc-900"
-              : "text-zinc-500"
-          }`}
-        >
-          Home Visits
-        </button>
+      <div className="flex gap-4 border-b border-zinc-200 sm:gap-6">
+        {(
+          [
+            { key: "medications", label: "Medications", icon: Pill },
+            { key: "documents", label: "Documents", icon: FileText },
+            { key: "homeVisits", label: "Home Visits", icon: Home },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex items-center gap-1.5 border-b-2 px-1 py-2.5 text-sm font-medium transition-colors ${
+              tab === t.key
+                ? "border-brand-blue text-brand-blue"
+                : "border-transparent text-zinc-500 hover:text-zinc-700"
+            }`}
+          >
+            <t.icon className="h-4 w-4" />
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {tab === "medications" && (
@@ -823,10 +895,20 @@ export default function PatientDetailPage() {
 
       {tab === "homeVisits" && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">
-              Historia ya Ziara
-            </h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-blue-light text-brand-blue">
+                <Home className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-sm font-semibold text-zinc-900">
+                  Historia ya Ziara
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  Angalia na simamia historia ya ziara za mgonjwa nyumbani.
+                </p>
+              </div>
+            </div>
             <button
               onClick={() => setShowQuickReport((v) => !v)}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm transition-colors ${
@@ -958,15 +1040,20 @@ export default function PatientDetailPage() {
           )}
 
           {homeVisits.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-zinc-300 py-10 text-center">
-              <Stethoscope className="h-8 w-8 text-zinc-300" />
-              <p className="text-sm text-zinc-500">
+            <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-zinc-200 bg-zinc-50/50 py-12 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-blue-light text-brand-blue">
+                <ClipboardPlus className="h-8 w-8" />
+              </span>
+              <p className="text-sm font-semibold text-zinc-900">
                 Hakuna ziara/ripoti zilizorekodiwa bado kwa mgonjwa huyu.
+              </p>
+              <p className="max-w-sm text-xs text-zinc-500">
+                Anza kwa kuongeza ripoti mpya ya ziara ya mgonjwa nyumbani.
               </p>
               {!showQuickReport && (
                 <button
                   onClick={() => setShowQuickReport(true)}
-                  className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-blue-dark"
+                  className="mt-1 flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
                 >
                   <ClipboardPlus className="h-4 w-4" />
                   Andika Ripoti ya Kwanza
@@ -1041,6 +1128,14 @@ export default function PatientDetailPage() {
             </table>
             </div>
           )}
+
+          <div className="mt-4 flex items-start gap-2 rounded-lg bg-brand-blue-light/60 px-3 py-2.5 text-xs text-brand-blue">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              Vidokezo: Kila ziara inasaidia kufuatilia maendeleo ya mgonjwa na
+              kuboresha huduma zinazotolewa.
+            </p>
+          </div>
         </div>
       )}
     </div>
