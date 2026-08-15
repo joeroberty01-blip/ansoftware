@@ -108,9 +108,9 @@ function bmiStatus(
 }
 
 const VISIT_STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  COMPLETED: { label: "Imekamilika", className: "bg-green-100 text-green-700" },
-  SCHEDULED: { label: "Imepangwa", className: "bg-brand-blue-light text-brand-blue" },
-  CANCELLED: { label: "Imeghairiwa", className: "bg-red-100 text-red-700" },
+  COMPLETED: { label: "Completed", className: "bg-green-100 text-green-700" },
+  SCHEDULED: { label: "Scheduled", className: "bg-brand-blue-light text-brand-blue" },
+  CANCELLED: { label: "Cancelled", className: "bg-red-100 text-red-700" },
 };
 
 function VisitStatusBadge({ status }: { status: string }) {
@@ -167,7 +167,7 @@ function VitalCard({
               status === "normal" ? "bg-green-500" : "bg-orange-500"
             }`}
           />
-          {status === "normal" ? "Normal" : "Angalia"}
+          {status === "normal" ? "Normal" : "Attention"}
         </span>
       )}
     </div>
@@ -237,7 +237,7 @@ function VitalsTrendChart({
   if (points.length === 0) {
     return (
       <p className="py-8 text-center text-xs text-zinc-400">
-        Hakuna data ya kutosha kuchora grafu.
+        Not enough data to draw a chart.
       </p>
     );
   }
@@ -281,8 +281,8 @@ function VitalsChartTabs({
   const [metric, setMetric] = useState<VitalsChartMetric>("bp");
   const options: { key: VitalsChartMetric; label: string }[] = [
     { key: "bp", label: "BP" },
-    { key: "sukari", label: "Sukari" },
-    { key: "uzito", label: "Uzito" },
+    { key: "sukari", label: "Sugar" },
+    { key: "uzito", label: "Weight" },
     { key: "temp", label: "Temp" },
   ];
   return (
@@ -396,7 +396,7 @@ export default function PatientDetailPage() {
   const onDeletePatient = async () => {
     if (
       !window.confirm(
-        "Futa mgonjwa huyu KABISA? Hii itafuta pia dawa, documents, na home visits zote za mgonjwa huyu. Hatua hii haiwezi kutenduliwa."
+        "Delete mgonjwa huyu KABISA? Hii itafuta pia dawa, documents, na home visits zote za mgonjwa huyu. Hatua hii haiwezi kutenduliwa."
       )
     ) {
       return;
@@ -406,13 +406,13 @@ export default function PatientDetailPage() {
       const res = await fetch(`/api/patients/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error ?? "Imeshindwa kufuta mgonjwa.");
+        alert(json.error ?? "Failed to delete patient.");
         setDeletingPatient(false);
         return;
       }
       router.push("/patients");
     } catch {
-      alert("Hitilafu ya mtandao.");
+      alert("Network error.");
       setDeletingPatient(false);
     }
   };
@@ -448,12 +448,12 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setPhotoError(json.error ?? "Imeshindwa kupakia picha.");
+        setPhotoError(json.error ?? "Failed to upload photo.");
         return;
       }
       setPatient((prev) => (prev ? { ...prev, photo_url: json.patient.photo_url } : prev));
     } catch {
-      setPhotoError("Hitilafu ya mtandao.");
+      setPhotoError("Network error.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -531,13 +531,13 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setEditError(json.error ?? "Imeshindwa kuhifadhi.");
+        setEditError(json.error ?? "Failed to save.");
         return;
       }
       setEditing(false);
       await loadPatient();
     } catch {
-      setEditError("Hitilafu ya mtandao.");
+      setEditError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -579,7 +579,7 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setMedError(json.error ?? "Imeshindwa kuongeza dawa.");
+        setMedError(json.error ?? "Failed to add medication.");
         return;
       }
       setMedName("");
@@ -588,7 +588,7 @@ export default function PatientDetailPage() {
       setMedStartDate("");
       await loadMedications();
     } catch {
-      setMedError("Hitilafu ya mtandao.");
+      setMedError("Network error.");
     } finally {
       setAddingMed(false);
     }
@@ -628,14 +628,14 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setDocError(json.error ?? "Imeshindwa kuongeza document.");
+        setDocError(json.error ?? "Failed to add document.");
         return;
       }
       setDocTitle("");
       setDocNotes("");
       await loadDocuments();
     } catch {
-      setDocError("Hitilafu ya mtandao.");
+      setDocError("Network error.");
     } finally {
       setAddingDoc(false);
     }
@@ -695,7 +695,7 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setQrError(json.error ?? "Imeshindwa kuongeza ripoti.");
+        setQrError(json.error ?? "Failed to add report.");
         return;
       }
       setQrBloodPressure("");
@@ -710,17 +710,17 @@ export default function PatientDetailPage() {
       setShowQuickReport(false);
       await loadHomeVisits();
     } catch {
-      setQrError("Hitilafu ya mtandao.");
+      setQrError("Network error.");
     } finally {
       setQrSubmitting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+    return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!patient) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -820,7 +820,7 @@ export default function PatientDetailPage() {
                   className="flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                  {deletingPatient ? "Inafuta..." : "Futa"}
+                  {deletingPatient ? "Deleting..." : "Delete"}
                 </button>
               )}
             </div>
@@ -836,8 +836,8 @@ export default function PatientDetailPage() {
                 />
                 {bpStatus(latestVisit.blood_pressure) === "warning" ||
                 glucoseStatus(latestVisit.blood_glucose) === "warning"
-                  ? "Inahitaji Uangalizi"
-                  : "Afya Imara"}
+                  ? "Needs Attention"
+                  : "Stable"}
                 <span className="text-zinc-300">·</span>
                 Last updated {latestVisit.visit_date.slice(0, 10)}
               </div>
@@ -854,7 +854,7 @@ export default function PatientDetailPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
               <label className="text-xs font-medium text-zinc-600">
-                Jina Kamili
+                Name Kamili
               </label>
               <input
                 value={editFullName}
@@ -864,7 +864,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Tarehe ya Kuzaliwa
+                Date ya Kuzaliwa
               </label>
               <input
                 type="date"
@@ -895,13 +895,13 @@ export default function PatientDetailPage() {
               <input
                 value={editBloodType}
                 onChange={(e) => setEditBloodType(e.target.value)}
-                placeholder="mf. O+"
+                placeholder="e.g. O+"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Simu
+                Phone
               </label>
               <input
                 value={editPhone}
@@ -911,7 +911,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Barua Pepe
+                Email
               </label>
               <input
                 value={editEmail}
@@ -921,7 +921,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
               <label className="text-xs font-medium text-zinc-600">
-                Anwani
+                Address
               </label>
               <input
                 value={editAddress}
@@ -931,7 +931,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Emergency Contact - Jina
+                Emergency Contact - Name
               </label>
               <input
                 value={editEmergencyName}
@@ -941,7 +941,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Emergency Contact - Simu
+                Emergency Contact - Phone
               </label>
               <input
                 value={editEmergencyPhone}
@@ -952,7 +952,7 @@ export default function PatientDetailPage() {
             {isAdmin && (
               <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
                 <label className="text-xs font-medium text-zinc-600">
-                  Nurse Aliyepangiwa (Assigned Nurse)
+                  Assigned Nurse (Assigned Nurse)
                 </label>
                 <select
                   value={editAssignedStaffId}
@@ -971,7 +971,7 @@ export default function PatientDetailPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Mzio (Allergies)
+              Allergies
             </label>
             <textarea
               value={editAllergies}
@@ -982,7 +982,7 @@ export default function PatientDetailPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Magonjwa Sugu
+              Chronic Conditions
             </label>
             <textarea
               value={editChronic}
@@ -993,7 +993,7 @@ export default function PatientDetailPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Maelezo Mengine
+              Notes Mengine
             </label>
             <textarea
               value={editNotes}
@@ -1015,7 +1015,7 @@ export default function PatientDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : "Hifadhi"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
@@ -1029,9 +1029,9 @@ export default function PatientDetailPage() {
       ) : (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-x-4 gap-y-5 text-sm sm:grid-cols-3">
-            <InfoField icon={Phone} label="Simu" value={patient.phone} />
+            <InfoField icon={Phone} label="Phone" value={patient.phone} />
             <InfoField icon={Droplet} label="Blood Type" value={patient.blood_type} />
-            <InfoField icon={MapPin} label="Anwani" value={patient.address} />
+            <InfoField icon={MapPin} label="Address" value={patient.address} />
             <InfoField
               icon={Phone}
               label="Emergency Contact"
@@ -1047,21 +1047,21 @@ export default function PatientDetailPage() {
             />
             <InfoField
               icon={UserRound}
-              label="Nurse Aliyepangiwa"
+              label="Assigned Nurse"
               value={patient.assigned_staff_name}
             />
             <InfoField
               icon={Sun}
-              label="Mzio (Allergies)"
+              label="Allergies"
               value={patient.allergies}
-              emptyText="Hakuna kilichorekodiwa"
+              emptyText="Nothing recorded"
               emptyIsWarning
             />
             <InfoField
               icon={ClipboardList}
-              label="Magonjwa Sugu"
+              label="Chronic Conditions"
               value={patient.chronic_conditions}
-              emptyText="Hakuna kilichorekodiwa"
+              emptyText="Nothing recorded"
               emptyIsWarning
               className="col-span-2 sm:col-span-3"
             />
@@ -1098,35 +1098,35 @@ export default function PatientDetailPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <VitalCard
               icon={Activity}
-              label="Shinikizo la Damu"
+              label="Blood Pressure"
               value={latestVisit?.blood_pressure ?? "-"}
               unit={latestVisit?.blood_pressure ? "mmHg" : undefined}
               status={bpStatus(latestVisit?.blood_pressure)}
             />
             <VitalCard
               icon={Droplet}
-              label="Sukari (BS)"
+              label="Blood Sugar (BS)"
               value={latestVisit?.blood_glucose ?? "-"}
               unit={latestVisit?.blood_glucose ? "mmol/L" : undefined}
               status={glucoseStatus(latestVisit?.blood_glucose)}
             />
             <VitalCard
               icon={Weight}
-              label="Uzito"
+              label="Weight"
               value={latestVisit?.weight ?? "-"}
               unit={latestVisit?.weight ? "kg" : undefined}
               status={bmiStatus(latestVisit?.weight, latestVisit?.height_cm)}
             />
             <VitalCard
               icon={Ruler}
-              label="Urefu"
+              label="Height"
               value={latestVisit?.height_cm ?? "-"}
               unit={latestVisit?.height_cm ? "cm" : undefined}
             />
             <VitalCard
               icon={Shield}
               label="Allergies"
-              value={patient.allergies || "Hakuna kilichorekodiwa"}
+              value={patient.allergies || "Nothing recorded"}
             />
           </div>
 
@@ -1148,7 +1148,7 @@ export default function PatientDetailPage() {
                     className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
                   >
                     <ClipboardPlus className="h-3.5 w-3.5" />
-                    Ripoti ya Leo
+                    Today's Report
                   </button>
                 </div>
 
@@ -1176,7 +1176,7 @@ export default function PatientDetailPage() {
                           <p className="truncate text-xs text-zinc-500">
                             Nurse: {v.staff_name ?? "-"}
                             {v.blood_pressure ? ` · BP: ${v.blood_pressure} mmHg` : ""}
-                            {v.blood_glucose ? ` · Sukari: ${v.blood_glucose} mmol/L` : ""}
+                            {v.blood_glucose ? ` · Sugar: ${v.blood_glucose} mmol/L` : ""}
                           </p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -1269,7 +1269,7 @@ export default function PatientDetailPage() {
                     <VisitStatusBadge status={upcomingVisit.status} />
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-500">Hakuna ziara iliyopangwa.</p>
+                  <p className="text-sm text-zinc-500">No visit scheduled.</p>
                 )}
               </div>
 
@@ -1280,7 +1280,7 @@ export default function PatientDetailPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <QuickActionButton
                     icon={ClipboardPlus}
-                    label="Ripoti ya Leo"
+                    label="Today's Report"
                     onClick={() => {
                       setTab("homeVisits");
                       setShowQuickReport(true);
@@ -1288,28 +1288,28 @@ export default function PatientDetailPage() {
                   />
                   <QuickActionButton
                     icon={Pill}
-                    label="Ongeza Dawa"
+                    label="Add Medication"
                     onClick={() => setTab("medications")}
                   />
                   <QuickActionButton
                     icon={CalendarClock}
-                    label="Panga Ziara"
+                    label="Schedule Visit"
                     href={`/home-visits/new?patientId=${id}`}
                   />
                   <QuickActionButton
                     icon={Phone}
-                    label="Piga Simu"
+                    label="Call"
                     href={patient.phone ? `tel:${patient.phone}` : undefined}
                     disabled={!patient.phone}
                   />
                   <QuickActionButton
                     icon={StickyNote}
-                    label="Ongeza Note"
+                    label="Add Note"
                     onClick={startEditing}
                   />
                   <QuickActionButton
                     icon={Upload}
-                    label="Pakia Document"
+                    label="Upload Document"
                     onClick={() => setTab("documents")}
                   />
                 </div>
@@ -1317,7 +1317,7 @@ export default function PatientDetailPage() {
 
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-zinc-900">Nyaraka</h2>
+                  <h2 className="text-sm font-semibold text-zinc-900">Documents</h2>
                   <button
                     onClick={() => setTab("documents")}
                     className="text-xs font-medium text-brand-blue hover:underline"
@@ -1326,7 +1326,7 @@ export default function PatientDetailPage() {
                   </button>
                 </div>
                 {documents.length === 0 ? (
-                  <p className="text-sm text-zinc-500">Hakuna nyaraka bado.</p>
+                  <p className="text-sm text-zinc-500">No documents yet.</p>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {documents.slice(0, 3).map((d) => (
@@ -1370,13 +1370,13 @@ export default function PatientDetailPage() {
             <input
               value={medName}
               onChange={(e) => setMedName(e.target.value)}
-              placeholder="Jina la Dawa"
+              placeholder="Medication Name"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
             <input
               value={medDosage}
               onChange={(e) => setMedDosage(e.target.value)}
-              placeholder="Dosage (mf. 500mg)"
+              placeholder="Dosage (e.g. 500mg)"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
             <input
@@ -1396,7 +1396,7 @@ export default function PatientDetailPage() {
               disabled={addingMed}
               className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {addingMed ? "Inaongeza..." : "Ongeza Dawa"}
+              {addingMed ? "Adding..." : "Add Medication"}
             </button>
           </form>
           {medError && (
@@ -1405,7 +1405,7 @@ export default function PatientDetailPage() {
             </p>
           )}
           {medications.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna dawa zilizorekodiwa.</p>
+            <p className="text-sm text-zinc-500">No medications recorded.</p>
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
@@ -1413,7 +1413,7 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Dawa</th>
                   <th className="py-2 pr-4">Dosage</th>
                   <th className="py-2 pr-4">Frequency</th>
-                  <th className="py-2 pr-4">Ilianza</th>
+                  <th className="py-2 pr-4">Started</th>
                 </tr>
               </thead>
               <tbody>
@@ -1442,7 +1442,7 @@ export default function PatientDetailPage() {
             <input
               value={docTitle}
               onChange={(e) => setDocTitle(e.target.value)}
-              placeholder="Jina la Document"
+              placeholder="Document Title"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
             <select
@@ -1459,7 +1459,7 @@ export default function PatientDetailPage() {
             <input
               value={docNotes}
               onChange={(e) => setDocNotes(e.target.value)}
-              placeholder="Maelezo (hiari)"
+              placeholder="Notes (optional)"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
             <button
@@ -1467,7 +1467,7 @@ export default function PatientDetailPage() {
               disabled={addingDoc}
               className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {addingDoc ? "Inaongeza..." : "Ongeza Document"}
+              {addingDoc ? "Adding..." : "Add Document"}
             </button>
           </form>
           {docError && (
@@ -1476,15 +1476,15 @@ export default function PatientDetailPage() {
             </p>
           )}
           {documents.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna documents bado.</p>
+            <p className="text-sm text-zinc-500">No documents yet.</p>
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Jina</th>
-                  <th className="py-2 pr-4">Aina</th>
-                  <th className="py-2 pr-4">Maelezo</th>
-                  <th className="py-2 pr-4">Tarehe</th>
+                  <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">Type</th>
+                  <th className="py-2 pr-4">Notes</th>
+                  <th className="py-2 pr-4">Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -1527,7 +1527,7 @@ export default function PatientDetailPage() {
               }`}
             >
               <ClipboardPlus className="h-4 w-4" />
-              {showQuickReport ? "Funga" : "Ripoti ya Leo"}
+              {showQuickReport ? "Close" : "Today's Report"}
             </button>
           </div>
 
@@ -1548,7 +1548,7 @@ export default function PatientDetailPage() {
                   <input
                     value={qrBloodPressure}
                     onChange={(e) => setQrBloodPressure(e.target.value)}
-                    placeholder="mf. 120/80"
+                    placeholder="e.g. 120/80"
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   />
                 </div>
@@ -1587,61 +1587,61 @@ export default function PatientDetailPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
-                    Sukari / Blood Glucose
+                    Sugar / Blood Glucose
                   </label>
                   <input
                     value={qrBloodGlucose}
                     onChange={(e) => setQrBloodGlucose(e.target.value)}
                     inputMode="decimal"
-                    placeholder="mf. 5.5"
+                    placeholder="e.g. 5.5"
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
-                    Urefu (cm)
+                    Height (cm)
                   </label>
                   <input
                     value={qrHeightCm}
                     onChange={(e) => setQrHeightCm(e.target.value)}
                     inputMode="decimal"
-                    placeholder="mf. 170"
+                    placeholder="e.g. 170"
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   />
                 </div>
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
-                  Chakula / Ulishaji (Food Intake)
+                  Food Intake
                 </label>
                 <input
                   value={qrFoodIntake}
                   onChange={(e) => setQrFoodIntake(e.target.value)}
-                  placeholder="mf. Alikula ugali na mboga, kikombe 1 cha chai..."
+                  placeholder="e.g. Ate ugali and vegetables, one cup of tea..."
                   className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
-                  Taratibu Zilizofanyika (Procedures)
+                  Procedures Performed
                 </label>
                 <textarea
                   value={qrTreatmentNotes}
                   onChange={(e) => setQrTreatmentNotes(e.target.value)}
                   rows={3}
-                  placeholder="mf. Alibadilishiwa bandage, alipimwa sukari, alipewa dawa X..."
+                  placeholder="e.g. Bandage changed, sugar checked, given medication X..."
                   className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
-                  Maendeleo ya Mgonjwa / Maelezo Mengine (Progress Notes)
+                  Patient Progress / Other Notes
                 </label>
                 <textarea
                   value={qrNotes}
                   onChange={(e) => setQrNotes(e.target.value)}
                   rows={3}
-                  placeholder="mf. Hali ya mgonjwa leo, maumivu, hamu ya kula, usingizi, mabadiliko yoyote..."
+                  placeholder="e.g. Patient's condition today, pain, appetite, sleep, any changes..."
                   className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 />
               </div>
@@ -1655,7 +1655,7 @@ export default function PatientDetailPage() {
                 disabled={qrSubmitting}
                 className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {qrSubmitting ? "Inahifadhi..." : "Hifadhi Ripoti ya Leo"}
+                {qrSubmitting ? "Saving..." : "Save Today's Report"}
               </button>
             </form>
           )}
@@ -1686,7 +1686,7 @@ export default function PatientDetailPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Tarehe</th>
+                  <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4">Nurse</th>
                   <th className="py-2 pr-4">Location</th>
                   <th className="py-2 pr-4">Status</th>
@@ -1694,10 +1694,10 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Temp</th>
                   <th className="py-2 pr-4">Pulse</th>
                   <th className="py-2 pr-4">Weight</th>
-                  <th className="py-2 pr-4">Sukari</th>
-                  <th className="py-2 pr-4">Chakula</th>
-                  <th className="py-2 pr-4">Taratibu</th>
-                  <th className="py-2 pr-4">Maendeleo</th>
+                  <th className="py-2 pr-4">Sugar</th>
+                  <th className="py-2 pr-4">Food</th>
+                  <th className="py-2 pr-4">Procedures</th>
+                  <th className="py-2 pr-4">Progress</th>
                 </tr>
               </thead>
               <tbody>

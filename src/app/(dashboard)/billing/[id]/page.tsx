@@ -112,7 +112,7 @@ export default function BillingDetailPage() {
       setReference("");
       await load();
     } catch {
-      setPayError("Hitilafu ya mtandao.");
+      setPayError("Network error.");
     } finally {
       setPaying(false);
     }
@@ -132,7 +132,7 @@ export default function BillingDetailPage() {
       }
       window.location.href = `/billing/${json.invoice.id}`;
     } catch {
-      setConvertError("Hitilafu ya mtandao.");
+      setConvertError("Network error.");
     } finally {
       setConverting(false);
     }
@@ -160,14 +160,14 @@ export default function BillingDetailPage() {
       }
       await load();
     } catch {
-      setCancelError("Hitilafu ya mtandao.");
+      setCancelError("Network error.");
     } finally {
       setCancelling(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+    return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!invoice) {
     return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;

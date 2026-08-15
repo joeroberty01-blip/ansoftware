@@ -110,7 +110,7 @@ export default function DocumentsPage() {
       setShowAdd(false);
       await load(search);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +184,7 @@ export default function DocumentsPage() {
           <input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Maelezo (hiari)"
+            placeholder="Notes (optional)"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
           {error && (
@@ -197,14 +197,14 @@ export default function DocumentsPage() {
             disabled={submitting}
             className="col-span-full self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {submitting ? "Inahifadhi..." : "Hifadhi Document"}
+            {submitting ? "Saving..." : "Hifadhi Document"}
           </button>
         </form>
       )}
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : documents.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna documents bado.</p>
         ) : (

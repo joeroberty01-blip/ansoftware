@@ -41,7 +41,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setServerError("Hitilafu ya mtandao. Jaribu tena.");
+      setServerError("Network error. Jaribu tena.");
     } finally {
       setSubmitting(false);
     }
@@ -68,7 +68,7 @@ export default function LoginPage() {
           <IconInput
             id="email"
             icon={Mail}
-            label="Barua pepe"
+            label="Email"
             type="email"
             autoComplete="email"
             placeholder="wewe@example.com"

@@ -301,7 +301,7 @@ export default function FinancePage() {
       resetForm();
       await loadData(period);
     } catch {
-      setFormError("Hitilafu ya mtandao.");
+      setFormError("Network error.");
     } finally {
       setSubmitting(false);
     }
@@ -466,7 +466,7 @@ export default function FinancePage() {
               <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="mf. Mafuta ya gari"
+                placeholder="e.g. Vehicle fuel"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -488,7 +488,7 @@ export default function FinancePage() {
               disabled={submitting}
               className="mt-1 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {submitting ? "Inaongeza..." : "Ongeza Expense"}
+              {submitting ? "Adding..." : "Ongeza Expense"}
             </button>
           </form>
         </div>
@@ -560,7 +560,7 @@ export default function FinancePage() {
             </button>
           </div>
           {loading ? (
-            <p className="text-sm text-zinc-500">Inapakia...</p>
+            <p className="text-sm text-zinc-500">Loading...</p>
           ) : expenses.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna matumizi bado.</p>
           ) : (
@@ -604,7 +604,7 @@ export default function FinancePage() {
             </div>
           </div>
           {loading ? (
-            <p className="text-sm text-zinc-500">Inapakia...</p>
+            <p className="text-sm text-zinc-500">Loading...</p>
           ) : filteredExpenses.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna matumizi yanayolingana.</p>
           ) : (

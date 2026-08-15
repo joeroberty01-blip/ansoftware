@@ -132,9 +132,9 @@ export function Sidebar({
   );
 
   const groups: { key: NavItem["group"]; label: string }[] = [
-    { key: "main", label: "Huduma" },
-    { key: "billing", label: "Fedha" },
-    { key: "other", label: "Nyingine" },
+    { key: "main", label: "Care" },
+    { key: "billing", label: "Finance" },
+    { key: "other", label: "Other" },
   ];
 
   return (

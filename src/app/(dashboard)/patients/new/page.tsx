@@ -56,14 +56,14 @@ export default function NewPatientPage() {
       }
       router.push(`/patients/${json.patient.id}`);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }
   };
 
   if (isAdmin === null) {
-    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+    return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
 
   if (!isAdmin) {
@@ -132,7 +132,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Barua Pepe (hiari)
+              Email (hiari)
             </label>
             <input
               value={email}
@@ -148,7 +148,7 @@ export default function NewPatientPage() {
             <input
               value={bloodType}
               onChange={(e) => setBloodType(e.target.value)}
-              placeholder="mf. O+"
+              placeholder="e.g. O+"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>
@@ -218,7 +218,7 @@ export default function NewPatientPage() {
           disabled={submitting}
           className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inaongeza..." : "Ongeza Mgonjwa"}
+          {submitting ? "Adding..." : "Ongeza Mgonjwa"}
         </button>
       </form>
     </div>

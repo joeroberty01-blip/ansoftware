@@ -27,7 +27,7 @@ export default function SettingsPage() {
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Settings</h1>
       {loading ? (
-        <p className="text-sm text-zinc-500">Inapakia...</p>
+        <p className="text-sm text-zinc-500">Loading...</p>
       ) : (
         <>
           <ProfileForm initialMe={me} />
@@ -58,12 +58,12 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi.");
+        setError(json.error ?? "Failed to save.");
         return;
       }
-      setMessage("Taarifa zimehifadhiwa.");
+      setMessage("Details saved.");
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -76,7 +76,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
     >
       <h2 className="text-sm font-semibold text-zinc-900">Taarifa Zangu</h2>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Barua Pepe</label>
+        <label className="text-xs font-medium text-zinc-600">Email</label>
         <input
           value={initialMe?.email ?? ""}
           disabled
@@ -112,7 +112,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
         disabled={saving}
         className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
-        {saving ? "Inahifadhi..." : "Hifadhi"}
+        {saving ? "Saving..." : "Hifadhi"}
       </button>
     </form>
   );
@@ -139,15 +139,15 @@ function PasswordForm() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kubadili password.");
+        setError(json.error ?? "Failed to change password.");
         return;
       }
-      setMessage(json.message ?? "Password imebadilishwa.");
+      setMessage(json.message ?? "Password changed.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -158,7 +158,7 @@ function PasswordForm() {
       onSubmit={onSubmit}
       className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
     >
-      <h2 className="text-sm font-semibold text-zinc-900">Badilisha Password</h2>
+      <h2 className="text-sm font-semibold text-zinc-900">Change Password</h2>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-zinc-600">Password ya Sasa</label>
         <input
@@ -204,7 +204,7 @@ function PasswordForm() {
         disabled={saving}
         className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
-        {saving ? "Inabadilisha..." : "Badilisha Password"}
+        {saving ? "Updating..." : "Change Password"}
       </button>
     </form>
   );

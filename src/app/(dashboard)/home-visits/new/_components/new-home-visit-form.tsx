@@ -109,7 +109,7 @@ export function NewHomeVisitForm({
       }
       router.push(`/home-visits/${json.visit.id}`);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }
@@ -217,7 +217,7 @@ export function NewHomeVisitForm({
             <input
               value={bloodPressure}
               onChange={(e) => setBloodPressure(e.target.value)}
-              placeholder="mf. 120/80"
+              placeholder="e.g. 120/80"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>
@@ -261,7 +261,7 @@ export function NewHomeVisitForm({
               value={bloodGlucose}
               onChange={(e) => setBloodGlucose(e.target.value)}
               inputMode="decimal"
-              placeholder="mf. 5.5"
+              placeholder="e.g. 5.5"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>
@@ -272,7 +272,7 @@ export function NewHomeVisitForm({
             <input
               value={foodIntake}
               onChange={(e) => setFoodIntake(e.target.value)}
-              placeholder="mf. Alikula ugali na mboga, kikombe 1 cha chai..."
+              placeholder="e.g. Ate ugali and vegetables, one cup of tea..."
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>

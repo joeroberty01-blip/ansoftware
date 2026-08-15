@@ -86,7 +86,7 @@ export default function ReceiptsPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : filtered.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna risiti bado.</p>
         ) : (

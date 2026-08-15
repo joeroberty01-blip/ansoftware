@@ -17,10 +17,10 @@ import { Sidebar } from "./sidebar";
 import type { UserRole } from "@/lib/types";
 
 const CREATE_LINKS = [
-  { label: "Mgonjwa Mpya", href: "/patients/new" },
-  { label: "Home Visit Mpya", href: "/home-visits/new" },
-  { label: "Invoice/Quotation Mpya", href: "/billing/new" },
-  { label: "Item ya Inventory", href: "/inventory/new" },
+  { label: "New Patient", href: "/patients/new" },
+  { label: "New Home Visit", href: "/home-visits/new" },
+  { label: "New Invoice/Quotation", href: "/billing/new" },
+  { label: "New Inventory Item", href: "/inventory/new" },
 ];
 
 export function DashboardShell({
@@ -223,7 +223,7 @@ export function DashboardShell({
                       className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50"
                     >
                       <LogOut className="h-4 w-4" />
-                      Toka
+                      Logout
                     </button>
                   </div>
                 </>

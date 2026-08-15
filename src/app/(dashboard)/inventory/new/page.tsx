@@ -34,7 +34,7 @@ export default function NewInventoryItemPage() {
       }
       router.push(`/inventory/${json.item.id}`);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }
@@ -54,7 +54,7 @@ export default function NewInventoryItemPage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="mf. Paracetamol 500mg"
+            placeholder="e.g. Paracetamol 500mg"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
         </div>
@@ -72,7 +72,7 @@ export default function NewInventoryItemPage() {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Unit (mf. vidonge, chupa, vipande)
+            Unit (e.g. vidonge, chupa, vipande)
           </label>
           <input
             value={unit}
@@ -103,7 +103,7 @@ export default function NewInventoryItemPage() {
           disabled={submitting}
           className="mt-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inaongeza..." : "Ongeza Item"}
+          {submitting ? "Adding..." : "Ongeza Item"}
         </button>
       </form>
     </div>

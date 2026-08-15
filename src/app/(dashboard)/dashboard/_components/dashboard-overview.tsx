@@ -134,7 +134,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
       </div>
 
       {!data ? (
-        <p className="text-sm text-zinc-500">Inapakia...</p>
+        <p className="text-sm text-zinc-500">Loading...</p>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">

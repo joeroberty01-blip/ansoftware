@@ -41,7 +41,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "You need to sign in first." },
       { status: 401 }
     );
   }
@@ -52,7 +52,7 @@ export async function GET(
   }
 
   if (session.role !== "ADMIN" && staff.user_id !== session.id) {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "Permission denied." }, { status: 403 });
   }
 
   const [photoDataUri, qrDataUri] = await Promise.all([

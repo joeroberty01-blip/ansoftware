@@ -332,7 +332,7 @@ export default function PatientsListPage() {
       }
       await load();
     } catch {
-      alert("Hitilafu ya mtandao.");
+      alert("Network error.");
     } finally {
       setDeletingId(null);
       setOpenMenuId(null);
@@ -357,7 +357,7 @@ export default function PatientsListPage() {
       setAssignStaffId("");
       await load();
     } catch {
-      alert("Hitilafu ya mtandao.");
+      alert("Network error.");
     } finally {
       setAssigning(false);
     }
@@ -485,7 +485,7 @@ export default function PatientsListPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
         {loading ? (
-          <p className="p-5 text-sm text-zinc-500">Inapakia...</p>
+          <p className="p-5 text-sm text-zinc-500">Loading...</p>
         ) : sorted.length === 0 ? (
           <p className="p-5 text-sm text-zinc-500">Hakuna wagonjwa wanaolingana.</p>
         ) : (
@@ -680,7 +680,7 @@ export default function PatientsListPage() {
                                   disabled={deletingId === p.id}
                                   className="block w-full px-3 py-1.5 text-left text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
                                 >
-                                  {deletingId === p.id ? "Inafuta..." : "Futa"}
+                                  {deletingId === p.id ? "Deleting..." : "Futa"}
                                 </button>
                               </div>
                             </>
@@ -735,7 +735,7 @@ export default function PatientsListPage() {
                             disabled={!assignStaffId || assigning}
                             className="mt-2 w-full rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-50"
                           >
-                            {assigning ? "Inaweka..." : "Panga"}
+                            {assigning ? "Assigning..." : "Panga"}
                           </button>
                         </div>
                       </>

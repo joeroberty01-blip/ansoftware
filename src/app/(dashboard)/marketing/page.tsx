@@ -116,7 +116,7 @@ function PostsTab() {
       setContent("");
       await load();
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }
@@ -134,7 +134,7 @@ function PostsTab() {
       }
       await load();
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setBusyId(null);
     }
@@ -169,13 +169,13 @@ function PostsTab() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi.");
+        setError(json.error ?? "Failed to save.");
         return;
       }
       setEditingId(null);
       await load();
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSavingEdit(false);
     }
@@ -192,7 +192,7 @@ function PostsTab() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Kichwa (mf. Promo ya Agosti)"
+            placeholder="Title (e.g. August Promo)"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm sm:col-span-2"
           />
           <select
@@ -222,13 +222,13 @@ function PostsTab() {
           disabled={submitting}
           className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inahifadhi..." : "Hifadhi Post"}
+          {submitting ? "Saving..." : "Hifadhi Post"}
         </button>
       </form>
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : posts.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna posts bado.</p>
         ) : (
@@ -270,7 +270,7 @@ function PostsTab() {
                       disabled={savingEdit}
                       className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                     >
-                      {savingEdit ? "Inahifadhi..." : "Hifadhi"}
+                      {savingEdit ? "Saving..." : "Hifadhi"}
                     </button>
                     <button
                       type="button"
@@ -368,7 +368,7 @@ function AiTab() {
       }
       setResult(json.content);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setGenerating(false);
     }
@@ -389,12 +389,12 @@ function AiTab() {
       });
       if (!res.ok) {
         const json = await res.json();
-        setError(json.error ?? "Imeshindwa kuhifadhi.");
+        setError(json.error ?? "Failed to save.");
         return;
       }
       setSaved(true);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -413,13 +413,13 @@ function AiTab() {
           <input
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="Mada (mf. Huduma mpya za wazee)"
+            placeholder="Topic (e.g. New elderly care services)"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm sm:col-span-2"
           />
           <input
             value={audience}
             onChange={(e) => setAudience(e.target.value)}
-            placeholder="Walengwa (hiari, mf. familia za Dar es Salaam)"
+            placeholder="Audience (optional, e.g. families in Dar es Salaam)"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
           <select
@@ -436,7 +436,7 @@ function AiTab() {
           <input
             value={tone}
             onChange={(e) => setTone(e.target.value)}
-            placeholder="Mtindo (hiari, mf. wa kirafiki)"
+            placeholder="Tone (optional, e.g. friendly)"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm sm:col-span-2"
           />
         </div>
@@ -482,7 +482,7 @@ function AiTab() {
               disabled={saving}
               className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : "Hifadhi kwenye Machapisho"}
+              {saving ? "Saving..." : "Hifadhi kwenye Machapisho"}
             </button>
             {saved && (
               <span className="self-center text-sm text-green-700">
@@ -530,13 +530,13 @@ function LinksTab() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi.");
+        setError(json.error ?? "Failed to save.");
         return;
       }
       setLinks(json.links);
       setMessage("Links zimehifadhiwa.");
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -550,7 +550,7 @@ function LinksTab() {
   ];
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">Inapakia...</p>;
+    return <p className="text-sm text-zinc-500">Loading...</p>;
   }
 
   return (
@@ -597,7 +597,7 @@ function LinksTab() {
         disabled={saving}
         className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
-        {saving ? "Inahifadhi..." : "Hifadhi Links"}
+        {saving ? "Saving..." : "Hifadhi Links"}
       </button>
     </form>
   );

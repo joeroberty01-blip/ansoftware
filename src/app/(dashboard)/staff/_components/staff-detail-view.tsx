@@ -115,7 +115,7 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setEditError(json.error ?? "Imeshindwa kuhifadhi.");
+        setEditError(json.error ?? "Failed to save.");
         return;
       }
       setStaff((prev) => ({
@@ -129,7 +129,7 @@ export function StaffDetailView({
       }));
       setEditing(false);
     } catch {
-      setEditError("Hitilafu ya mtandao.");
+      setEditError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -155,7 +155,7 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setDeactivateError(json.error ?? "Imeshindwa kuondoa staff.");
+        setDeactivateError(json.error ?? "Failed to remove staff.");
         return;
       }
       setStaff((prev) => ({
@@ -163,7 +163,7 @@ export function StaffDetailView({
         employment_status: json.staff.employment_status,
       }));
     } catch {
-      setDeactivateError("Hitilafu ya mtandao.");
+      setDeactivateError("Network error.");
     } finally {
       setDeactivating(false);
     }
@@ -188,12 +188,12 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setPhotoError(json.error ?? "Imeshindwa kupakia picha.");
+        setPhotoError(json.error ?? "Failed to upload photo.");
         return;
       }
       setStaff((prev) => ({ ...prev, photo_url: json.staff.photo_url }));
     } catch {
-      setPhotoError("Hitilafu ya mtandao.");
+      setPhotoError("Network error.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -225,12 +225,12 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setPayrollError(json.error ?? "Imeshindwa kulipa mshahara.");
+        setPayrollError(json.error ?? "Failed to pay salary.");
         return;
       }
       await loadPayrolls();
     } catch {
-      setPayrollError("Hitilafu ya mtandao.");
+      setPayrollError("Network error.");
     } finally {
       setPayingId(null);
     }
@@ -265,13 +265,13 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setPayrollError(json.error ?? "Imeshindwa kutengeneza payroll.");
+        setPayrollError(json.error ?? "Failed to generate payroll.");
         return;
       }
       setOtherDeductions("0");
       await loadPayrolls();
     } catch {
-      setPayrollError("Hitilafu ya mtandao.");
+      setPayrollError("Network error.");
     } finally {
       setGenerating(false);
     }
@@ -315,7 +315,7 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setLeaveError(json.error ?? "Imeshindwa kuomba likizo.");
+        setLeaveError(json.error ?? "Failed to request leave.");
         return;
       }
       setLeaveStart("");
@@ -323,7 +323,7 @@ export function StaffDetailView({
       setLeaveReason("");
       await loadLeaves();
     } catch {
-      setLeaveError("Hitilafu ya mtandao.");
+      setLeaveError("Network error.");
     } finally {
       setRequesting(false);
     }
@@ -340,7 +340,7 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setLeaveError(json.error ?? "Imeshindwa kuamua.");
+        setLeaveError(json.error ?? "Failed to decide.");
         return;
       }
       await loadLeaves();
@@ -355,7 +355,7 @@ export function StaffDetailView({
         }));
       }
     } catch {
-      setLeaveError("Hitilafu ya mtandao.");
+      setLeaveError("Network error.");
     } finally {
       setDecidingId(null);
     }
@@ -403,7 +403,7 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setDutyError(json.error ?? "Imeshindwa kuongeza jukumu.");
+        setDutyError(json.error ?? "Failed to add task.");
         return;
       }
       setDutyTitle("");
@@ -411,7 +411,7 @@ export function StaffDetailView({
       setDutyDueDate("");
       await loadDuties();
     } catch {
-      setDutyError("Hitilafu ya mtandao.");
+      setDutyError("Network error.");
     } finally {
       setAddingDuty(false);
     }
@@ -428,12 +428,12 @@ export function StaffDetailView({
       });
       const json = await res.json();
       if (!res.ok) {
-        setDutyError(json.error ?? "Imeshindwa kubadili status.");
+        setDutyError(json.error ?? "Failed to change status.");
         return;
       }
       await loadDuties();
     } catch {
-      setDutyError("Hitilafu ya mtandao.");
+      setDutyError("Network error.");
     } finally {
       setDutyBusyId(null);
     }
@@ -449,12 +449,12 @@ export function StaffDetailView({
       });
       if (!res.ok) {
         const json = await res.json();
-        setDutyError(json.error ?? "Imeshindwa kufuta jukumu.");
+        setDutyError(json.error ?? "Failed to delete task.");
         return;
       }
       await loadDuties();
     } catch {
-      setDutyError("Hitilafu ya mtandao.");
+      setDutyError("Network error.");
     } finally {
       setDutyBusyId(null);
     }
@@ -511,7 +511,7 @@ export function StaffDetailView({
                 disabled={deactivating}
                 className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
               >
-                {deactivating ? "Inaondoa..." : "Ondoa Staff"}
+                {deactivating ? "Removing..." : "Remove Staff"}
               </button>
             )}
           </div>
@@ -520,7 +520,7 @@ export function StaffDetailView({
           )}
           {viewerIsAdmin && (
             <label className="cursor-pointer text-xs font-medium text-brand-blue underline">
-              {uploadingPhoto ? "Inapakia picha..." : "Pakia/Badilisha Picha"}
+              {uploadingPhoto ? "Uploading photo..." : "Upload/Change Photo"}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -619,7 +619,7 @@ export function StaffDetailView({
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : "Hifadhi"}
+              {saving ? "Saving..." : "Hifadhi"}
             </button>
             <button
               type="button"
@@ -760,7 +760,7 @@ export function StaffDetailView({
             </p>
           )}
           {loadingPayroll ? (
-            <p className="text-sm text-zinc-500">Inapakia...</p>
+            <p className="text-sm text-zinc-500">Loading...</p>
           ) : payrolls.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna payroll bado.</p>
           ) : (
@@ -808,7 +808,7 @@ export function StaffDetailView({
                             disabled={payingId === p.id}
                             className="rounded bg-brand-blue px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                           >
-                            {payingId === p.id ? "Inalipa..." : "Lipa Mshahara"}
+                            {payingId === p.id ? "Inalipa..." : "Pay Salary"}
                           </button>
                         )}
                       </td>
@@ -862,7 +862,7 @@ export function StaffDetailView({
             </p>
           )}
           {loadingLeave ? (
-            <p className="text-sm text-zinc-500">Inapakia...</p>
+            <p className="text-sm text-zinc-500">Loading...</p>
           ) : leaves.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna maombi ya likizo.</p>
           ) : (
@@ -933,7 +933,7 @@ export function StaffDetailView({
               <input
                 value={dutyDescription}
                 onChange={(e) => setDutyDescription(e.target.value)}
-                placeholder="Maelezo (hiari)"
+                placeholder="Notes (optional)"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <input
@@ -947,7 +947,7 @@ export function StaffDetailView({
                 disabled={addingDuty}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {addingDuty ? "Inaongeza..." : "Panga Jukumu"}
+                {addingDuty ? "Adding..." : "Panga Jukumu"}
               </button>
             </form>
           )}
@@ -957,7 +957,7 @@ export function StaffDetailView({
             </p>
           )}
           {loadingDuties ? (
-            <p className="text-sm text-zinc-500">Inapakia...</p>
+            <p className="text-sm text-zinc-500">Loading...</p>
           ) : duties.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna majukumu yaliyopangwa.</p>
           ) : (

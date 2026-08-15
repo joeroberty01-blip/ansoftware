@@ -11,7 +11,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "You need to sign in first." },
       { status: 401 }
     );
   }

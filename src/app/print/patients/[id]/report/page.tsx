@@ -69,12 +69,12 @@ export default async function PatientReportPrintPage(
         <div className="mt-3 text-sm">
           <span className="text-zinc-600">Mzio (Allergies): </span>
           <span className="font-medium text-red-700">
-            {patient.allergies || "Hakuna kilichorekodiwa"}
+            {patient.allergies || "Nothing recorded"}
           </span>
         </div>
         <div className="mt-1 text-sm">
           <span className="text-zinc-600">Magonjwa Sugu: </span>
-          {patient.chronic_conditions || "Hakuna kilichorekodiwa"}
+          {patient.chronic_conditions || "Nothing recorded"}
         </div>
       </div>
 

@@ -108,7 +108,7 @@ export default function NewBillingPage() {
       }
       router.push(`/billing/${json.invoice.id}`);
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }

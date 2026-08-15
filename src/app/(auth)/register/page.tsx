@@ -115,7 +115,7 @@ function AdminForm() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setServerError("Hitilafu ya mtandao. Jaribu tena.");
+      setServerError("Network error. Jaribu tena.");
     } finally {
       setSubmitting(false);
     }
@@ -130,7 +130,7 @@ function AdminForm() {
       <IconInput
         id="admin-fullName"
         icon={User}
-        label="Jina kamili"
+        label="Full name"
         placeholder="Joe Robert"
         error={errors.fullName?.message}
         {...register("fullName")}
@@ -139,7 +139,7 @@ function AdminForm() {
       <IconInput
         id="admin-email"
         icon={Mail}
-        label="Barua pepe"
+        label="Email"
         type="email"
         autoComplete="email"
         placeholder="joe@example.com"
@@ -150,7 +150,7 @@ function AdminForm() {
       <IconInput
         id="admin-phone"
         icon={Phone}
-        label="Namba ya simu"
+        label="Phone number"
         type="tel"
         placeholder="0700 000 000"
         error={errors.phone?.message}
@@ -235,7 +235,7 @@ function StaffForm() {
       }
       setRegistered(true);
     } catch {
-      setServerError("Hitilafu ya mtandao. Jaribu tena.");
+      setServerError("Network error. Jaribu tena.");
     } finally {
       setSubmitting(false);
     }
@@ -266,7 +266,7 @@ function StaffForm() {
       <IconInput
         id="staff-fullName"
         icon={User}
-        label="Jina kamili"
+        label="Full name"
         placeholder="Jina lako"
         error={errors.fullName?.message}
         {...register("fullName")}
@@ -275,7 +275,7 @@ function StaffForm() {
       <IconInput
         id="staff-email"
         icon={Mail}
-        label="Barua pepe"
+        label="Email"
         type="email"
         autoComplete="email"
         placeholder="wewe@example.com"
@@ -286,7 +286,7 @@ function StaffForm() {
       <IconInput
         id="staff-phone"
         icon={Phone}
-        label="Namba ya simu"
+        label="Phone number"
         type="tel"
         placeholder="0700 000 000"
         error={errors.phone?.message}

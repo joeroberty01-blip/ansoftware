@@ -90,13 +90,13 @@ export default function HomeVisitDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi.");
+        setError(json.error ?? "Failed to save.");
         return;
       }
       setEditing(false);
       await load();
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -117,13 +117,13 @@ export default function HomeVisitDetailPage() {
       }
       router.push("/home-visits");
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
       setDeleting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+    return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!visit) {
     return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
@@ -154,7 +154,7 @@ export default function HomeVisitDetailPage() {
               disabled={deleting}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {deleting ? "Inafuta..." : "Futa"}
+              {deleting ? "Deleting..." : "Futa"}
             </button>
           </div>
         )}
@@ -242,7 +242,7 @@ export default function HomeVisitDetailPage() {
                 value={bloodGlucose}
                 onChange={(e) => setBloodGlucose(e.target.value)}
                 inputMode="decimal"
-                placeholder="mf. 5.5"
+                placeholder="e.g. 5.5"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -253,7 +253,7 @@ export default function HomeVisitDetailPage() {
               <input
                 value={foodIntake}
                 onChange={(e) => setFoodIntake(e.target.value)}
-                placeholder="mf. Alikula ugali na mboga..."
+                placeholder="e.g. Ate ugali and vegetables..."
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -293,7 +293,7 @@ export default function HomeVisitDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : "Hifadhi"}
+              {saving ? "Saving..." : "Hifadhi"}
             </button>
             <button
               type="button"
@@ -349,7 +349,7 @@ export default function HomeVisitDetailPage() {
           <div className="mt-4">
             <p className="text-xs text-zinc-500">Maelezo ya Matibabu</p>
             <p className="mt-1 text-sm">
-              {visit.treatment_notes || "Hakuna kilichorekodiwa"}
+              {visit.treatment_notes || "Nothing recorded"}
             </p>
           </div>
           {visit.notes && (

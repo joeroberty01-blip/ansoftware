@@ -41,12 +41,12 @@ export default function PendingStaffPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuamua.");
+        setError(json.error ?? "Failed to decide.");
         return;
       }
       await load();
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setDecidingId(null);
     }
@@ -74,7 +74,7 @@ export default function PendingStaffPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : pending.length === 0 ? (
           <p className="text-sm text-zinc-500">
             Hakuna staff wanaosubiri idhini.
@@ -85,7 +85,7 @@ export default function PendingStaffPage() {
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
-                <th className="py-2 pr-4">Barua pepe</th>
+                <th className="py-2 pr-4">Email</th>
                 <th className="py-2 pr-4">Simu</th>
                 <th className="py-2 pr-4">Aliomba</th>
                 <th className="py-2 pr-4"></th>

@@ -74,7 +74,7 @@ export default function HomeVisitsListPage() {
       }
       await load();
     } catch {
-      alert("Hitilafu ya mtandao.");
+      alert("Network error.");
     } finally {
       setDeletingId(null);
     }
@@ -113,7 +113,7 @@ export default function HomeVisitsListPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : visits.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna home visits bado.</p>
         ) : (

@@ -58,7 +58,7 @@ export default function InventoryAlertsPage() {
           Low Stock ({lowStock.length})
         </h2>
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : lowStock.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna items chini ya reorder level.</p>
         ) : (
@@ -101,7 +101,7 @@ export default function InventoryAlertsPage() {
           Zinazokaribia Kuisha (siku 60) ({expiring.length})
         </h2>
         {loading ? (
-          <p className="text-sm text-zinc-500">Inapakia...</p>
+          <p className="text-sm text-zinc-500">Loading...</p>
         ) : expiring.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna batch zinazokaribia kuisha.</p>
         ) : (

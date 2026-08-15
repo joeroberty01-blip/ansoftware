@@ -111,7 +111,7 @@ export default function ExpensesPage() {
       setExpDescription("");
       await loadExpenses();
     } catch {
-      setExpError("Hitilafu ya mtandao.");
+      setExpError("Network error.");
     } finally {
       setAddingExpense(false);
     }
@@ -171,7 +171,7 @@ export default function ExpensesPage() {
       setBillAmount("");
       await loadBills();
     } catch {
-      setBillError("Hitilafu ya mtandao.");
+      setBillError("Network error.");
     } finally {
       setAddingBill(false);
     }
@@ -196,7 +196,7 @@ export default function ExpensesPage() {
       }
       await Promise.all([loadBills(), loadExpenses()]);
     } catch {
-      setBillError("Hitilafu ya mtandao.");
+      setBillError("Network error.");
     } finally {
       setBillBusyId(null);
     }
@@ -229,13 +229,13 @@ export default function ExpensesPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setBillError(json.error ?? "Imeshindwa kuhifadhi.");
+        setBillError(json.error ?? "Failed to save.");
         return;
       }
       setEditingBillId(null);
       await loadBills();
     } catch {
-      setBillError("Hitilafu ya mtandao.");
+      setBillError("Network error.");
     } finally {
       setSavingBillEdit(false);
     }
@@ -254,7 +254,7 @@ export default function ExpensesPage() {
       }
       await loadBills();
     } catch {
-      setBillError("Hitilafu ya mtandao.");
+      setBillError("Network error.");
     } finally {
       setBillBusyId(null);
     }
@@ -342,7 +342,7 @@ export default function ExpensesPage() {
                 disabled={addingExpense}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {addingExpense ? "Inaongeza..." : "Ongeza Expense"}
+                {addingExpense ? "Adding..." : "Ongeza Expense"}
               </button>
             </form>
             {expError && (
@@ -354,7 +354,7 @@ export default function ExpensesPage() {
 
           <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             {loadingExpenses ? (
-              <p className="text-sm text-zinc-500">Inapakia...</p>
+              <p className="text-sm text-zinc-500">Loading...</p>
             ) : expenses.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna matumizi bado.</p>
             ) : (
@@ -391,7 +391,7 @@ export default function ExpensesPage() {
         <>
           <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
             <h2 className="mb-4 text-sm font-semibold text-zinc-900">
-              Ongeza Bill (mf. Umeme, Maji, Kodi ya Ofisi, Internet)
+              Add Bill (e.g. Electricity, Water, Office Rent, Internet)
             </h2>
             <form
               onSubmit={onAddBill}
@@ -406,7 +406,7 @@ export default function ExpensesPage() {
               <input
                 value={billCategory}
                 onChange={(e) => setBillCategory(e.target.value)}
-                placeholder="Category (mf. Umeme)"
+                placeholder="Category (e.g. Umeme)"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <input
@@ -427,7 +427,7 @@ export default function ExpensesPage() {
                 disabled={addingBill}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {addingBill ? "Inaongeza..." : "Ongeza Bill"}
+                {addingBill ? "Adding..." : "Add Bill"}
               </button>
             </form>
             {billError && (
@@ -439,7 +439,7 @@ export default function ExpensesPage() {
 
           <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             {loadingBills ? (
-              <p className="text-sm text-zinc-500">Inapakia...</p>
+              <p className="text-sm text-zinc-500">Loading...</p>
             ) : bills.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna bills bado.</p>
             ) : (

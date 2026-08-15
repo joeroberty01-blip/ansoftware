@@ -49,7 +49,7 @@ export default function InventoryItemDetailPage() {
       }
       router.push("/inventory");
     } catch {
-      setDeleteError("Hitilafu ya mtandao.");
+      setDeleteError("Network error.");
       setDeletingItem(false);
     }
   };
@@ -90,13 +90,13 @@ export default function InventoryItemDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setEditError(json.error ?? "Imeshindwa kuhifadhi.");
+        setEditError(json.error ?? "Failed to save.");
         return;
       }
       setEditing(false);
       await load();
     } catch {
-      setEditError("Hitilafu ya mtandao.");
+      setEditError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -150,14 +150,14 @@ export default function InventoryItemDetailPage() {
       setReference("");
       await load();
     } catch {
-      setError("Hitilafu ya mtandao.");
+      setError("Network error.");
     } finally {
       setSubmitting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+    return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!item) {
     return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
@@ -185,7 +185,7 @@ export default function InventoryItemDetailPage() {
               disabled={deletingItem}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {deletingItem ? "Inafuta..." : "Futa"}
+              {deletingItem ? "Deleting..." : "Futa"}
             </button>
           </div>
         )}
@@ -255,7 +255,7 @@ export default function InventoryItemDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : "Hifadhi"}
+              {saving ? "Saving..." : "Hifadhi"}
             </button>
             <button
               type="button"

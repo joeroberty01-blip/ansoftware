@@ -112,13 +112,13 @@ export default function ClientBillingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setEditError(json.error ?? "Imeshindwa kuhifadhi.");
+        setEditError(json.error ?? "Failed to save.");
         return;
       }
       setEditing(false);
       await load();
     } catch {
-      setEditError("Hitilafu ya mtandao.");
+      setEditError("Network error.");
     } finally {
       setSaving(false);
     }
@@ -138,13 +138,13 @@ export default function ClientBillingDetailPage() {
       }
       router.push("/billing");
     } catch {
-      setDeleteError("Hitilafu ya mtandao.");
+      setDeleteError("Network error.");
       setDeleting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6 text-sm text-zinc-500">Inapakia...</div>;
+    return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!client) {
     return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
@@ -175,7 +175,7 @@ export default function ClientBillingDetailPage() {
               disabled={deleting}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {deleting ? "Inafuta..." : "Futa"}
+              {deleting ? "Deleting..." : "Futa"}
             </button>
           </div>
         )}
@@ -224,7 +224,7 @@ export default function ClientBillingDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Barua Pepe
+                Email
               </label>
               <input
                 value={editEmail}
@@ -252,7 +252,7 @@ export default function ClientBillingDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : "Hifadhi"}
+              {saving ? "Saving..." : "Hifadhi"}
             </button>
             <button
               type="button"
