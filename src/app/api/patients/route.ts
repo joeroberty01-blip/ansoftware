@@ -16,11 +16,12 @@ export async function GET(req: NextRequest) {
 
   const search = req.nextUrl.searchParams.get("search") ?? undefined;
   const assignedToMe = req.nextUrl.searchParams.get("assignedToMe") === "true";
+  const staffIdParam = req.nextUrl.searchParams.get("staffId") ?? undefined;
 
   let assignedStaffId: string | undefined;
   if (session.role !== "ADMIN") {
     // Staff can only ever see patients assigned to them — not an optional
-    // filter, always enforced regardless of the assignedToMe query param.
+    // filter, always enforced regardless of any query param.
     const ownStaff = await getStaffByUserId(session.id);
     if (!ownStaff) {
       return NextResponse.json({ patients: [] });
@@ -32,6 +33,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ patients: [] });
     }
     assignedStaffId = ownStaff.id;
+  } else if (staffIdParam) {
+    // Admin looking up a specific staff member's assigned patients
+    // (e.g. from that staff member's detail page).
+    assignedStaffId = staffIdParam;
   }
 
   const patients = await listPatients({ search, assignedStaffId });

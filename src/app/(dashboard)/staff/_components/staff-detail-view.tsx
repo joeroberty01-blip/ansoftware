@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { relativeDays } from "@/lib/date-utils";
 
 interface Staff {
   id: string;
@@ -52,6 +54,15 @@ interface Duty {
   due_date: string | null;
 }
 
+interface AssignedPatient {
+  id: string;
+  full_name: string;
+  patient_number: string | null;
+  gender: string | null;
+  phone: string | null;
+  last_visit_date: string | null;
+}
+
 const DUTY_STATUSES = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 
 const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"];
@@ -79,9 +90,55 @@ export function StaffDetailView({
   isOwnProfile: boolean;
 }) {
   const [staff, setStaff] = useState<Staff>(initialStaff);
-  const [tab, setTab] = useState<"payroll" | "leave" | "duties" | "performance">(
-    "payroll"
-  );
+  const [tab, setTab] = useState<
+    "payroll" | "leave" | "duties" | "performance" | "patients"
+  >("payroll");
+
+  // --- Assigned patients ---
+  const [assignedPatients, setAssignedPatients] = useState<AssignedPatient[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(true);
+
+  const loadAssignedPatients = useCallback(async () => {
+    setLoadingPatients(true);
+    const url = viewerIsAdmin
+      ? `/api/patients?staffId=${staff.id}`
+      : `/api/patients?assignedToMe=true`;
+    const res = await fetch(url);
+    const json = await res.json();
+    setAssignedPatients(json.patients ?? []);
+    setLoadingPatients(false);
+  }, [staff.id, viewerIsAdmin]);
+
+  useEffect(() => {
+    loadAssignedPatients();
+  }, [loadAssignedPatients]);
+
+  // --- Reset password (Admin only) ---
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
+
+  const onResetPassword = async () => {
+    setResetError(null);
+    setResetting(true);
+    try {
+      const res = await fetch(`/api/staff/${staff.id}/reset-password`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setResetError(json.error ?? "Failed to reset password.");
+        return;
+      }
+      setTempPassword(json.temporaryPassword);
+      setShowResetConfirm(false);
+    } catch {
+      setResetError("Network error.");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // --- Edit profile (Admin only) ---
   const [editing, setEditing] = useState(false);
@@ -480,7 +537,7 @@ export function StaffDetailView({
               {staff.full_name}
             </h1>
             <p className="text-sm text-zinc-600">
-              {staff.profession} — {staff.email}
+              {staff.profession} — Username: {staff.email}
             </p>
             <p className="text-xs text-zinc-500">ID: {staff.staff_number}</p>
           </div>
@@ -505,6 +562,18 @@ export function StaffDetailView({
                 Pakua ID Card (PDF)
               </a>
             )}
+            {viewerIsAdmin && (
+              <button
+                onClick={() => {
+                  setResetError(null);
+                  setTempPassword(null);
+                  setShowResetConfirm(true);
+                }}
+                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
+              >
+                Reset Password
+              </button>
+            )}
             {viewerIsAdmin && !isOwnProfile && staff.employment_status !== "TERMINATED" && (
               <button
                 onClick={onDeactivate}
@@ -517,6 +586,59 @@ export function StaffDetailView({
           </div>
           {deactivateError && (
             <p className="text-xs text-red-600">{deactivateError}</p>
+          )}
+          {showResetConfirm && (
+            <div className="flex w-72 flex-col gap-2 rounded-lg border border-zinc-300 bg-white p-3 shadow-sm">
+              <p className="text-xs text-zinc-700">
+                Generate a new temporary password for {staff.full_name}? Their
+                current password will stop working immediately.
+              </p>
+              {resetError && <p className="text-xs text-red-600">{resetError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={onResetPassword}
+                  disabled={resetting}
+                  className="rounded border border-zinc-900 bg-zinc-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {resetting ? "Resetting..." : "Confirm Reset"}
+                </button>
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  disabled={resetting}
+                  className="rounded border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          {tempPassword && (
+            <div className="flex w-72 flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 shadow-sm">
+              <p className="text-xs font-medium text-amber-900">
+                New temporary password (shown once — save it now):
+              </p>
+              <div className="flex items-center justify-between gap-2 rounded border border-amber-300 bg-white px-2 py-1.5">
+                <code className="text-sm font-semibold tracking-wide text-zinc-900">
+                  {tempPassword}
+                </code>
+                <button
+                  onClick={() => navigator.clipboard.writeText(tempPassword)}
+                  className="text-xs font-medium text-brand-blue underline"
+                >
+                  Copy
+                </button>
+              </div>
+              <p className="text-[11px] text-amber-800">
+                Share this with {staff.full_name} securely. It will not be shown
+                again — reset again if it's lost.
+              </p>
+              <button
+                onClick={() => setTempPassword(null)}
+                className="self-start text-xs font-medium text-zinc-600 underline"
+              >
+                Dismiss
+              </button>
+            </div>
           )}
           {viewerIsAdmin && (
             <label className="cursor-pointer text-xs font-medium text-brand-blue underline">
@@ -691,6 +813,16 @@ export function StaffDetailView({
           }`}
         >
           Leave Requests
+        </button>
+        <button
+          onClick={() => setTab("patients")}
+          className={`px-3 py-2 text-sm font-medium ${
+            tab === "patients"
+              ? "border-b-2 border-zinc-900 text-zinc-900"
+              : "text-zinc-500"
+          }`}
+        >
+          Patients
         </button>
         <button
           onClick={() => setTab("duties")}
@@ -1021,6 +1153,54 @@ export function StaffDetailView({
           <p className="mt-3 text-sm text-zinc-500">
             Kipengele hiki kinakuja hivi karibuni.
           </p>
+        </div>
+      )}
+
+      {tab === "patients" && (
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          {loadingPatients ? (
+            <p className="text-sm text-zinc-500">Loading...</p>
+          ) : assignedPatients.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              No patients are currently assigned to {staff.full_name}.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500">
+                    <th className="pb-2 pr-4 font-medium">Patient</th>
+                    <th className="pb-2 pr-4 font-medium">Patient No.</th>
+                    <th className="pb-2 pr-4 font-medium">Gender</th>
+                    <th className="pb-2 pr-4 font-medium">Phone</th>
+                    <th className="pb-2 pr-4 font-medium">Last Visit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignedPatients.map((p) => (
+                    <tr key={p.id} className="border-b border-zinc-100 last:border-0">
+                      <td className="py-2 pr-4">
+                        <Link
+                          href={`/patients/${p.id}`}
+                          className="font-medium text-brand-blue hover:underline"
+                        >
+                          {p.full_name}
+                        </Link>
+                      </td>
+                      <td className="py-2 pr-4 text-zinc-600">
+                        {p.patient_number ?? "-"}
+                      </td>
+                      <td className="py-2 pr-4 text-zinc-600">{p.gender ?? "-"}</td>
+                      <td className="py-2 pr-4 text-zinc-600">{p.phone ?? "-"}</td>
+                      <td className="py-2 pr-4 text-zinc-600">
+                        {p.last_visit_date ? relativeDays(p.last_visit_date) : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
