@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
     temperature: d.temperature ? d.temperature : null,
     pulse: d.pulse ?? null,
     weight: d.weight ? d.weight : null,
+    heightCm: d.heightCm ? d.heightCm : null,
     bloodGlucose: d.bloodGlucose ? d.bloodGlucose : null,
     foodIntake: d.foodIntake ? d.foodIntake : null,
     treatmentNotes: d.treatmentNotes ? d.treatmentNotes : null,

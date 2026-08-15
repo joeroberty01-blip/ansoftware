@@ -5,6 +5,14 @@ import type {
   PatientRow,
 } from "../types";
 
+export async function nextPatientNumber(): Promise<string> {
+  const rows = await query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM patients`
+  );
+  const seq = parseInt(rows[0]?.count ?? "0", 10) + 1;
+  return `AN-${String(seq).padStart(6, "0")}`;
+}
+
 export async function createPatient(input: {
   fullName: string;
   dateOfBirth: string | null;
@@ -20,14 +28,16 @@ export async function createPatient(input: {
   notes: string | null;
   createdById: string;
 }): Promise<PatientRow> {
+  const patientNumber = await nextPatientNumber();
   const row = await queryOne<PatientRow>(
     `INSERT INTO patients
-       (full_name, date_of_birth, gender, phone, email, address,
+       (patient_number, full_name, date_of_birth, gender, phone, email, address,
         emergency_contact_name, emergency_contact_phone, blood_type,
         allergies, chronic_conditions, notes, created_by_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
      RETURNING *`,
     [
+      patientNumber,
       input.fullName,
       input.dateOfBirth,
       input.gender,
@@ -140,6 +150,7 @@ export async function updatePatient(
     chronicConditions?: string | null;
     notes?: string | null;
     assignedStaffId?: string | null;
+    photoUrl?: string | null;
   }
 ): Promise<PatientRow | null> {
   const columnMap: Record<string, unknown> = {
@@ -156,6 +167,7 @@ export async function updatePatient(
     chronic_conditions: patch.chronicConditions,
     notes: patch.notes,
     assigned_staff_id: patch.assignedStaffId,
+    photo_url: patch.photoUrl,
   };
 
   const fields: string[] = [];

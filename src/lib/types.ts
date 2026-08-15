@@ -195,6 +195,8 @@ export type Gender = "MALE" | "FEMALE" | "OTHER";
 
 export interface PatientRow {
   id: string;
+  patient_number: string | null;
+  photo_url: string | null;
   full_name: string;
   date_of_birth: string | null;
   gender: Gender | null;
@@ -262,6 +264,7 @@ export interface HomeVisitRow {
   temperature: string | null;
   pulse: number | null;
   weight: string | null;
+  height_cm: string | null;
   blood_glucose: string | null;
   food_intake: string | null;
   treatment_notes: string | null;

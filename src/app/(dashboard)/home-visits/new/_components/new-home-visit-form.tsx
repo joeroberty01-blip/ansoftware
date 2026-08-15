@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Patient {
   id: string;
@@ -24,10 +24,12 @@ export function NewHomeVisitForm({
   ownStaffName: string | null;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prefillPatientId = searchParams.get("patientId") ?? "";
   const [patients, setPatients] = useState<Patient[]>([]);
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
 
-  const [patientId, setPatientId] = useState("");
+  const [patientId, setPatientId] = useState(prefillPatientId);
   const [staffId, setStaffId] = useState(ownStaffId ?? "");
   const [visitDate, setVisitDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -51,9 +53,12 @@ export function NewHomeVisitForm({
       .then((json: { patients?: Patient[] }) => {
         const list = json.patients ?? [];
         setPatients(list);
-        if (list[0]) {
-          setPatientId((prev) => prev || list[0].id);
-          setLocation((prev) => prev || list[0].address || "");
+        const preselected = prefillPatientId
+          ? list.find((p) => p.id === prefillPatientId)
+          : list[0];
+        if (preselected) {
+          setPatientId((prev) => prev || preselected.id);
+          setLocation((prev) => prev || preselected.address || "");
         }
       });
   }, []);

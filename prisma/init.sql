@@ -205,6 +205,8 @@ CREATE TABLE stock_movements (
 -- ================= PATIENTS (EMR) =================
 CREATE TABLE patients (
   id                      TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  patient_number          TEXT UNIQUE,
+  photo_url               TEXT,
   full_name               TEXT NOT NULL,
   date_of_birth           DATE,
   gender                  gender_type,
@@ -258,6 +260,7 @@ CREATE TABLE home_visits (
   temperature       DECIMAL(4,1),
   pulse             INT CHECK (pulse IS NULL OR pulse > 0),
   weight            DECIMAL(5,2),
+  height_cm         DECIMAL(5,1),
   blood_glucose     DECIMAL(5,1),
   food_intake       TEXT,
   treatment_notes   TEXT,
