@@ -50,6 +50,7 @@ export async function getFinanceSummary(
        SELECT COALESCE(SUM(e.amount), 0) AS total
        FROM expenses e, period
        WHERE e.date >= period.from_date AND e.date < period.to_date
+         AND e.status = 'APPROVED'
      ),
      outstanding AS (
        SELECT COUNT(*) AS count
@@ -119,8 +120,8 @@ export async function getFinanceComparison(period: FinancePeriod): Promise<{
      SELECT
        (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.from_date AND paid_at < period.to_date) AS income,
        (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.prev_from_date AND paid_at < period.from_date) AS previous_income,
-       (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.from_date AND date < period.to_date) AS expenses,
-       (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.prev_from_date AND date < period.from_date) AS previous_expenses`,
+       (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.from_date AND date < period.to_date AND status = 'APPROVED') AS expenses,
+       (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.prev_from_date AND date < period.from_date AND status = 'APPROVED') AS previous_expenses`,
     [period]
   );
 

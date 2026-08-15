@@ -140,6 +140,8 @@ export interface PaymentRow {
   created_at: string;
 }
 
+export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 export interface ExpenseRow {
   id: string;
   category: ExpenseCategory;
@@ -148,6 +150,7 @@ export interface ExpenseRow {
   description: string;
   payment_method: PaymentMethod | null;
   attachment_url: string | null;
+  status: ExpenseStatus;
   created_by_id: string;
   created_at: string;
 }

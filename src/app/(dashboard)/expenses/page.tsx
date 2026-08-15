@@ -5,12 +5,15 @@ import { ListToolbar } from "../_components/list-toolbar";
 
 type ExpenseCategory = "MISHAHARA" | "VIFAA" | "USAFIRI" | "UENDESHAJI" | "MENGINEYO";
 
+type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 interface Expense {
   id: string;
   category: ExpenseCategory;
   amount: string;
   date: string;
   description: string;
+  status: ExpenseStatus;
 }
 
 interface Bill {
@@ -74,6 +77,7 @@ export default function ExpensesPage() {
   const [expDescription, setExpDescription] = useState("");
   const [expError, setExpError] = useState<string | null>(null);
   const [addingExpense, setAddingExpense] = useState(false);
+  const [expenseBusyId, setExpenseBusyId] = useState<string | null>(null);
 
   const loadExpenses = useCallback(async () => {
     setLoadingExpenses(true);
@@ -114,6 +118,28 @@ export default function ExpensesPage() {
       setExpError("Network error.");
     } finally {
       setAddingExpense(false);
+    }
+  };
+
+  const onDecideExpense = async (id: string, status: "APPROVED" | "REJECTED") => {
+    setExpError(null);
+    setExpenseBusyId(id);
+    try {
+      const res = await fetch(`/api/expenses/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setExpError(json.error ?? "Imeshindwa kusasisha ombi.");
+        return;
+      }
+      await loadExpenses();
+    } catch {
+      setExpError("Network error.");
+    } finally {
+      setExpenseBusyId(null);
     }
   };
 
@@ -366,6 +392,8 @@ export default function ExpensesPage() {
                     <th className="py-2 pr-4">Category</th>
                     <th className="py-2 pr-4">Maelezo</th>
                     <th className="py-2 pr-4 text-right">Kiasi</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2 pr-4 print:hidden"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -376,6 +404,39 @@ export default function ExpensesPage() {
                       <td className="py-2 pr-4">{exp.description}</td>
                       <td className="py-2 pr-4 text-right font-medium">
                         {fmt(exp.amount)}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span
+                          className={
+                            exp.status === "APPROVED"
+                              ? "font-medium text-green-700"
+                              : exp.status === "REJECTED"
+                              ? "font-medium text-red-700"
+                              : "font-medium text-amber-700"
+                          }
+                        >
+                          {exp.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-right print:hidden">
+                        {exp.status === "PENDING" && (
+                          <div className="flex justify-end gap-3">
+                            <button
+                              onClick={() => onDecideExpense(exp.id, "APPROVED")}
+                              disabled={expenseBusyId === exp.id}
+                              className="text-xs font-medium text-brand-blue underline disabled:opacity-50"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => onDecideExpense(exp.id, "REJECTED")}
+                              disabled={expenseBusyId === exp.id}
+                              className="text-xs font-medium text-red-700 underline disabled:opacity-50"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

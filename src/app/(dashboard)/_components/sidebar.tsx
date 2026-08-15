@@ -22,6 +22,7 @@ import type { UserRole } from "@/lib/types";
 
 interface NavItem {
   label: string;
+  labelForStaff?: string;
   href: string | ((role: UserRole) => string);
   icon: LucideIcon;
   hideForStaff?: boolean;
@@ -35,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, group: "main" },
   {
     label: "Staff Management",
+    labelForStaff: "My Profile",
     href: (role) => (role === "ADMIN" ? "/staff" : "/staff/me"),
     icon: Users,
     badgeKey: "pendingStaff",
@@ -51,7 +53,6 @@ const NAV_ITEMS: NavItem[] = [
     label: "Expenses",
     href: "/expenses",
     icon: FileSpreadsheet,
-    hideForStaff: true,
     group: "billing",
   },
   {
@@ -133,7 +134,7 @@ export function Sidebar({
 
   const groups: { key: NavItem["group"]; label: string }[] = [
     { key: "main", label: "Care" },
-    { key: "billing", label: "Finance" },
+    { key: "billing", label: role === "ADMIN" ? "Finance" : "Operations" },
     { key: "other", label: "Other" },
   ];
 
@@ -156,6 +157,8 @@ export function Sidebar({
                 : pathname === itemPath;
               const Icon = item.icon;
               const badge = item.badgeKey ? badgeValues[item.badgeKey] : 0;
+              const label =
+                role !== "ADMIN" && item.labelForStaff ? item.labelForStaff : item.label;
               return (
                 <Link
                   key={item.label}
@@ -168,7 +171,7 @@ export function Sidebar({
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1">{label}</span>
                   {badge > 0 && (
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${

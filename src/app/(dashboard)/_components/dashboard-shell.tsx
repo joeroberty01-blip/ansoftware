@@ -89,7 +89,7 @@ export function DashboardShell({
                 <span className="text-brand-orange">Nyumbani</span>
               </span>
               <span className="block text-[10px] text-zinc-400">
-                Care that comes home
+                {role === "ADMIN" ? "Care that comes home" : "Staff Portal"}
               </span>
             </span>
           </Link>

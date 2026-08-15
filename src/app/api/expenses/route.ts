@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createExpenseSchema } from "@/lib/validation/expenses";
-import { createExpense, listAllExpenses, listRecentExpenses } from "@/lib/repo/expenses";
+import {
+  createExpense,
+  listAllExpenses,
+  listRecentExpenses,
+  listExpensesForUser,
+} from "@/lib/repo/expenses";
 
-async function requireAdmin() {
+async function requireSession() {
   const session = await getCurrentUser();
   if (!session) {
     return {
@@ -15,21 +20,19 @@ async function requireAdmin() {
       ),
     };
   }
-  if (session.role !== "ADMIN") {
-    return {
-      session: null,
-      response: NextResponse.json(
-        { error: "Ruhusa hairuhusiwi." },
-        { status: 403 }
-      ),
-    };
-  }
   return { session, response: null };
 }
 
 export async function GET(req: NextRequest) {
-  const { session, response } = await requireAdmin();
+  const { session, response } = await requireSession();
   if (!session) return response;
+
+  if (session.role !== "ADMIN") {
+    // Staff can only ever see their own expense requests, never the
+    // company-wide list.
+    const expenses = await listExpensesForUser(session.id);
+    return NextResponse.json({ expenses });
+  }
 
   const all = req.nextUrl.searchParams.get("all") === "true";
   const expenses = all ? await listAllExpenses() : await listRecentExpenses(20);
@@ -37,7 +40,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { session, response } = await requireAdmin();
+  const { session, response } = await requireSession();
   if (!session) return response;
 
   const body = await req.json();
@@ -49,10 +52,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Staff-submitted expenses start as a request awaiting Admin approval;
+  // expenses an Admin records directly are approved immediately.
   const expense = await createExpense({
     ...parsed.data,
     paymentMethod: parsed.data.paymentMethod || null,
     createdById: session.id,
+    status: session.role === "ADMIN" ? "APPROVED" : "PENDING",
   });
 
   return NextResponse.json({ expense }, { status: 201 });

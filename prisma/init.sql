@@ -16,6 +16,7 @@ CREATE TYPE doc_type AS ENUM ('QUOTATION', 'INVOICE', 'PROFORMA', 'TAX_INVOICE')
 CREATE TYPE payment_status AS ENUM ('PENDING', 'PARTIAL', 'PAID', 'OVERDUE', 'CANCELLED');
 CREATE TYPE payment_method AS ENUM ('CASH', 'MPESA', 'AIRTEL_MONEY', 'MIXX_BY_YAS', 'BANK_TRANSFER');
 CREATE TYPE expense_category AS ENUM ('MISHAHARA', 'VIFAA', 'USAFIRI', 'UENDESHAJI', 'MENGINEYO');
+CREATE TYPE expense_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE stock_movement_type AS ENUM ('IN', 'OUT');
 CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE home_visit_status AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED');
@@ -161,6 +162,7 @@ CREATE TABLE expenses (
   description     TEXT NOT NULL,
   payment_method  payment_method,
   attachment_url  TEXT,
+  status          expense_status NOT NULL DEFAULT 'APPROVED',
   created_by_id   TEXT NOT NULL REFERENCES users(id),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );

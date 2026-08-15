@@ -165,6 +165,68 @@ export async function getStaffVisitLeaderboard(
   );
 }
 
+export interface VisitsTodayComparison {
+  todayCount: number;
+  yesterdayCount: number;
+}
+
+/** Real day-over-day comparison for a staff member's visit count — no fabricated deltas. */
+export async function getVisitsTodayComparisonForStaff(
+  staffId: string
+): Promise<VisitsTodayComparison> {
+  const row = await queryOne<{ today_count: string; yesterday_count: string }>(
+    `SELECT
+       (SELECT COUNT(*) FROM home_visits WHERE staff_id = $1 AND visit_date = CURRENT_DATE) AS today_count,
+       (SELECT COUNT(*) FROM home_visits WHERE staff_id = $1 AND visit_date = CURRENT_DATE - 1) AS yesterday_count`,
+    [staffId]
+  );
+  return {
+    todayCount: parseInt(row?.today_count ?? "0", 10),
+    yesterdayCount: parseInt(row?.yesterday_count ?? "0", 10),
+  };
+}
+
+export async function listUpcomingVisitsForStaff(
+  staffId: string,
+  limit = 5
+): Promise<HomeVisitWithNames[]> {
+  return query<HomeVisitWithNames>(
+    `SELECT ${SELECT_WITH_NAMES}
+     FROM home_visits hv
+     JOIN patients p ON p.id = hv.patient_id
+     LEFT JOIN staff s ON s.id = hv.staff_id
+     LEFT JOIN users u ON u.id = s.user_id
+     WHERE hv.staff_id = $1 AND hv.status = 'SCHEDULED' AND hv.visit_date > CURRENT_DATE
+     ORDER BY hv.visit_date ASC
+     LIMIT $2`,
+    [staffId, limit]
+  );
+}
+
+/**
+ * Visits due today or earlier whose clinical notes are still blank — the
+ * honest, computable stand-in for "reports to complete" (there's no
+ * separate reports table; a home visit's own record is the report).
+ */
+export async function listVisitsNeedingReportForStaff(
+  staffId: string
+): Promise<HomeVisitWithNames[]> {
+  return query<HomeVisitWithNames>(
+    `SELECT ${SELECT_WITH_NAMES}
+     FROM home_visits hv
+     JOIN patients p ON p.id = hv.patient_id
+     LEFT JOIN staff s ON s.id = hv.staff_id
+     LEFT JOIN users u ON u.id = s.user_id
+     WHERE hv.staff_id = $1
+       AND hv.status != 'CANCELLED'
+       AND hv.visit_date <= CURRENT_DATE
+       AND (hv.treatment_notes IS NULL OR hv.treatment_notes = '')
+     ORDER BY hv.visit_date ASC
+     LIMIT 10`,
+    [staffId]
+  );
+}
+
 export async function deleteHomeVisit(id: string): Promise<boolean> {
   const rows = await query(`DELETE FROM home_visits WHERE id = $1 RETURNING id`, [id]);
   return rows.length > 0;

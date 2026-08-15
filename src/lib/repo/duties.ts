@@ -27,6 +27,17 @@ export async function listDutiesForStaff(
   );
 }
 
+export async function listDutiesDueTodayForStaff(
+  staffId: string
+): Promise<StaffDutyRow[]> {
+  return query<StaffDutyRow>(
+    `SELECT * FROM staff_duties
+     WHERE staff_id = $1 AND status != 'COMPLETED' AND (due_date IS NULL OR due_date <= CURRENT_DATE)
+     ORDER BY due_date ASC NULLS LAST, created_at ASC`,
+    [staffId]
+  );
+}
+
 export async function getDutyById(id: string): Promise<StaffDutyRow | null> {
   return queryOne<StaffDutyRow>(`SELECT * FROM staff_duties WHERE id = $1`, [id]);
 }

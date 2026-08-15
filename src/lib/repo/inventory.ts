@@ -188,6 +188,43 @@ export async function recordStockMovement(input: {
   });
 }
 
+export interface StaffInventoryUsageRow {
+  item_id: string;
+  item_name: string;
+  unit: string;
+  used_this_month: string;
+  available: string;
+}
+
+/** Items the given user has recorded OUT movements for this month, with their real current stock. */
+export async function getInventoryUsageForUser(
+  userId: string,
+  fromDate: string,
+  toDate: string
+): Promise<StaffInventoryUsageRow[]> {
+  return query<StaffInventoryUsageRow>(
+    `SELECT
+       i.id AS item_id,
+       i.name AS item_name,
+       i.unit,
+       COALESCE(SUM(CASE
+         WHEN m.movement_type = 'OUT' AND m.created_by_id = $1
+              AND m.created_at >= $2 AND m.created_at < $3
+         THEN m.quantity ELSE 0 END), 0)::text AS used_this_month,
+       COALESCE(SUM(CASE WHEN m.movement_type = 'IN' THEN m.quantity ELSE -m.quantity END), 0)::text AS available
+     FROM inventory_items i
+     LEFT JOIN stock_movements m ON m.item_id = i.id
+     GROUP BY i.id, i.name, i.unit
+     HAVING COALESCE(SUM(CASE
+         WHEN m.movement_type = 'OUT' AND m.created_by_id = $1
+              AND m.created_at >= $2 AND m.created_at < $3
+         THEN m.quantity ELSE 0 END), 0) > 0
+     ORDER BY used_this_month DESC
+     LIMIT 6`,
+    [userId, fromDate, toDate]
+  );
+}
+
 export async function listLowStockItems(): Promise<InventoryItemWithStock[]> {
   const items = await listItemsWithStock();
   return items.filter((i) => i.is_low_stock);
