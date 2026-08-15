@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_METHODS } from "./invoices";
 
 export const EXPENSE_CATEGORIES = [
   "MISHAHARA",
@@ -18,6 +19,7 @@ export const createExpenseSchema = z.object({
     .refine((v) => Number(v) > 0, "Kiasi lazima kiwe zaidi ya sifuri"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi"),
   description: z.string().trim().min(1, "Maelezo yanahitajika").max(500),
+  paymentMethod: z.enum(PAYMENT_METHODS).optional().or(z.literal("")),
 });
 
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;

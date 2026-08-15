@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
 
   const expense = await createExpense({
     ...parsed.data,
+    paymentMethod: parsed.data.paymentMethod || null,
     createdById: session.id,
   });
 

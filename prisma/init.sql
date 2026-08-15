@@ -154,13 +154,15 @@ CREATE TABLE payments (
 
 -- ================= FINANCE / EXPENSES =================
 CREATE TABLE expenses (
-  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  category       expense_category NOT NULL,
-  amount         DECIMAL(14,2) NOT NULL CHECK (amount > 0),
-  date           DATE NOT NULL,
-  description    TEXT NOT NULL,
-  created_by_id  TEXT NOT NULL REFERENCES users(id),
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  category        expense_category NOT NULL,
+  amount          DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  date            DATE NOT NULL,
+  description     TEXT NOT NULL,
+  payment_method  payment_method,
+  attachment_url  TEXT,
+  created_by_id   TEXT NOT NULL REFERENCES users(id),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE company_bills (

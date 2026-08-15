@@ -146,6 +146,8 @@ export interface ExpenseRow {
   amount: string;
   date: string;
   description: string;
+  payment_method: PaymentMethod | null;
+  attachment_url: string | null;
   created_by_id: string;
   created_at: string;
 }
