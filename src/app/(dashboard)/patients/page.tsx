@@ -91,7 +91,7 @@ export default function PatientsListPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Patients</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Patients</h1>
         <div className="flex gap-2">
           <ListToolbar
             filename="patients"
@@ -101,7 +101,7 @@ export default function PatientsListPage() {
           {isAdmin && (
             <Link
               href="/patients/new"
-              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
             >
               Ongeza Mgonjwa Mpya
             </Link>
@@ -124,7 +124,7 @@ export default function PatientsListPage() {
         />
         <button
           type="submit"
-          className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
         >
           Tafuta
         </button>
@@ -143,7 +143,7 @@ export default function PatientsListPage() {
         )}
       </form>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : patients.length === 0 ? (
@@ -151,7 +151,7 @@ export default function PatientsListPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
                 <th className="py-2 pr-4">Tarehe ya Kuzaliwa</th>
                 <th className="py-2 pr-4">Jinsia</th>

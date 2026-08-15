@@ -112,7 +112,7 @@ export function NewHomeVisitForm({
 
   return (
     <div className="flex max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
         Rekodi Home Visit
       </h1>
 
@@ -305,7 +305,7 @@ export function NewHomeVisitForm({
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+          className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
           {submitting ? "Inarekodi..." : "Rekodi Ziara"}
         </button>

@@ -156,7 +156,7 @@ export default function ClientBillingDetailPage() {
     <div className="flex max-w-3xl flex-col gap-6 p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">{client.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{client.name}</h1>
           <p className="text-sm text-zinc-600">
             {client.type} — {client.phone}
             {client.email ? ` — ${client.email}` : ""}
@@ -166,7 +166,7 @@ export default function ClientBillingDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={startEditing}
-              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
               Hariri
             </button>
@@ -189,7 +189,7 @@ export default function ClientBillingDetailPage() {
       {editing ? (
         <form
           onSubmit={onSaveClient}
-          className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+          className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
@@ -250,7 +250,7 @@ export default function ClientBillingDetailPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
               {saving ? "Inahifadhi..." : "Hifadhi"}
             </button>
@@ -264,7 +264,7 @@ export default function ClientBillingDetailPage() {
           </div>
         </form>
       ) : (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
               <p className="text-xs text-zinc-500">Anwani</p>
@@ -282,7 +282,7 @@ export default function ClientBillingDetailPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
           Hati (Quotations/Invoices)
         </h2>
@@ -291,7 +291,7 @@ export default function ClientBillingDetailPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Namba</th>
                 <th className="py-2 pr-4">Aina</th>
                 <th className="py-2 pr-4">Tarehe</th>
@@ -323,7 +323,7 @@ export default function ClientBillingDetailPage() {
         )}
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
           Historia ya Malipo
         </h2>
@@ -332,7 +332,7 @@ export default function ClientBillingDetailPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
                 <th className="py-2 pr-4">Hati</th>
                 <th className="py-2 pr-4">Njia</th>

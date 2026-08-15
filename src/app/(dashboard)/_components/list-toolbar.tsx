@@ -16,14 +16,14 @@ export function ListToolbar({
       <button
         type="button"
         onClick={() => downloadCsv(filename, columns, rows)}
-        className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+        className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
       >
         Pakua CSV
       </button>
       <button
         type="button"
         onClick={() => window.print()}
-        className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+        className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
       >
         Print
       </button>

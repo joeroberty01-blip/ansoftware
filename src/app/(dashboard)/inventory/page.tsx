@@ -67,18 +67,18 @@ export default function InventoryListPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Inventory</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Inventory</h1>
         <div className="flex gap-2">
           <ListToolbar filename="inventory" columns={CSV_COLUMNS} rows={items} />
           <Link
             href="/inventory/alerts"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 print:hidden"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50 print:hidden"
           >
             Alerts{lowStockCount > 0 ? ` (${lowStockCount})` : ""}
           </Link>
           <Link
             href="/inventory/new"
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
             Ongeza Item Mpya
           </Link>
@@ -94,7 +94,7 @@ export default function InventoryListPage() {
         </p>
       )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : items.length === 0 ? (
@@ -102,7 +102,7 @@ export default function InventoryListPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
                 <th className="py-2 pr-4">Category</th>
                 <th className="py-2 pr-4">Unit</th>

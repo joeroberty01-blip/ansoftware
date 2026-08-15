@@ -107,7 +107,7 @@ export default function FinancePage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
         Finance / Accounting
       </h1>
 
@@ -130,7 +130,7 @@ export default function FinancePage() {
         />
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5 print:hidden">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
         <h2 className="mb-4 text-sm font-semibold text-zinc-900">
           Ongeza Expense
         </h2>
@@ -194,7 +194,7 @@ export default function FinancePage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
               {submitting ? "Inaongeza..." : "Ongeza Expense"}
             </button>
@@ -207,7 +207,7 @@ export default function FinancePage() {
         )}
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-900">
             Matumizi ya Hivi Karibuni
@@ -225,7 +225,7 @@ export default function FinancePage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
                 <th className="py-2 pr-4">Category</th>
                 <th className="py-2 pr-4">Maelezo</th>
@@ -258,7 +258,7 @@ export default function FinancePage() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
+    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-medium text-zinc-500">{label}</p>
       <p className="mt-1 text-lg font-semibold text-zinc-900">{value}</p>
     </div>

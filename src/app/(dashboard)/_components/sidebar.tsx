@@ -163,7 +163,7 @@ export function Sidebar({
                   onClick={onNavigate}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-brand-blue text-white"
+                      ? "bg-brand-blue text-white shadow-sm"
                       : "text-zinc-700 hover:bg-zinc-100"
                   }`}
                 >

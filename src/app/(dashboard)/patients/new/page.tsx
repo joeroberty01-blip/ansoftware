@@ -69,7 +69,7 @@ export default function NewPatientPage() {
   if (!isAdmin) {
     return (
       <div className="flex flex-col gap-3 p-6">
-        <h1 className="text-xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
           Ongeza Mgonjwa Mpya
         </h1>
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -81,7 +81,7 @@ export default function NewPatientPage() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
         Ongeza Mgonjwa Mpya
       </h1>
 
@@ -216,7 +216,7 @@ export default function NewPatientPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+          className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
           {submitting ? "Inaongeza..." : "Ongeza Mgonjwa"}
         </button>

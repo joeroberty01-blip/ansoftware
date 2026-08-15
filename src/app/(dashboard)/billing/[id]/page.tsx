@@ -186,7 +186,7 @@ export default function BillingDetailPage() {
     <div className="flex max-w-3xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
             {invoice.document_number}
           </h1>
           <p className="text-sm text-zinc-600">
@@ -207,7 +207,7 @@ export default function BillingDetailPage() {
             href={`/print/invoices/${invoice.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
             Print
           </a>
@@ -215,7 +215,7 @@ export default function BillingDetailPage() {
             href={`/api/invoices/${invoice.id}/pdf`}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
             Pakua PDF
           </a>
@@ -241,7 +241,7 @@ export default function BillingDetailPage() {
         </p>
       )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <div>
             <p className="text-xs text-zinc-500">Status</p>
@@ -262,11 +262,11 @@ export default function BillingDetailPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">Items</h2>
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+            <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               <th className="py-2 pr-4">Maelezo</th>
               <th className="py-2 pr-4 text-right">Idadi</th>
               <th className="py-2 pr-4 text-right">Bei</th>
@@ -287,7 +287,7 @@ export default function BillingDetailPage() {
       </div>
 
       {isPayable && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-zinc-900">
             Historia ya Malipo
           </h2>
@@ -296,7 +296,7 @@ export default function BillingDetailPage() {
           ) : (
             <table className="mb-4 w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Tarehe</th>
                   <th className="py-2 pr-4">Njia</th>
                   <th className="py-2 pr-4">Kumbukumbu</th>
@@ -364,7 +364,7 @@ export default function BillingDetailPage() {
               <button
                 type="submit"
                 disabled={paying}
-                className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+                className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
               >
                 {paying ? "Inarekodi..." : "Rekodi Malipo"}
               </button>

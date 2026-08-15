@@ -119,13 +119,13 @@ export default function DocumentsPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Documents</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Documents</h1>
         <div className="flex gap-2">
           <ListToolbar filename="documents" columns={CSV_COLUMNS} rows={documents} />
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
             {showAdd ? "Funga" : "Ongeza Document"}
           </button>
@@ -141,7 +141,7 @@ export default function DocumentsPage() {
         />
         <button
           type="submit"
-          className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
         >
           Tafuta
         </button>
@@ -195,14 +195,14 @@ export default function DocumentsPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="col-span-full self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+            className="col-span-full self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
             {submitting ? "Inahifadhi..." : "Hifadhi Document"}
           </button>
         </form>
       )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : documents.length === 0 ? (
@@ -211,7 +211,7 @@ export default function DocumentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Mgonjwa</th>
                   <th className="py-2 pr-4">Jina</th>
                   <th className="py-2 pr-4">Aina</th>

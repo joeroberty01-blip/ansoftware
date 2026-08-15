@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   if (user?.role !== "ADMIN") {
     return (
       <div className="p-6">
-        <h1 className="text-xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
           Karibu, {user?.fullName} 👋
         </h1>
       </div>

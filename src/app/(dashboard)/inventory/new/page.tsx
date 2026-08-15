@@ -42,7 +42,7 @@ export default function NewInventoryItemPage() {
 
   return (
     <div className="flex max-w-lg flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
         Ongeza Item Mpya
       </h1>
 
@@ -101,7 +101,7 @@ export default function NewInventoryItemPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+          className="mt-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
           {submitting ? "Inaongeza..." : "Ongeza Item"}
         </button>

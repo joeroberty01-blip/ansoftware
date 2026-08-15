@@ -25,7 +25,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex max-w-lg flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Settings</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Settings</h1>
       {loading ? (
         <p className="text-sm text-zinc-500">Inapakia...</p>
       ) : (
@@ -72,7 +72,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+      className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
     >
       <h2 className="text-sm font-semibold text-zinc-900">Taarifa Zangu</h2>
       <div className="flex flex-col gap-1">
@@ -110,7 +110,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
       <button
         type="submit"
         disabled={saving}
-        className="mt-1 self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+        className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
         {saving ? "Inahifadhi..." : "Hifadhi"}
       </button>
@@ -156,7 +156,7 @@ function PasswordForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+      className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
     >
       <h2 className="text-sm font-semibold text-zinc-900">Badilisha Password</h2>
       <div className="flex flex-col gap-1">
@@ -202,7 +202,7 @@ function PasswordForm() {
       <button
         type="submit"
         disabled={saving}
-        className="mt-1 self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+        className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
         {saving ? "Inabadilisha..." : "Badilisha Password"}
       </button>

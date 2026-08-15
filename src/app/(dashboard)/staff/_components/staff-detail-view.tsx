@@ -476,7 +476,7 @@ export function StaffDetailView({
             </div>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-zinc-900">
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
               {staff.full_name}
             </h1>
             <p className="text-sm text-zinc-600">
@@ -490,7 +490,7 @@ export function StaffDetailView({
             {viewerIsAdmin && !editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
                 Hariri
               </button>
@@ -500,7 +500,7 @@ export function StaffDetailView({
                 href={`/api/staff/${staff.id}/id-card`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
                 Pakua ID Card (PDF)
               </a>
@@ -541,7 +541,7 @@ export function StaffDetailView({
       {editing ? (
         <form
           onSubmit={onSaveEdit}
-          className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+          className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
@@ -617,7 +617,7 @@ export function StaffDetailView({
             <button
               type="submit"
               disabled={saving}
-              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
               {saving ? "Inahifadhi..." : "Hifadhi"}
             </button>
@@ -631,7 +631,7 @@ export function StaffDetailView({
           </div>
         </form>
       ) : (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
               <p className="text-xs text-zinc-500">Simu</p>
@@ -715,7 +715,7 @@ export function StaffDetailView({
       </div>
 
       {tab === "payroll" && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           {viewerIsAdmin && (
             <form
               onSubmit={onGeneratePayroll}
@@ -766,7 +766,7 @@ export function StaffDetailView({
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Mwezi</th>
                   <th className="py-2 pr-4 text-right">Gross</th>
                   <th className="py-2 pr-4 text-right">NSSF</th>
@@ -821,7 +821,7 @@ export function StaffDetailView({
       )}
 
       {tab === "leave" && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           {isOwnProfile && (
             <form
               onSubmit={onRequestLeave}
@@ -866,7 +866,7 @@ export function StaffDetailView({
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Tarehe</th>
                   <th className="py-2 pr-4 text-right">Siku</th>
                   <th className="py-2 pr-4">Sababu</th>
@@ -914,7 +914,7 @@ export function StaffDetailView({
       )}
 
       {tab === "duties" && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           {viewerIsAdmin && (
             <form
               onSubmit={onAddDuty}
@@ -959,7 +959,7 @@ export function StaffDetailView({
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Jukumu</th>
                   <th className="py-2 pr-4">Maelezo</th>
                   <th className="py-2 pr-4">Deadline</th>
@@ -1009,7 +1009,7 @@ export function StaffDetailView({
       )}
 
       {tab === "performance" && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <p className="text-xs text-zinc-500">Idadi ya Ziara (Visits) — Mwezi Huu</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900">0</p>
           <p className="mt-3 text-sm text-zinc-500">

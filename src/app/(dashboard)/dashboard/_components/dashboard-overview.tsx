@@ -94,7 +94,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 sm:text-2xl">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-2xl">
             {greeting}, {fullName.split(" ")[0]} 👋
           </h1>
           <p className="text-sm text-zinc-500">

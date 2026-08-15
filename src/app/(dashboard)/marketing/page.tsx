@@ -27,7 +27,7 @@ export default function MarketingPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Marketing Tools</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Marketing Tools</h1>
 
       <div className="flex gap-2 border-b border-zinc-200">
         <button
@@ -185,7 +185,7 @@ function PostsTab() {
     <div className="flex flex-col gap-4">
       <form
         onSubmit={onAdd}
-        className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+        className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
       >
         <h2 className="text-sm font-semibold text-zinc-900">Andika Post Mpya</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -220,13 +220,13 @@ function PostsTab() {
         <button
           type="submit"
           disabled={submitting}
-          className="self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+          className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
           {submitting ? "Inahifadhi..." : "Hifadhi Post"}
         </button>
       </form>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : posts.length === 0 ? (
@@ -275,7 +275,7 @@ function PostsTab() {
                     <button
                       type="button"
                       onClick={() => setEditingId(null)}
-                      className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                      className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
                     >
                       Ghairi
                     </button>
@@ -404,7 +404,7 @@ function AiTab() {
     <div className="flex flex-col gap-4">
       <form
         onSubmit={onGenerate}
-        className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+        className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
       >
         <h2 className="text-sm font-semibold text-zinc-900">
           Tengeneza Post kwa AI
@@ -455,14 +455,14 @@ function AiTab() {
         <button
           type="submit"
           disabled={generating || !topic}
-          className="self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+          className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
           {generating ? "Inatengeneza..." : "Tengeneza"}
         </button>
       </form>
 
       {result && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h3 className="mb-2 text-sm font-semibold text-zinc-900">Matokeo</h3>
           <textarea
             value={result}
@@ -473,7 +473,7 @@ function AiTab() {
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => navigator.clipboard?.writeText(result)}
-              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
               Nakili
             </button>
@@ -556,7 +556,7 @@ function LinksTab() {
   return (
     <form
       onSubmit={onSave}
-      className="flex max-w-lg flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+      className="flex max-w-lg flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
     >
       <h2 className="text-sm font-semibold text-zinc-900">
         Social Media Links za Kampuni
@@ -576,7 +576,7 @@ function LinksTab() {
                 href={links[f.key]}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
                 Fungua
               </a>
@@ -595,7 +595,7 @@ function LinksTab() {
       <button
         type="submit"
         disabled={saving}
-        className="mt-1 self-start rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+        className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
         {saving ? "Inahifadhi..." : "Hifadhi Links"}
       </button>

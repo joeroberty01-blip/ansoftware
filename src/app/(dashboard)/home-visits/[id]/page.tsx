@@ -133,7 +133,7 @@ export default function HomeVisitDetailPage() {
     <div className="flex max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
             {visit.patient_name}
           </h1>
           <p className="text-sm text-zinc-600">
@@ -145,7 +145,7 @@ export default function HomeVisitDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(true)}
-              className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
               Hariri
             </button>
@@ -163,7 +163,7 @@ export default function HomeVisitDetailPage() {
       {editing ? (
         <form
           onSubmit={onSave}
-          className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5"
+          className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
         >
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="flex flex-col gap-1 sm:col-span-4">
@@ -291,7 +291,7 @@ export default function HomeVisitDetailPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
               {saving ? "Inahifadhi..." : "Hifadhi"}
             </button>
@@ -305,7 +305,7 @@ export default function HomeVisitDetailPage() {
           </div>
         </form>
       ) : (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
             <div>
               <p className="text-xs text-zinc-500">Status</p>

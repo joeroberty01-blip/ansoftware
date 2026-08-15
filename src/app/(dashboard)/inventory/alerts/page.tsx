@@ -42,18 +42,18 @@ export default function InventoryAlertsPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
           Inventory Alerts
         </h1>
         <Link
           href="/inventory"
-          className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
         >
           Rudi kwenye Inventory
         </Link>
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
           Low Stock ({lowStock.length})
         </h2>
@@ -64,7 +64,7 @@ export default function InventoryAlertsPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
                 <th className="py-2 pr-4">Category</th>
                 <th className="py-2 pr-4 text-right">Stock ya Sasa</th>
@@ -94,7 +94,7 @@ export default function InventoryAlertsPage() {
         )}
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
           Zinazokaribia Kuisha (siku 60) ({expiring.length})
         </h2>
@@ -105,7 +105,7 @@ export default function InventoryAlertsPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Item</th>
                 <th className="py-2 pr-4">Batch</th>
                 <th className="py-2 pr-4 text-right">Idadi</th>

@@ -78,7 +78,7 @@ export default function BillingPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
           Billing / Invoices
         </h1>
         <div className="flex gap-2">
@@ -89,7 +89,7 @@ export default function BillingPage() {
           />
           <Link
             href="/billing/new"
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
             Tengeneza Mpya
           </Link>
@@ -129,7 +129,7 @@ export default function BillingPage() {
         </label>
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : invoices.length === 0 ? (
@@ -137,7 +137,7 @@ export default function BillingPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Namba</th>
                 <th className="py-2 pr-4">Aina</th>
                 <th className="py-2 pr-4">Client</th>

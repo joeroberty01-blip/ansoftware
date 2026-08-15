@@ -62,7 +62,7 @@ export default function ReceiptsPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Receipts</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Receipts</h1>
         <ListToolbar filename="receipts" columns={CSV_COLUMNS} rows={filtered} />
       </div>
 
@@ -84,7 +84,7 @@ export default function ReceiptsPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : filtered.length === 0 ? (
@@ -92,7 +92,7 @@ export default function ReceiptsPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
                 <th className="py-2 pr-4">Hati</th>
                 <th className="py-2 pr-4">Client</th>

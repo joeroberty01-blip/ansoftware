@@ -51,7 +51,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
       <h2 className="mb-3 text-sm font-semibold text-zinc-900">{title}</h2>
       {children}
     </div>
@@ -74,7 +74,7 @@ export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-zinc-900">Reports</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Reports</h1>
         <div className="flex items-center gap-2 print:hidden">
           <div className="flex overflow-hidden rounded-lg border border-zinc-300">
             {DAYS_OPTIONS.map((opt) => (
@@ -94,7 +94,7 @@ export default function ReportsPage() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
             Print
           </button>
@@ -116,7 +116,7 @@ export default function ReportsPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className="rounded-lg border border-zinc-200 bg-white p-4"
+                className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
               >
                 <p className="text-xs text-zinc-500">{card.label}</p>
                 <p className="mt-1 text-lg font-semibold text-zinc-900">
@@ -182,7 +182,7 @@ export default function ReportsPage() {
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Nurse</th>
                     <th className="py-2 pr-4 text-right">Idadi ya Wagonjwa</th>
                   </tr>
@@ -225,7 +225,7 @@ export default function ReportsPage() {
               ) : (
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                    <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Nurse</th>
                       <th className="py-2 pr-4 text-right">Ziara Zilizokamilika</th>
                     </tr>
@@ -251,7 +251,7 @@ export default function ReportsPage() {
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Nurse</th>
                     <th className="py-2 pr-4">Leseni Inaisha</th>
                   </tr>
@@ -277,7 +277,7 @@ export default function ReportsPage() {
               ) : (
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                    <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Item</th>
                       <th className="py-2 pr-4 text-right">Stock</th>
                       <th className="py-2 pr-4 text-right">Reorder Level</th>
@@ -304,7 +304,7 @@ export default function ReportsPage() {
               ) : (
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                    <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Item</th>
                       <th className="py-2 pr-4">Batch</th>
                       <th className="py-2 pr-4">Inaisha</th>

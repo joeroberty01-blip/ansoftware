@@ -266,7 +266,7 @@ export default function ExpensesPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Expenses</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Expenses</h1>
         <ListToolbar
           filename={tab === "expenses" ? "expenses" : "company-bills"}
           columns={tab === "expenses" ? EXPENSE_CSV_COLUMNS : BILL_CSV_COLUMNS}
@@ -299,7 +299,7 @@ export default function ExpensesPage() {
 
       {tab === "expenses" && (
         <>
-          <div className="rounded-lg border border-zinc-200 bg-white p-5 print:hidden">
+          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
             <h2 className="mb-4 text-sm font-semibold text-zinc-900">
               Ongeza Expense
             </h2>
@@ -352,7 +352,7 @@ export default function ExpensesPage() {
             )}
           </div>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-5">
+          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             {loadingExpenses ? (
               <p className="text-sm text-zinc-500">Inapakia...</p>
             ) : expenses.length === 0 ? (
@@ -360,7 +360,7 @@ export default function ExpensesPage() {
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Tarehe</th>
                     <th className="py-2 pr-4">Category</th>
                     <th className="py-2 pr-4">Maelezo</th>
@@ -387,7 +387,7 @@ export default function ExpensesPage() {
 
       {tab === "bills" && (
         <>
-          <div className="rounded-lg border border-zinc-200 bg-white p-5 print:hidden">
+          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
             <h2 className="mb-4 text-sm font-semibold text-zinc-900">
               Ongeza Bill (mf. Umeme, Maji, Kodi ya Ofisi, Internet)
             </h2>
@@ -435,7 +435,7 @@ export default function ExpensesPage() {
             )}
           </div>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-5">
+          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             {loadingBills ? (
               <p className="text-sm text-zinc-500">Inapakia...</p>
             ) : bills.length === 0 ? (
@@ -443,7 +443,7 @@ export default function ExpensesPage() {
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Tarehe ya Malipo</th>
                     <th className="py-2 pr-4">Jina</th>
                     <th className="py-2 pr-4">Category</th>

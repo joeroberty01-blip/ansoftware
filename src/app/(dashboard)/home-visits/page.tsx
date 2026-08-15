@@ -83,7 +83,7 @@ export default function HomeVisitsListPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Home Visits</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Home Visits</h1>
         <div className="flex gap-2">
           <ListToolbar
             filename="home-visits"
@@ -92,7 +92,7 @@ export default function HomeVisitsListPage() {
           />
           <Link
             href="/home-visits/new"
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark print:hidden"
+            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
             Rekodi Ziara Mpya
           </Link>
@@ -111,7 +111,7 @@ export default function HomeVisitsListPage() {
         ))}
       </select>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : visits.length === 0 ? (
@@ -119,7 +119,7 @@ export default function HomeVisitsListPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
                 <th className="py-2 pr-4">Mgonjwa</th>
                 <th className="py-2 pr-4">Staff</th>

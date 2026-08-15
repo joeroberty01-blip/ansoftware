@@ -115,7 +115,7 @@ export default function StaffListPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">Staff Management</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Staff Management</h1>
         <div className="flex gap-2">
           <ListToolbar
             filename="staff"
@@ -124,7 +124,7 @@ export default function StaffListPage() {
           />
           <Link
             href="/staff/pending"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 print:hidden"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50 print:hidden"
           >
             Wanaosubiri Idhini
           </Link>
@@ -140,7 +140,7 @@ export default function StaffListPage() {
       {showAddForm && (
         <form
           onSubmit={onSubmit}
-          className="grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4 print:hidden"
+          className="grid grid-cols-1 gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4 print:hidden"
         >
           <input
             value={fullName}
@@ -207,14 +207,14 @@ export default function StaffListPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50 sm:col-span-2 lg:col-span-4"
+            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50 sm:col-span-2 lg:col-span-4"
           >
             {submitting ? "Inaongeza..." : "Ongeza Staff"}
           </button>
         </form>
       )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (
           <p className="text-sm text-zinc-500">Inapakia...</p>
         ) : staffList.length === 0 ? (
@@ -222,7 +222,7 @@ export default function StaffListPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
                 <th className="py-2 pr-4">Taaluma</th>
                 <th className="py-2 pr-4">Leseni (Inaisha)</th>

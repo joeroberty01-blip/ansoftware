@@ -80,7 +80,7 @@ export function DashboardShell({
             className="flex items-center gap-2"
             onClick={() => setSidebarOpen(false)}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange-light text-brand-orange">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-blue to-brand-orange text-white shadow-sm">
               <Stethoscope className="h-4 w-4" />
             </span>
             <span className="leading-tight">
@@ -121,7 +121,7 @@ export function DashboardShell({
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 print:hidden">
+        <header className="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm print:hidden">
           <button
             type="button"
             className="text-zinc-700 sm:hidden"
@@ -161,7 +161,7 @@ export function DashboardShell({
               <button
                 type="button"
                 onClick={() => setCreateOpen((v) => !v)}
-                className="flex items-center gap-1 rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark"
+                className="flex items-center gap-1 rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Create</span>
