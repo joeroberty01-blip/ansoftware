@@ -85,11 +85,25 @@ export async function countActivePatients(): Promise<number> {
 
 export interface PatientWithAssignment extends PatientRow {
   assigned_staff_name: string | null;
+  assigned_staff_photo: string | null;
+  last_visit_date: string | null;
 }
 
 const PATIENT_SELECT_WITH_ASSIGNMENT = `
   p.*,
-  su.full_name AS assigned_staff_name
+  su.full_name AS assigned_staff_name,
+  s.photo_url AS assigned_staff_photo,
+  lv.visit_date AS last_visit_date
+`;
+
+const LAST_VISIT_JOIN = `
+  LEFT JOIN LATERAL (
+    SELECT hv.visit_date
+    FROM home_visits hv
+    WHERE hv.patient_id = p.id AND hv.status = 'COMPLETED'
+    ORDER BY hv.visit_date DESC
+    LIMIT 1
+  ) lv ON true
 `;
 
 export async function listPatients(filters?: {
@@ -101,7 +115,9 @@ export async function listPatients(filters?: {
 
   if (filters?.search) {
     params.push(`%${filters.search}%`);
-    conditions.push(`p.full_name ILIKE $${params.length}`);
+    conditions.push(
+      `(p.full_name ILIKE $${params.length} OR p.patient_number ILIKE $${params.length} OR p.phone ILIKE $${params.length})`
+    );
   }
   if (filters?.assignedStaffId) {
     params.push(filters.assignedStaffId);
@@ -115,6 +131,7 @@ export async function listPatients(filters?: {
      FROM patients p
      LEFT JOIN staff s ON s.id = p.assigned_staff_id
      LEFT JOIN users su ON su.id = s.user_id
+     ${LAST_VISIT_JOIN}
      ${where}
      ORDER BY p.full_name ASC`,
     params
@@ -129,6 +146,7 @@ export async function getPatientById(
      FROM patients p
      LEFT JOIN staff s ON s.id = p.assigned_staff_id
      LEFT JOIN users su ON su.id = s.user_id
+     ${LAST_VISIT_JOIN}
      WHERE p.id = $1`,
     [id]
   );
