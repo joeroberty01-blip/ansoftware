@@ -153,7 +153,7 @@ export default function ClientBillingDetailPage() {
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{client.name}</h1>
@@ -289,7 +289,8 @@ export default function ClientBillingDetailPage() {
         {invoices.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna hati bado.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Namba</th>
@@ -319,7 +320,8 @@ export default function ClientBillingDetailPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
 
@@ -330,7 +332,8 @@ export default function ClientBillingDetailPage() {
         {payments.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna malipo bado.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
@@ -358,7 +361,8 @@ export default function ClientBillingDetailPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

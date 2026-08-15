@@ -734,7 +734,7 @@ export default function PatientDetailPage() {
   const recentVisits = homeVisits.slice(0, 4);
 
   return (
-    <div className="flex max-w-6xl flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <Link
         href="/patients"
         className="flex w-fit items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"

@@ -183,7 +183,7 @@ export default function BillingDetailPage() {
     Number(invoice.amount_paid) === 0;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
@@ -264,7 +264,8 @@ export default function BillingDetailPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">Items</h2>
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               <th className="py-2 pr-4">Maelezo</th>
@@ -283,7 +284,8 @@ export default function BillingDetailPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       {isPayable && (
@@ -294,7 +296,8 @@ export default function BillingDetailPage() {
           {invoice.payments.length === 0 ? (
             <p className="mb-4 text-sm text-zinc-500">Hakuna malipo bado.</p>
           ) : (
-            <table className="mb-4 w-full text-left text-sm">
+            <div className="overflow-x-auto">
+              <table className="mb-4 w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Tarehe</th>
@@ -332,7 +335,8 @@ export default function BillingDetailPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           )}
 
           {canPay && (

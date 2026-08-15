@@ -62,7 +62,8 @@ export default function InventoryAlertsPage() {
         ) : lowStock.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna items chini ya reorder level.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
@@ -90,7 +91,8 @@ export default function InventoryAlertsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
 
@@ -103,7 +105,8 @@ export default function InventoryAlertsPage() {
         ) : expiring.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna batch zinazokaribia kuisha.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Item</th>
@@ -131,7 +134,8 @@ export default function InventoryAlertsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

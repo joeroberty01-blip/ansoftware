@@ -131,7 +131,8 @@ export default function ReportsPage() {
               {data.genderBreakdown.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna data.</p>
               ) : (
-                <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
                   <tbody>
                     {data.genderBreakdown.map((g) => (
                       <tr key={g.gender ?? "unknown"} className="border-b border-zinc-100 last:border-0">
@@ -140,12 +141,14 @@ export default function ReportsPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               )}
             </SectionCard>
 
             <SectionCard title="Staff Status">
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
                 <tbody>
                   <tr className="border-b border-zinc-100">
                     <td className="py-1.5">Active</td>
@@ -172,7 +175,8 @@ export default function ReportsPage() {
                     </td>
                   </tr>
                 </tbody>
-              </table>
+                </table>
+              </div>
             </SectionCard>
           </div>
 
@@ -180,7 +184,8 @@ export default function ReportsPage() {
             {data.patientsPerNurse.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna staff active.</p>
             ) : (
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Nurse</th>
@@ -197,7 +202,8 @@ export default function ReportsPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             )}
           </SectionCard>
 
@@ -206,7 +212,8 @@ export default function ReportsPage() {
               {data.visitStatusBreakdown.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna ziara katika kipindi hiki.</p>
               ) : (
-                <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
                   <tbody>
                     {data.visitStatusBreakdown.map((v) => (
                       <tr key={v.status} className="border-b border-zinc-100 last:border-0">
@@ -215,7 +222,8 @@ export default function ReportsPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               )}
             </SectionCard>
 
@@ -223,7 +231,8 @@ export default function ReportsPage() {
               {data.staffLeaderboard.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna data kwa kipindi hiki.</p>
               ) : (
-                <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Nurse</th>
@@ -240,7 +249,8 @@ export default function ReportsPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               )}
             </SectionCard>
           </div>
@@ -249,7 +259,8 @@ export default function ReportsPage() {
             {data.expiringLicenses.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna leseni zinazokaribia kuisha.</p>
             ) : (
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Nurse</th>
@@ -266,7 +277,8 @@ export default function ReportsPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             )}
           </SectionCard>
 
@@ -275,7 +287,8 @@ export default function ReportsPage() {
               {data.lowStockItems.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna item chini ya reorder level.</p>
               ) : (
-                <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Item</th>
@@ -294,7 +307,8 @@ export default function ReportsPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               )}
             </SectionCard>
 
@@ -302,7 +316,8 @@ export default function ReportsPage() {
               {data.expiringBatches.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna batch zinazokaribia kuisha.</p>
               ) : (
-                <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Item</th>
@@ -324,7 +339,8 @@ export default function ReportsPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               )}
             </SectionCard>
           </div>

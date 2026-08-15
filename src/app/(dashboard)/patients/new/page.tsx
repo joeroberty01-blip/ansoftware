@@ -80,7 +80,7 @@ export default function NewPatientPage() {
   }
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
         Ongeza Mgonjwa Mpya
       </h1>

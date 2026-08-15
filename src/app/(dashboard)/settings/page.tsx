@@ -24,7 +24,7 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div className="flex max-w-lg flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Settings</h1>
       {loading ? (
         <p className="text-sm text-zinc-500">Inapakia...</p>

@@ -100,7 +100,8 @@ export default function InventoryListPage() {
         ) : items.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna items bado.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Jina</th>
@@ -155,7 +156,8 @@ export default function InventoryListPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

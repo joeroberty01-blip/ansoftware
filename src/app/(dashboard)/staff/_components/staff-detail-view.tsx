@@ -461,7 +461,7 @@ export function StaffDetailView({
   };
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           {staff.photo_url ? (
@@ -764,7 +764,8 @@ export function StaffDetailView({
           ) : payrolls.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna payroll bado.</p>
           ) : (
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Mwezi</th>
@@ -815,7 +816,8 @@ export function StaffDetailView({
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -864,7 +866,8 @@ export function StaffDetailView({
           ) : leaves.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna maombi ya likizo.</p>
           ) : (
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Tarehe</th>
@@ -908,7 +911,8 @@ export function StaffDetailView({
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -957,7 +961,8 @@ export function StaffDetailView({
           ) : duties.length === 0 ? (
             <p className="text-sm text-zinc-500">Hakuna majukumu yaliyopangwa.</p>
           ) : (
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Jukumu</th>
@@ -1003,7 +1008,8 @@ export function StaffDetailView({
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           )}
         </div>
       )}

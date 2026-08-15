@@ -358,7 +358,8 @@ export default function ExpensesPage() {
             ) : expenses.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna matumizi bado.</p>
             ) : (
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Tarehe</th>
@@ -379,7 +380,8 @@ export default function ExpensesPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             )}
           </div>
         </>
@@ -441,7 +443,8 @@ export default function ExpensesPage() {
             ) : bills.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna bills bado.</p>
             ) : (
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Tarehe ya Malipo</th>
@@ -555,7 +558,8 @@ export default function ExpensesPage() {
                     )
                   )}
                 </tbody>
-              </table>
+                </table>
+              </div>
             )}
           </div>
         </>
