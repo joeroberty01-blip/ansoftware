@@ -19,8 +19,8 @@ export function relativeDays(dateStr: string | null): string {
   today.setHours(0, 0, 0, 0);
   date.setHours(0, 0, 0, 0);
   const diffDays = Math.round((today.getTime() - date.getTime()) / 86_400_000);
-  if (diffDays === 0) return "Leo";
-  if (diffDays === 1) return "Jana";
-  if (diffDays > 1) return `siku ${diffDays} zilizopita`;
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays > 1) return `${diffDays} days ago`;
   return dateStr.slice(0, 10);
 }

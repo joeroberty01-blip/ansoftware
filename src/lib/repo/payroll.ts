@@ -143,3 +143,23 @@ export async function listPayrollHistory(
     [staffId]
   );
 }
+
+/** Total net payroll for the current calendar month vs. the previous one. */
+export async function getMonthlyPayrollComparison(): Promise<{
+  currentTotal: string;
+  previousTotal: string;
+}> {
+  const row = await query<{ current_total: string; previous_total: string }>(
+    `SELECT
+       (SELECT COALESCE(SUM(net_pay), 0)::text FROM payrolls
+        WHERE month = EXTRACT(MONTH FROM CURRENT_DATE)::int
+          AND year = EXTRACT(YEAR FROM CURRENT_DATE)::int) AS current_total,
+       (SELECT COALESCE(SUM(net_pay), 0)::text FROM payrolls
+        WHERE month = EXTRACT(MONTH FROM CURRENT_DATE - interval '1 month')::int
+          AND year = EXTRACT(YEAR FROM CURRENT_DATE - interval '1 month')::int) AS previous_total`
+  );
+  return {
+    currentTotal: row[0]?.current_total ?? "0",
+    previousTotal: row[0]?.previous_total ?? "0",
+  };
+}

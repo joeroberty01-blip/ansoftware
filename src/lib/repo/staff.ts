@@ -257,6 +257,53 @@ export async function getStaffStatusCounts(): Promise<StaffStatusCounts> {
   return counts;
 }
 
+/** Total staff count now vs. as of ~30 days ago (staff.created_at cutoff). */
+export async function getStaffGrowth(): Promise<{
+  totalNow: number;
+  totalMonthAgo: number;
+}> {
+  const row = await queryOne<{ total_now: string; total_month_ago: string }>(
+    `SELECT
+       COUNT(*)::text AS total_now,
+       COUNT(*) FILTER (WHERE created_at <= now() - interval '30 days')::text AS total_month_ago
+     FROM staff`
+  );
+  return {
+    totalNow: parseInt(row?.total_now ?? "0", 10),
+    totalMonthAgo: parseInt(row?.total_month_ago ?? "0", 10),
+  };
+}
+
+const DEPARTMENT_BY_PROFESSION: Record<string, string> = {
+  NURSE: "Nursing",
+  DOCTOR: "Medical",
+  CHW: "Support",
+  ADMIN_STAFF: "Admin",
+};
+
+export interface DepartmentCount {
+  department: string;
+  count: number;
+}
+
+/** Staff counts grouped by a department derived from profession. */
+export async function getStaffByDepartment(): Promise<DepartmentCount[]> {
+  const rows = await query<{ profession: string; count: string }>(
+    `SELECT profession, COUNT(*)::text AS count
+     FROM staff
+     WHERE employment_status != 'TERMINATED'
+     GROUP BY profession`
+  );
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    const dept = DEPARTMENT_BY_PROFESSION[row.profession] ?? row.profession;
+    totals.set(dept, (totals.get(dept) ?? 0) + parseInt(row.count, 10));
+  }
+  return Array.from(totals.entries())
+    .map(([department, count]) => ({ department, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
 export async function listExpiringLicenses(
   withinDays: number
 ): Promise<StaffWithUser[]> {
