@@ -4,9 +4,11 @@ import { getStaffByUserId } from "./repo/staff";
 import { getPatientById } from "./repo/patients";
 
 /**
- * Staff may only view/edit patients assigned to them; Admins can access any
- * patient. Returns a ready-to-return 403/404 NextResponse if access should
- * be denied, or null if the caller may proceed.
+ * Staff may only view/edit patients assigned to them; Admins, and staff
+ * whose profession is ADMIN_STAFF (front-desk/admin support staff — not a
+ * clinical role tied to specific patients), can access any patient.
+ * Returns a ready-to-return 403/404 NextResponse if access should be
+ * denied, or null if the caller may proceed.
  */
 export async function assertPatientAccess(
   session: SessionUser,
@@ -18,6 +20,8 @@ export async function assertPatientAccess(
   if (!staff) {
     return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 403 });
   }
+
+  if (staff.profession === "ADMIN_STAFF") return null;
 
   const patient = await getPatientById(patientId);
   if (!patient) {

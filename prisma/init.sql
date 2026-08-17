@@ -17,6 +17,7 @@ CREATE TYPE payment_status AS ENUM ('PENDING', 'PARTIAL', 'PAID', 'OVERDUE', 'CA
 CREATE TYPE payment_method AS ENUM ('CASH', 'MPESA', 'AIRTEL_MONEY', 'MIXX_BY_YAS', 'BANK_TRANSFER');
 CREATE TYPE expense_category AS ENUM ('MISHAHARA', 'VIFAA', 'USAFIRI', 'UENDESHAJI', 'MENGINEYO');
 CREATE TYPE expense_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+CREATE TYPE income_category AS ENUM ('HUDUMA', 'MSAADA', 'UWEKEZAJI', 'MENGINEYO');
 CREATE TYPE stock_movement_type AS ENUM ('IN', 'OUT');
 CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE home_visit_status AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED');
@@ -46,6 +47,10 @@ CREATE TABLE staff (
   profession           profession NOT NULL,
   license_number       TEXT,
   license_expiry_date  DATE,
+  highest_education    TEXT,
+  specialization       TEXT,
+  skills               TEXT,
+  certifications       TEXT,
   start_date           DATE NOT NULL,
   employment_status    employment_status NOT NULL DEFAULT 'ACTIVE',
   base_salary          DECIMAL(14,2) NOT NULL CHECK (base_salary >= 0),
@@ -167,6 +172,18 @@ CREATE TABLE expenses (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE other_income (
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  category        income_category NOT NULL,
+  amount          DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  date            DATE NOT NULL,
+  source          TEXT NOT NULL,
+  description     TEXT NOT NULL,
+  payment_method  payment_method,
+  created_by_id   TEXT NOT NULL REFERENCES users(id),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE company_bills (
   id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name           TEXT NOT NULL,
@@ -248,6 +265,16 @@ CREATE TABLE patient_documents (
   title          TEXT NOT NULL,
   document_type  TEXT NOT NULL,
   notes          TEXT,
+  uploaded_by_id TEXT NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE staff_documents (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  staff_id       TEXT NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  title          TEXT NOT NULL,
+  document_type  TEXT NOT NULL,
+  file_url       TEXT NOT NULL,
   uploaded_by_id TEXT NOT NULL REFERENCES users(id),
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

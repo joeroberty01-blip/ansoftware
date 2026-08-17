@@ -43,6 +43,10 @@ export const updateStaffSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi")
     .optional(),
+  highestEducation: z.string().trim().max(200).optional().or(z.literal("")),
+  specialization: z.string().trim().max(200).optional().or(z.literal("")),
+  skills: z.string().trim().max(500).optional().or(z.literal("")),
+  certifications: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export type UpdateStaffInput = z.infer<typeof updateStaffSchema>;

@@ -2,6 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  GraduationCap,
+  FileText,
+  Activity as ActivityIcon,
+  Eye,
+  Trash2,
+  CalendarPlus,
+  ClipboardList,
+  CalendarDays,
+} from "lucide-react";
 import { relativeDays } from "@/lib/date-utils";
 
 interface Staff {
@@ -20,6 +30,10 @@ interface Staff {
   allowances: string;
   leave_balance_days: number;
   user_status: string;
+  highest_education: string | null;
+  specialization: string | null;
+  skills: string | null;
+  certifications: string | null;
 }
 
 interface Payroll {
@@ -53,6 +67,30 @@ interface Duty {
   status: string;
   due_date: string | null;
 }
+
+interface JobSummary {
+  patientsAssigned: number;
+  activeVisits: number;
+  reportsSubmitted: number;
+  tasksCompleted: number;
+}
+
+interface ActivityItem {
+  id: string;
+  type: string;
+  message: string;
+  occurredAt: string;
+}
+
+interface StaffDocument {
+  id: string;
+  title: string;
+  document_type: string;
+  file_url: string;
+  created_at: string;
+}
+
+const DOCUMENT_TYPES = ["ID Card", "CV/Resume", "Academic Certificate", "License Certificate", "Other"];
 
 interface AssignedPatient {
   id: string;
@@ -140,6 +178,83 @@ export function StaffDetailView({
     }
   };
 
+  // --- Job summary + recent activity ---
+  const [jobSummary, setJobSummary] = useState<JobSummary | null>(null);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+
+  const loadSummary = useCallback(async () => {
+    const res = await fetch(`/api/staff/${staff.id}/summary`);
+    if (!res.ok) return;
+    const json = await res.json();
+    setJobSummary(json.summary ?? null);
+    setActivity(json.activity ?? []);
+  }, [staff.id]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  // --- Documents ---
+  const [documents, setDocuments] = useState<StaffDocument[]>([]);
+  const [loadingDocuments, setLoadingDocuments] = useState(true);
+  const [docTitle, setDocTitle] = useState("");
+  const [docType, setDocType] = useState("ID Card");
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+
+  const loadDocuments = useCallback(async () => {
+    setLoadingDocuments(true);
+    const res = await fetch(`/api/staff/${staff.id}/documents`);
+    const json = await res.json();
+    setDocuments(json.documents ?? []);
+    setLoadingDocuments(false);
+  }, [staff.id]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
+  const onUploadDocument = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fileInput = form.elements.namedItem("file") as HTMLInputElement;
+    const file = fileInput.files?.[0];
+    if (!file || !docTitle.trim()) {
+      setDocError("Chagua faili na jina la hati.");
+      return;
+    }
+    setDocError(null);
+    setUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("title", docTitle);
+      formData.append("documentType", docType);
+      const res = await fetch(`/api/staff/${staff.id}/documents`, {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setDocError(json.error ?? "Failed to upload document.");
+        return;
+      }
+      setDocTitle("");
+      form.reset();
+      await loadDocuments();
+    } catch {
+      setDocError("Network error.");
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const onDeleteDocument = async (docId: string) => {
+    if (!window.confirm("Futa hati hii?")) return;
+    await fetch(`/api/staff/${staff.id}/documents/${docId}`, { method: "DELETE" });
+    await loadDocuments();
+  };
+
   // --- Edit profile (Admin only) ---
   const [editing, setEditing] = useState(false);
   const [profession, setProfession] = useState(staff.profession);
@@ -150,6 +265,10 @@ export function StaffDetailView({
   const [employmentStatus, setEmploymentStatus] = useState(staff.employment_status);
   const [baseSalary, setBaseSalary] = useState(staff.base_salary);
   const [allowances, setAllowances] = useState(staff.allowances);
+  const [highestEducation, setHighestEducation] = useState(staff.highest_education ?? "");
+  const [specialization, setSpecialization] = useState(staff.specialization ?? "");
+  const [skills, setSkills] = useState(staff.skills ?? "");
+  const [certifications, setCertifications] = useState(staff.certifications ?? "");
   const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -168,6 +287,10 @@ export function StaffDetailView({
           employmentStatus,
           baseSalary,
           allowances,
+          highestEducation,
+          specialization,
+          skills,
+          certifications,
         }),
       });
       const json = await res.json();
@@ -183,6 +306,10 @@ export function StaffDetailView({
         employment_status: json.staff.employment_status,
         base_salary: json.staff.base_salary,
         allowances: json.staff.allowances,
+        highest_education: json.staff.highest_education,
+        specialization: json.staff.specialization,
+        skills: json.staff.skills,
+        certifications: json.staff.certifications,
       }));
       setEditing(false);
     } catch {
@@ -262,6 +389,7 @@ export function StaffDetailView({
   const [payMonth, setPayMonth] = useState(new Date().getMonth() + 1);
   const [payYear, setPayYear] = useState(new Date().getFullYear());
   const [otherDeductions, setOtherDeductions] = useState("0");
+  const [applyNssf, setApplyNssf] = useState(true);
   const [payrollError, setPayrollError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -318,6 +446,7 @@ export function StaffDetailView({
           month: payMonth,
           year: payYear,
           otherDeductions,
+          applyNssf,
         }),
       });
       const json = await res.json();
@@ -729,6 +858,46 @@ export function StaffDetailView({
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">Highest Education</label>
+              <input
+                value={highestEducation}
+                onChange={(e) => setHighestEducation(e.target.value)}
+                placeholder="e.g. Bachelor of Science in Nursing"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">Specialization</label>
+              <input
+                value={specialization}
+                onChange={(e) => setSpecialization(e.target.value)}
+                placeholder="e.g. Community Health Nursing"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <label className="text-xs font-medium text-zinc-600">
+                Skills (comma-separated)
+              </label>
+              <input
+                value={skills}
+                onChange={(e) => setSkills(e.target.value)}
+                placeholder="e.g. Patient Care, First Aid, IV Administration"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <label className="text-xs font-medium text-zinc-600">
+                Certifications (comma-separated)
+              </label>
+              <input
+                value={certifications}
+                onChange={(e) => setCertifications(e.target.value)}
+                placeholder="e.g. BLS Certification, CPR Certified"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
           </div>
           {editError && (
             <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -792,6 +961,233 @@ export function StaffDetailView({
           </div>
         </div>
       )}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+            <ClipboardList className="h-4 w-4 text-brand-blue" /> Job Summary
+          </h2>
+          {jobSummary ? (
+            <ul className="flex flex-col gap-2 text-sm">
+              <li className="flex items-center justify-between">
+                <span className="text-zinc-500">Total Patients Assigned</span>
+                <span className="font-medium text-zinc-900">{jobSummary.patientsAssigned}</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-zinc-500">Active Visits</span>
+                <span className="font-medium text-zinc-900">{jobSummary.activeVisits}</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-zinc-500">Reports Submitted</span>
+                <span className="font-medium text-zinc-900">{jobSummary.reportsSubmitted}</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-zinc-500">Tasks Completed</span>
+                <span className="font-medium text-zinc-900">{jobSummary.tasksCompleted}</span>
+              </li>
+            </ul>
+          ) : (
+            <p className="text-sm text-zinc-500">Loading...</p>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+            <GraduationCap className="h-4 w-4 text-brand-blue" /> Skills & Qualifications
+          </h2>
+          <ul className="flex flex-col gap-2 text-sm">
+            <li className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-zinc-500">Highest Education</span>
+              <span className="truncate text-right font-medium text-zinc-900">
+                {staff.highest_education || "-"}
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-zinc-500">Professional License</span>
+              <span className="truncate text-right font-medium text-zinc-900">
+                {staff.profession}
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-zinc-500">License Number</span>
+              <span className="truncate text-right font-medium text-zinc-900">
+                {staff.license_number || "-"}
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span className="shrink-0 text-zinc-500">Specialization</span>
+              <span className="truncate text-right font-medium text-zinc-900">
+                {staff.specialization || "-"}
+              </span>
+            </li>
+          </ul>
+          {staff.skills && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs text-zinc-500">Skills</p>
+              <div className="flex flex-wrap gap-1.5">
+                {staff.skills.split(",").map((s) => s.trim()).filter(Boolean).map((s) => (
+                  <span key={s} className="rounded-full bg-brand-blue-light px-2 py-0.5 text-xs font-medium text-brand-blue">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {staff.certifications && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs text-zinc-500">Certifications</p>
+              <div className="flex flex-wrap gap-1.5">
+                {staff.certifications.split(",").map((s) => s.trim()).filter(Boolean).map((s) => (
+                  <span key={s} className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+              <FileText className="h-4 w-4 text-brand-blue" /> Documents
+            </h2>
+          </div>
+          {loadingDocuments ? (
+            <p className="text-sm text-zinc-500">Loading...</p>
+          ) : documents.length === 0 ? (
+            <p className="text-sm text-zinc-500">No documents uploaded.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {documents.map((d) => (
+                <li key={d.id} className="flex items-center justify-between gap-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-zinc-900">{d.title}</p>
+                    <p className="text-xs text-zinc-400">
+                      Uploaded on {d.created_at.slice(0, 10)}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <a
+                      href={d.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-zinc-400 hover:text-brand-blue"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </a>
+                    {viewerIsAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteDocument(d.id)}
+                        className="text-zinc-400 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {viewerIsAdmin && (
+            <form onSubmit={onUploadDocument} className="mt-3 flex flex-col gap-2 border-t border-zinc-100 pt-3">
+              <input
+                value={docTitle}
+                onChange={(e) => setDocTitle(e.target.value)}
+                placeholder="Document title"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-xs"
+              />
+              <select
+                value={docType}
+                onChange={(e) => setDocType(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-xs"
+              >
+                {DOCUMENT_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="file"
+                name="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                className="text-xs"
+              />
+              {docError && <p className="text-xs text-red-600">{docError}</p>}
+              <button
+                type="submit"
+                disabled={uploadingDoc}
+                className="rounded bg-brand-blue px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+              >
+                {uploadingDoc ? "Uploading..." : "Upload Document"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-zinc-900">
+            <ActivityIcon className="h-4 w-4 text-brand-blue" /> Recent Activity
+          </h2>
+          {activity.length === 0 ? (
+            <p className="text-sm text-zinc-500">No recent activity.</p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {activity.map((a) => (
+                <li key={`${a.type}-${a.id}`} className="flex gap-2 text-sm">
+                  <span
+                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                      a.type === "REPORT_SUBMITTED"
+                        ? "bg-blue-500"
+                        : a.type === "VISIT_COMPLETED"
+                        ? "bg-green-500"
+                        : "bg-amber-500"
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-zinc-900">{a.message}</p>
+                    <p className="text-xs text-zinc-400">
+                      {new Date(a.occurredAt).toLocaleString("en-TZ", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-zinc-900">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <Link
+            href={`/home-visits/new?staffId=${staff.id}`}
+            className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:border-brand-blue hover:text-brand-blue"
+          >
+            <CalendarPlus className="h-4 w-4" /> Assign New Visit
+          </Link>
+          <button
+            type="button"
+            onClick={() => setTab("duties")}
+            className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:border-brand-blue hover:text-brand-blue"
+          >
+            <ClipboardList className="h-4 w-4" /> Create Task
+          </button>
+          <Link
+            href={`/home-visits?staffId=${staff.id}`}
+            className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:border-brand-blue hover:text-brand-blue"
+          >
+            <CalendarDays className="h-4 w-4" /> View Schedule
+          </Link>
+        </div>
+      </div>
 
       <div className="flex gap-2 border-b border-zinc-200">
         <button
@@ -884,6 +1280,15 @@ export function StaffDetailView({
               >
                 {generating ? "Inatengeneza..." : "Tengeneza Payroll"}
               </button>
+              <label className="col-span-2 flex items-center gap-1.5 text-xs font-medium text-zinc-600 sm:col-span-4">
+                <input
+                  type="checkbox"
+                  checked={applyNssf}
+                  onChange={(e) => setApplyNssf(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-zinc-300"
+                />
+                Kata NSSF (10% ya gross pay)
+              </label>
             </form>
           )}
           {payrollError && (

@@ -8,6 +8,7 @@ export async function createPayrollForStaff(input: {
   month: number;
   year: number;
   otherDeductions: string;
+  applyNssf?: boolean;
   createdById: string;
 }): Promise<PayrollRow> {
   return withTransaction(async (client) => {
@@ -28,6 +29,7 @@ export async function createPayrollForStaff(input: {
       baseSalary: staff.base_salary,
       allowances: staff.allowances,
       otherDeductions: input.otherDeductions,
+      applyNssf: input.applyNssf,
     });
 
     const payrollRes = await client.query<PayrollRow>(

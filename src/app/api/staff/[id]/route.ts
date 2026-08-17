@@ -66,6 +66,19 @@ export async function PATCH(
     baseSalary: parsed.data.baseSalary,
     allowances: parsed.data.allowances,
     startDate: parsed.data.startDate,
+    highestEducation:
+      parsed.data.highestEducation === undefined
+        ? undefined
+        : parsed.data.highestEducation || null,
+    specialization:
+      parsed.data.specialization === undefined
+        ? undefined
+        : parsed.data.specialization || null,
+    skills: parsed.data.skills === undefined ? undefined : parsed.data.skills || null,
+    certifications:
+      parsed.data.certifications === undefined
+        ? undefined
+        : parsed.data.certifications || null,
   });
 
   if (!staff) {

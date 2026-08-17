@@ -27,6 +27,7 @@ export type ExpenseCategory =
   | "USAFIRI"
   | "UENDESHAJI"
   | "MENGINEYO";
+export type IncomeCategory = "HUDUMA" | "MSAADA" | "UWEKEZAJI" | "MENGINEYO";
 
 export interface UserRow {
   id: string;
@@ -48,6 +49,10 @@ export interface StaffRow {
   profession: Profession;
   license_number: string | null;
   license_expiry_date: string | null;
+  highest_education: string | null;
+  specialization: string | null;
+  skills: string | null;
+  certifications: string | null;
   start_date: string;
   employment_status: EmploymentStatus;
   base_salary: string; // NUMERIC -> string
@@ -151,6 +156,18 @@ export interface ExpenseRow {
   payment_method: PaymentMethod | null;
   attachment_url: string | null;
   status: ExpenseStatus;
+  created_by_id: string;
+  created_at: string;
+}
+
+export interface OtherIncomeRow {
+  id: string;
+  category: IncomeCategory;
+  amount: string;
+  date: string;
+  source: string;
+  description: string;
+  payment_method: PaymentMethod | null;
   created_by_id: string;
   created_at: string;
 }

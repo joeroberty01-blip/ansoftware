@@ -26,11 +26,12 @@ export function NewHomeVisitForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefillPatientId = searchParams.get("patientId") ?? "";
+  const prefillStaffId = searchParams.get("staffId") ?? "";
   const [patients, setPatients] = useState<Patient[]>([]);
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
 
   const [patientId, setPatientId] = useState(prefillPatientId);
-  const [staffId, setStaffId] = useState(ownStaffId ?? "");
+  const [staffId, setStaffId] = useState(ownStaffId ?? prefillStaffId);
   const [visitDate, setVisitDate] = useState(
     new Date().toISOString().slice(0, 10)
   );

@@ -57,6 +57,11 @@ const ADMIN_ONLY_PREFIXES = [
 // staff record, so the proxy only needs to let the request through.
 const ADMIN_ONLY_EXCEPTIONS = ["/staff/me", "/api/staff/me"];
 const ID_CARD_ROUTE = /^\/api\/staff\/[^/]+\/id-card$/;
+const STAFF_SELF_ACCESS_ROUTES = [
+  /^\/api\/staff\/[^/]+\/documents$/,
+  /^\/api\/staff\/[^/]+\/documents\/[^/]+$/,
+  /^\/api\/staff\/[^/]+\/summary$/,
+];
 
 function matches(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -85,7 +90,9 @@ export async function proxy(request: NextRequest) {
   }
 
   const isAdminOnlyException =
-    matches(pathname, ADMIN_ONLY_EXCEPTIONS) || ID_CARD_ROUTE.test(pathname);
+    matches(pathname, ADMIN_ONLY_EXCEPTIONS) ||
+    ID_CARD_ROUTE.test(pathname) ||
+    STAFF_SELF_ACCESS_ROUTES.some((re) => re.test(pathname));
 
   if (
     matches(pathname, ADMIN_ONLY_PREFIXES) &&

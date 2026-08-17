@@ -20,13 +20,17 @@ export async function GET(req: NextRequest) {
 
   let assignedStaffId: string | undefined;
   if (session.role !== "ADMIN") {
-    // Staff can only ever see patients assigned to them — not an optional
-    // filter, always enforced regardless of any query param.
     const ownStaff = await getStaffByUserId(session.id);
     if (!ownStaff) {
       return NextResponse.json({ patients: [] });
     }
-    assignedStaffId = ownStaff.id;
+    // ADMIN_STAFF is a front-desk/admin support role, not a clinical role
+    // tied to specific patients — they see the full patient list like an
+    // Admin. Every other profession is scoped to their own assignments,
+    // not an optional filter, always enforced regardless of any query param.
+    if (ownStaff.profession !== "ADMIN_STAFF") {
+      assignedStaffId = ownStaff.id;
+    }
   } else if (assignedToMe) {
     const ownStaff = await getStaffByUserId(session.id);
     if (!ownStaff) {

@@ -176,6 +176,10 @@ export async function updateStaffProfile(
     allowances?: string;
     startDate?: string;
     photoUrl?: string | null;
+    highestEducation?: string | null;
+    specialization?: string | null;
+    skills?: string | null;
+    certifications?: string | null;
   }
 ): Promise<StaffRow | null> {
   const fields: string[] = [];
@@ -190,6 +194,10 @@ export async function updateStaffProfile(
     allowances: patch.allowances,
     start_date: patch.startDate,
     photo_url: patch.photoUrl,
+    highest_education: patch.highestEducation,
+    specialization: patch.specialization,
+    skills: patch.skills,
+    certifications: patch.certifications,
   };
 
   for (const [column, value] of Object.entries(columnMap)) {
@@ -302,6 +310,84 @@ export async function getStaffByDepartment(): Promise<DepartmentCount[]> {
   return Array.from(totals.entries())
     .map(([department, count]) => ({ department, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+export interface StaffJobSummary {
+  patientsAssigned: number;
+  activeVisits: number;
+  reportsSubmitted: number;
+  tasksCompleted: number;
+}
+
+/** Real, derivable counts — no attendance or rating data exists to back those mockup fields. */
+export async function getStaffJobSummary(staffId: string): Promise<StaffJobSummary> {
+  const row = await queryOne<{
+    patients_assigned: string;
+    active_visits: string;
+    reports_submitted: string;
+    tasks_completed: string;
+  }>(
+    `SELECT
+       (SELECT COUNT(*) FROM patients WHERE assigned_staff_id = $1) AS patients_assigned,
+       (SELECT COUNT(*) FROM home_visits WHERE staff_id = $1 AND status = 'SCHEDULED') AS active_visits,
+       (SELECT COUNT(*) FROM home_visits WHERE staff_id = $1 AND status = 'COMPLETED' AND treatment_notes IS NOT NULL AND treatment_notes != '') AS reports_submitted,
+       (SELECT COUNT(*) FROM staff_duties WHERE staff_id = $1 AND status = 'COMPLETED') AS tasks_completed`,
+    [staffId]
+  );
+  return {
+    patientsAssigned: parseInt(row?.patients_assigned ?? "0", 10),
+    activeVisits: parseInt(row?.active_visits ?? "0", 10),
+    reportsSubmitted: parseInt(row?.reports_submitted ?? "0", 10),
+    tasksCompleted: parseInt(row?.tasks_completed ?? "0", 10),
+  };
+}
+
+export interface StaffActivityItem {
+  id: string;
+  type: "REPORT_SUBMITTED" | "VISIT_COMPLETED" | "TASK_COMPLETED";
+  message: string;
+  occurredAt: string;
+}
+
+/** A derived activity timeline from real status changes — no separate activity-log table exists. */
+export async function getStaffRecentActivity(
+  staffId: string,
+  limit = 10
+): Promise<StaffActivityItem[]> {
+  const rows = await query<{
+    id: string;
+    type: string;
+    message: string;
+    occurred_at: string;
+  }>(
+    `(SELECT hv.id, 'REPORT_SUBMITTED' AS type,
+        'Report Submitted — ' || p.full_name AS message, hv.updated_at AS occurred_at
+      FROM home_visits hv
+      JOIN patients p ON p.id = hv.patient_id
+      WHERE hv.staff_id = $1 AND hv.status = 'COMPLETED'
+        AND hv.treatment_notes IS NOT NULL AND hv.treatment_notes != '')
+     UNION ALL
+     (SELECT hv.id, 'VISIT_COMPLETED' AS type,
+        'Visit Completed — ' || p.full_name AS message, hv.updated_at AS occurred_at
+      FROM home_visits hv
+      JOIN patients p ON p.id = hv.patient_id
+      WHERE hv.staff_id = $1 AND hv.status = 'COMPLETED'
+        AND (hv.treatment_notes IS NULL OR hv.treatment_notes = ''))
+     UNION ALL
+     (SELECT sd.id, 'TASK_COMPLETED' AS type,
+        'Task Completed — ' || sd.title AS message, sd.updated_at AS occurred_at
+      FROM staff_duties sd
+      WHERE sd.staff_id = $1 AND sd.status = 'COMPLETED')
+     ORDER BY occurred_at DESC
+     LIMIT $2`,
+    [staffId, limit]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    type: r.type as StaffActivityItem["type"],
+    message: r.message,
+    occurredAt: r.occurred_at,
+  }));
 }
 
 export async function listExpiringLicenses(

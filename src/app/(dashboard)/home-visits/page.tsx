@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
 
 const CSV_COLUMNS = [
@@ -38,6 +38,8 @@ const STATUS_OPTIONS = [
 
 export default function HomeVisitsListPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const staffId = searchParams.get("staffId") ?? "";
   const [visits, setVisits] = useState<Visit[]>([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
@@ -46,11 +48,12 @@ export default function HomeVisitsListPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (status) params.set("status", status);
+    if (staffId) params.set("staffId", staffId);
     const res = await fetch(`/api/home-visits?${params.toString()}`);
     const json = await res.json();
     setVisits(json.visits ?? []);
     setLoading(false);
-  }, [status]);
+  }, [status, staffId]);
 
   useEffect(() => {
     load();
@@ -99,17 +102,27 @@ export default function HomeVisitsListPage() {
         </div>
       </div>
 
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value)}
-        className="w-full max-w-xs rounded border border-zinc-300 px-2 py-1.5 text-sm print:hidden"
-      >
-        {STATUS_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <div className="flex flex-wrap items-center gap-2 print:hidden">
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="w-full max-w-xs rounded border border-zinc-300 px-2 py-1.5 text-sm"
+        >
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {staffId && (
+          <span className="flex items-center gap-1.5 rounded-full bg-brand-blue-light px-3 py-1 text-xs font-medium text-brand-blue">
+            Filtered by staff member
+            <Link href="/home-visits" className="underline">
+              Clear
+            </Link>
+          </span>
+        )}
+      </div>
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         {loading ? (

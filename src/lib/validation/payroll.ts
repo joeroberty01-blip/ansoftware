@@ -9,6 +9,7 @@ export const createPayrollSchema = z.object({
     .regex(/^\d+(\.\d{1,2})?$/, "Other deductions sio sahihi")
     .optional()
     .default("0"),
+  applyNssf: z.boolean().optional().default(true),
 });
 
 export type CreatePayrollInput = z.infer<typeof createPayrollSchema>;

@@ -4,6 +4,7 @@ export interface PayrollCalculationInput {
   baseSalary: string;
   allowances: string;
   otherDeductions: string;
+  applyNssf?: boolean;
 }
 
 export interface PayrollCalculationResult {
@@ -52,7 +53,10 @@ export function calculatePayroll(
   const otherDeductions = new Decimal(input.otherDeductions);
 
   const grossPay = baseSalary.plus(allowances);
-  const nssfDeduction = grossPay.times(NSSF_RATE).toDecimalPlaces(2);
+  const nssfDeduction =
+    input.applyNssf === false
+      ? new Decimal(0)
+      : grossPay.times(NSSF_RATE).toDecimalPlaces(2);
   const payeDeduction = calculatePaye(grossPay).toDecimalPlaces(2);
   const netPay = grossPay
     .minus(nssfDeduction)
