@@ -42,9 +42,14 @@ export async function getFinanceSummary(
          END AS to_date
      ),
      income AS (
-       SELECT COALESCE(SUM(p.amount), 0) AS total
-       FROM payments p, period
-       WHERE p.paid_at >= period.from_date AND p.paid_at < period.to_date
+       SELECT
+         (SELECT COALESCE(SUM(p.amount), 0) FROM payments p, period
+          WHERE p.paid_at >= period.from_date AND p.paid_at < period.to_date)
+         +
+         (SELECT COALESCE(SUM(oi.amount), 0) FROM other_income oi, period
+          WHERE oi.date >= period.from_date AND oi.date < period.to_date)
+         AS total
+       FROM period
      ),
      expense AS (
        SELECT COALESCE(SUM(e.amount), 0) AS total
@@ -118,8 +123,10 @@ export async function getFinanceComparison(period: FinancePeriod): Promise<{
          END AS prev_from_date
      )
      SELECT
-       (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.from_date AND paid_at < period.to_date) AS income,
-       (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.prev_from_date AND paid_at < period.from_date) AS previous_income,
+       (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.from_date AND paid_at < period.to_date)
+         + (SELECT COALESCE(SUM(amount), 0) FROM other_income, period WHERE date >= period.from_date AND date < period.to_date) AS income,
+       (SELECT COALESCE(SUM(amount), 0) FROM payments, period WHERE paid_at >= period.prev_from_date AND paid_at < period.from_date)
+         + (SELECT COALESCE(SUM(amount), 0) FROM other_income, period WHERE date >= period.prev_from_date AND date < period.from_date) AS previous_income,
        (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.from_date AND date < period.to_date AND status = 'APPROVED') AS expenses,
        (SELECT COALESCE(SUM(amount), 0) FROM expenses, period WHERE date >= period.prev_from_date AND date < period.from_date AND status = 'APPROVED') AS previous_expenses`,
     [period]
@@ -149,7 +156,10 @@ export async function getRevenueTrend(
      )
      SELECT
        to_char(ms.month_start, 'YYYY-MM') AS month,
-       COALESCE(SUM(p.amount), 0) AS income
+       COALESCE(SUM(p.amount), 0) + COALESCE((
+         SELECT SUM(oi.amount) FROM other_income oi
+         WHERE oi.date >= ms.month_start AND oi.date < ms.month_start + interval '1 month'
+       ), 0) AS income
      FROM month_series ms
      LEFT JOIN payments p
        ON p.paid_at >= ms.month_start

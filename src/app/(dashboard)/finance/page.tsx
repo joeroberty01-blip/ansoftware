@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { ExpenseCategory, PaymentMethod } from "@/lib/types";
+import type { ExpenseCategory, IncomeCategory, PaymentMethod } from "@/lib/types";
 import { ListToolbar } from "../_components/list-toolbar";
 import {
   Wallet,
@@ -25,6 +25,16 @@ interface Expense {
   description: string;
   payment_method: PaymentMethod | null;
   attachment_url: string | null;
+}
+
+interface Income {
+  id: string;
+  category: IncomeCategory;
+  amount: string;
+  date: string;
+  source: string;
+  description: string;
+  payment_method: PaymentMethod | null;
 }
 
 const CSV_COLUMNS = [
@@ -68,6 +78,17 @@ const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
 const CATEGORY_LABELS = Object.fromEntries(
   CATEGORY_OPTIONS.map((c) => [c.value, c.label])
 ) as Record<ExpenseCategory, string>;
+
+const INCOME_CATEGORY_OPTIONS: { value: IncomeCategory; label: string }[] = [
+  { value: "HUDUMA", label: "Huduma (Services)" },
+  { value: "MSAADA", label: "Msaada/Ruzuku (Donation/Grant)" },
+  { value: "UWEKEZAJI", label: "Uwekezaji (Investment)" },
+  { value: "MENGINEYO", label: "Mengineyo" },
+];
+
+const INCOME_CATEGORY_LABELS = Object.fromEntries(
+  INCOME_CATEGORY_OPTIONS.map((c) => [c.value, c.label])
+) as Record<IncomeCategory, string>;
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   MISHAHARA: { bg: "bg-green-100", text: "text-green-700", dot: "#16a34a" },
@@ -225,14 +246,18 @@ export default function FinancePage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [formMode, setFormMode] = useState<"expense" | "income">("expense");
   const [category, setCategory] = useState<ExpenseCategory>("MISHAHARA");
+  const [incomeCategory, setIncomeCategory] = useState<IncomeCategory>("HUDUMA");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayDateInput());
+  const [source, setSource] = useState("");
   const [description, setDescription] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [recentIncome, setRecentIncome] = useState<Income[]>([]);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -240,8 +265,10 @@ export default function FinancePage() {
 
   const resetForm = () => {
     setCategory("MISHAHARA");
+    setIncomeCategory("HUDUMA");
     setAmount("");
     setDate(todayDateInput());
+    setSource("");
     setDescription("");
     setPaymentMethod("");
     setAttachmentFile(null);
@@ -250,11 +277,12 @@ export default function FinancePage() {
 
   const loadData = useCallback(async (p: Period) => {
     setLoading(true);
-    const [summaryRes, dashboardRes, breakdownRes, expensesRes] = await Promise.all([
+    const [summaryRes, dashboardRes, breakdownRes, expensesRes, incomeRes] = await Promise.all([
       fetch(`/api/finance/summary?period=${p}`),
       fetch(`/api/dashboard/summary?period=${p}`),
       fetch(`/api/finance/category-breakdown?period=${p}`),
       fetch("/api/expenses?all=true"),
+      fetch("/api/finance/income"),
     ]);
     setSummary(await summaryRes.json());
     const dashJson = await dashboardRes.json();
@@ -264,6 +292,8 @@ export default function FinancePage() {
     setBreakdown(breakdownJson.breakdown ?? []);
     const expensesJson = await expensesRes.json();
     setExpenses(expensesJson.expenses ?? []);
+    const incomeJson = await incomeRes.json();
+    setRecentIncome(incomeJson.income ?? []);
     setLoading(false);
   }, []);
 
@@ -280,6 +310,29 @@ export default function FinancePage() {
     setFormError(null);
     setSubmitting(true);
     try {
+      if (formMode === "income") {
+        const res = await fetch("/api/finance/income", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: incomeCategory,
+            amount,
+            date,
+            source,
+            description,
+            paymentMethod: paymentMethod || undefined,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setFormError(json.error ?? "Imeshindwa kuongeza mapato.");
+          return;
+        }
+        resetForm();
+        await loadData(period);
+        return;
+      }
+
       const res = await fetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -350,7 +403,21 @@ export default function FinancePage() {
           <ListToolbar filename="expenses-report" columns={CSV_COLUMNS} rows={expenses} />
           <button
             type="button"
-            onClick={() => document.getElementById("ongeza-expense-form")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => {
+              setFormMode("income");
+              document.getElementById("ongeza-expense-form")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-700"
+          >
+            <Wallet className="h-4 w-4" />
+            Ongeza Mapato
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setFormMode("expense");
+              document.getElementById("ongeza-expense-form")?.scrollIntoView({ behavior: "smooth" });
+            }}
             className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
           >
             <Receipt className="h-4 w-4" />
@@ -400,8 +467,32 @@ export default function FinancePage() {
         <div id="ongeza-expense-form" className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-900">Ongeza Expense</h2>
-              <p className="text-xs text-zinc-500">Ingiza matumizi mapya</p>
+              <div className="mb-1 flex gap-1 rounded-lg bg-zinc-100 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setFormMode("expense")}
+                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    formMode === "expense" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
+                  }`}
+                >
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormMode("income")}
+                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    formMode === "income" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
+                  }`}
+                >
+                  Mapato (Income)
+                </button>
+              </div>
+              <h2 className="text-sm font-semibold text-zinc-900">
+                {formMode === "income" ? "Ongeza Mapato" : "Ongeza Expense"}
+              </h2>
+              <p className="text-xs text-zinc-500">
+                {formMode === "income" ? "Ingiza mapato mapya" : "Ingiza matumizi mapya"}
+              </p>
             </div>
             <button
               type="button"
@@ -415,17 +506,31 @@ export default function FinancePage() {
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-              >
-                {CATEGORY_OPTIONS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              {formMode === "income" ? (
+                <select
+                  value={incomeCategory}
+                  onChange={(e) => setIncomeCategory(e.target.value as IncomeCategory)}
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                >
+                  {INCOME_CATEGORY_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                >
+                  {CATEGORY_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Kiasi (TZS)</label>
@@ -446,6 +551,17 @@ export default function FinancePage() {
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
+            {formMode === "income" && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-600">Source (Chanzo)</label>
+                <input
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  placeholder="e.g. XYZ Trust, John Mrema, Bank Interest"
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                />
+              </div>
+            )}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Payment Method (hiari)</label>
               <select
@@ -466,29 +582,33 @@ export default function FinancePage() {
               <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. Vehicle fuel"
+                placeholder={formMode === "income" ? "e.g. Donation from XYZ Trust" : "e.g. Vehicle fuel"}
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-brand-blue">
-              <Paperclip className="h-3.5 w-3.5" />
-              {attachmentFile ? attachmentFile.name : "+ Add Attachment (hiari)"}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                className="hidden"
-                onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
+            {formMode === "expense" && (
+              <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-brand-blue">
+                <Paperclip className="h-3.5 w-3.5" />
+                {attachmentFile ? attachmentFile.name : "+ Add Attachment (hiari)"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            )}
             {formError && (
               <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
             )}
             <button
               type="submit"
               disabled={submitting}
-              className="mt-1 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
+              className={`mt-1 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 ${
+                formMode === "income" ? "bg-green-600 hover:bg-green-700" : "bg-brand-blue hover:bg-brand-blue-dark"
+              }`}
             >
-              {submitting ? "Adding..." : "Ongeza Expense"}
+              {submitting ? "Adding..." : formMode === "income" ? "Ongeza Mapato" : "Ongeza Expense"}
             </button>
           </form>
         </div>
@@ -547,10 +667,10 @@ export default function FinancePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-1">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">Malipo ya Hivi Karibuni</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">Matumizi Mapya</h2>
             <button
               type="button"
               onClick={() => document.getElementById("expenses-table")?.scrollIntoView({ behavior: "smooth" })}
@@ -583,6 +703,37 @@ export default function FinancePage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-1">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-900">Mapato ya Hivi Karibuni</h2>
+          </div>
+          {loading ? (
+            <p className="text-sm text-zinc-500">Loading...</p>
+          ) : recentIncome.length === 0 ? (
+            <p className="text-sm text-zinc-500">Hakuna mapato mengine bado.</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {recentIncome.slice(0, 6).map((inc) => (
+                <div key={inc.id} className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-700">
+                    <Wallet className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-zinc-900">{inc.source}</p>
+                    <p className="truncate text-xs text-zinc-400">
+                      {INCOME_CATEGORY_LABELS[inc.category]} · {inc.description}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-green-600">+{formatMoney(inc.amount)}</p>
+                    <p className="text-xs text-zinc-400">{inc.date.slice(0, 10)}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
