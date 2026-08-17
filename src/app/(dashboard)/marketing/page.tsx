@@ -1,6 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  Send,
+  Users,
+  Smartphone,
+  Globe,
+  MessageSquareWarning,
+  Settings as SettingsIcon,
+} from "lucide-react";
 
 type Platform = "FACEBOOK" | "INSTAGRAM" | "WHATSAPP" | "TIKTOK" | "X" | "OTHER";
 
@@ -22,51 +30,207 @@ const PLATFORM_OPTIONS: { value: Platform; label: string }[] = [
   { value: "OTHER", label: "Nyingine" },
 ];
 
+type MarketingTab =
+  | "posts"
+  | "ai"
+  | "social-reports"
+  | "app"
+  | "website"
+  | "issues"
+  | "settings";
+
+const TABS: { key: MarketingTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: "posts", label: "Machapisho (Posts)", icon: Send },
+  { key: "ai", label: "AI Generator", icon: Send },
+  { key: "social-reports", label: "Social Media Reports", icon: Users },
+  { key: "app", label: "Company App", icon: Smartphone },
+  { key: "website", label: "Website", icon: Globe },
+  { key: "issues", label: "Issues & Feedback", icon: MessageSquareWarning },
+  { key: "settings", label: "Settings", icon: SettingsIcon },
+];
+
 export default function MarketingPage() {
-  const [tab, setTab] = useState<"posts" | "ai" | "links">("posts");
+  const [tab, setTab] = useState<MarketingTab>("posts");
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Marketing Tools</h1>
 
-      <div className="flex gap-2 border-b border-zinc-200">
-        <button
-          onClick={() => setTab("posts")}
-          className={`px-3 py-2 text-sm font-medium ${
-            tab === "posts"
-              ? "border-b-2 border-zinc-900 text-zinc-900"
-              : "text-zinc-500"
-          }`}
-        >
-          Machapisho (Posts)
-        </button>
-        <button
-          onClick={() => setTab("ai")}
-          className={`px-3 py-2 text-sm font-medium ${
-            tab === "ai"
-              ? "border-b-2 border-zinc-900 text-zinc-900"
-              : "text-zinc-500"
-          }`}
-        >
-          AI Generator
-        </button>
-        <button
-          onClick={() => setTab("links")}
-          className={`px-3 py-2 text-sm font-medium ${
-            tab === "links"
-              ? "border-b-2 border-zinc-900 text-zinc-900"
-              : "text-zinc-500"
-          }`}
-        >
-          Social Media Links
-        </button>
+      <div className="flex flex-wrap gap-2 border-b border-zinc-200">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
+              tab === t.key
+                ? "border-b-2 border-zinc-900 text-zinc-900"
+                : "text-zinc-500"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {tab === "posts" && <PostsTab />}
       {tab === "ai" && <AiTab />}
-      {tab === "links" && <LinksTab />}
+      {tab === "social-reports" && <SocialReportsTab />}
+      {tab === "app" && <NotConnectedTab
+        icon={Smartphone}
+        title="Company App"
+        message="No mobile app analytics are connected yet. Once the Afya Nyumbani app is published and linked to an analytics provider, install counts, active users, and session data will appear here."
+      />}
+      {tab === "website" && <WebsiteTab />}
+      {tab === "issues" && <NotConnectedTab
+        icon={MessageSquareWarning}
+        title="Issues & Feedback"
+        message="There isn't an issue/feedback tracker set up yet. This tab is reserved for when one is built — it will show real reported issues and their status here, not placeholder counts."
+      />}
+      {tab === "settings" && <LinksTab />}
     </div>
   );
+}
+
+function NotConnectedTab({
+  icon: Icon,
+  title,
+  message,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  message: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 bg-white p-10 text-center shadow-sm">
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">
+        <Icon className="h-6 w-6" />
+      </span>
+      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+      <p className="max-w-md text-sm text-zinc-500">{message}</p>
+    </div>
+  );
+}
+
+function SocialReportsTab() {
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/marketing/social-links")
+      .then((r) => r.json())
+      .then((json) => {
+        setLinks(json.links ?? {});
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const configured = [
+    { key: "social_facebook_url", label: "Facebook" },
+    { key: "social_instagram_url", label: "Instagram" },
+    { key: "social_whatsapp_url", label: "WhatsApp" },
+  ].filter((f) => links[f.key]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-6 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">
+            <Users className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-900">
+              Followers, reach and engagement aren&apos;t connected yet
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              These numbers can only come from each platform&apos;s official API
+              (Facebook/Instagram Graph API, WhatsApp Business API). No
+              integration is configured, so nothing is shown here rather than
+              made-up figures.
+            </p>
+          </div>
+        </div>
+      </div>
+      {!loading && configured.length > 0 && (
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h3 className="mb-3 text-sm font-semibold text-zinc-900">
+            Accounts on file
+          </h3>
+          <div className="flex flex-col gap-2">
+            {configured.map((f) => (
+              <a
+                key={f.key}
+                href={links[f.key]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 hover:border-brand-blue hover:text-brand-blue"
+              >
+                {f.label}
+                <span className="truncate text-xs text-zinc-400">{links[f.key]}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WebsiteTab() {
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/marketing/social-links")
+      .then((r) => r.json())
+      .then((json) => {
+        setLinks(json.links ?? {});
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const websiteUrl = links.social_website_url;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-6 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">
+            <Globe className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-900">
+              Website analytics aren&apos;t connected yet
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Sessions, bounce rate, and traffic data require connecting an
+              analytics provider (e.g. Google Analytics) for the site below.
+              Nothing is shown here rather than made-up figures.
+            </p>
+          </div>
+        </div>
+      </div>
+      {!loading && websiteUrl && (
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h3 className="mb-2 text-sm font-semibold text-zinc-900">Website on file</h3>
+          <a
+            href={websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-brand-blue hover:underline"
+          >
+            {websiteUrl}
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface PlatformBreakdown {
+  platform: string;
+  count: string;
 }
 
 function PostsTab() {
@@ -78,6 +242,8 @@ function PostsTab() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [postsThisMonth, setPostsThisMonth] = useState<number | null>(null);
+  const [platformBreakdown, setPlatformBreakdown] = useState<PlatformBreakdown[]>([]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -87,9 +253,15 @@ function PostsTab() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/marketing/posts");
-    const json = await res.json();
+    const [postsRes, overviewRes] = await Promise.all([
+      fetch("/api/marketing/posts"),
+      fetch("/api/marketing/overview"),
+    ]);
+    const json = await postsRes.json();
     setPosts(json.posts ?? []);
+    const overviewJson = await overviewRes.json();
+    setPostsThisMonth(overviewJson.postsThisMonth ?? null);
+    setPlatformBreakdown(overviewJson.postsByPlatform ?? []);
     setLoading(false);
   }, []);
 
@@ -183,6 +355,37 @@ function PostsTab() {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-blue-light text-brand-blue">
+            <Send className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-xs text-zinc-500">Posts This Month</p>
+            <p className="text-lg font-bold text-zinc-900">
+              {postsThisMonth === null ? "..." : postsThisMonth}
+            </p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <p className="mb-2 text-xs text-zinc-500">Posts by Platform</p>
+          {platformBreakdown.length === 0 ? (
+            <p className="text-sm text-zinc-400">No posts yet.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {platformBreakdown.map((b) => (
+                <span
+                  key={b.platform}
+                  className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700"
+                >
+                  {PLATFORM_OPTIONS.find((o) => o.value === b.platform)?.label ?? b.platform}: {b.count}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <form
         onSubmit={onAdd}
         className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"

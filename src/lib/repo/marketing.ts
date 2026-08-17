@@ -65,6 +65,30 @@ export async function deletePost(id: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+export interface PlatformBreakdownRow {
+  platform: string;
+  count: string;
+}
+
+/** Real post counts grouped by platform — used for the "Posts by Platform" chart. */
+export async function getPostsByPlatform(): Promise<PlatformBreakdownRow[]> {
+  return query<PlatformBreakdownRow>(
+    `SELECT platform, COUNT(*)::text AS count
+     FROM marketing_posts
+     GROUP BY platform
+     HAVING COUNT(*) > 0
+     ORDER BY COUNT(*) DESC`
+  );
+}
+
+export async function countPostsThisMonth(): Promise<number> {
+  const row = await queryOne<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM marketing_posts
+     WHERE created_at >= date_trunc('month', CURRENT_DATE)`
+  );
+  return parseInt(row?.count ?? "0", 10);
+}
+
 const SOCIAL_LINK_KEYS = [
   "social_facebook_url",
   "social_instagram_url",
