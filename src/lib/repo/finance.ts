@@ -1,6 +1,6 @@
 import { query, queryOne } from "../db";
 
-export type FinancePeriod = "today" | "week" | "month";
+export type FinancePeriod = "today" | "week" | "month" | "all";
 
 export interface FinanceSummary {
   period: FinancePeriod;
@@ -33,11 +33,13 @@ export async function getFinanceSummary(
          CASE
            WHEN $1 = 'today' THEN CURRENT_DATE
            WHEN $1 = 'week' THEN date_trunc('week', CURRENT_DATE)::date
+           WHEN $1 = 'all' THEN DATE '1900-01-01'
            ELSE date_trunc('month', CURRENT_DATE)::date
          END AS from_date,
          CASE
            WHEN $1 = 'today' THEN (CURRENT_DATE + 1)
            WHEN $1 = 'week' THEN (date_trunc('week', CURRENT_DATE) + interval '1 week')::date
+           WHEN $1 = 'all' THEN (CURRENT_DATE + 1)
            ELSE (date_trunc('month', CURRENT_DATE) + interval '1 month')::date
          END AS to_date
      ),
@@ -98,6 +100,19 @@ export async function getFinanceComparison(period: FinancePeriod): Promise<{
   expenses: string;
   previousExpenses: string;
 }> {
+  // "All time" has no meaningful prior period to compare against — return
+  // the current totals with a zero "previous" so callers render "-" rather
+  // than a fabricated percentage change.
+  if (period === "all") {
+    const summary = await getFinanceSummary("all");
+    return {
+      income: summary.income,
+      previousIncome: "0",
+      expenses: summary.expenses,
+      previousExpenses: "0",
+    };
+  }
+
   const row = await queryOne<{
     income: string;
     previous_income: string;

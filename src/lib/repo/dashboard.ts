@@ -10,12 +10,14 @@ import { getOutstandingSummary } from "./invoices";
 import { countActiveStaff, getStaffStatusCounts, listExpiringLicenses } from "./staff";
 import { countActivePatients, countNewPatientsThisMonth, countPatients } from "./patients";
 import {
+  countAbnormalVitalsToday,
   countMissedVisits,
   getHomeVisitStatusCounts,
   getStaffVisitLeaderboard,
   listHomeVisits,
 } from "./home-visits";
 import { listPendingStaff } from "./users";
+import { countNewBookings } from "./bookings";
 import { listLowStockItems, listExpiringBatches } from "./inventory";
 import { listLeaveRequests } from "./leave";
 import { listRecentActivity, type AuditLogWithUser } from "../audit";
@@ -121,6 +123,8 @@ export async function getDashboardOverview(
     activePatientsCount,
     staffLeaderboardRows,
     recentActivityRows,
+    abnormalVitalsCount,
+    newBookingsCount,
   ] = await Promise.all([
     getFinanceSummary(period),
     getFinanceComparison(period),
@@ -148,6 +152,8 @@ export async function getDashboardOverview(
     countActivePatients(),
     getStaffVisitLeaderboard(30),
     listRecentActivity(8),
+    countAbnormalVitalsToday(),
+    countNewBookings(),
   ]);
 
   const todayHomeVisitsCompleted = todayVisits.filter(
@@ -184,6 +190,16 @@ export async function getDashboardOverview(
       label: "Ziara zilizokosekana (missed)",
       count: missedVisitsCount,
       href: "/home-visits",
+    },
+    {
+      label: "Vitals zisizo za kawaida (leo)",
+      count: abnormalVitalsCount,
+      href: "/home-visits",
+    },
+    {
+      label: "Bookings mpya zinazosubiri",
+      count: newBookingsCount,
+      href: "/bookings",
     },
     {
       label: "Leseni za staff zinazokaribia kuisha",

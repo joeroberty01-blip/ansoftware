@@ -111,6 +111,13 @@ export default function BillingDetailPage() {
       setAmount("");
       setReference("");
       await load();
+      if (json.payment?.id) {
+        window.open(
+          `/print/receipts/${id}/${json.payment.id}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }
     } catch {
       setPayError("Network error.");
     } finally {
@@ -209,7 +216,15 @@ export default function BillingDetailPage() {
             rel="noopener noreferrer"
             className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
-            Print
+            Print (A4)
+          </a>
+          <a
+            href={`/print/invoices/${invoice.id}/thermal`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
+          >
+            Print (Thermal)
           </a>
           <a
             href={`/api/invoices/${invoice.id}/pdf`}

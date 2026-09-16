@@ -4,9 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ListToolbar } from "../_components/list-toolbar";
+import { hasVitalsAlert } from "@/lib/vitals";
+
+const VISIT_SESSION_LABELS: Record<string, string> = {
+  MORNING: "Asubuhi",
+  AFTERNOON: "Mchana",
+  EVENING: "Jioni",
+};
 
 const CSV_COLUMNS = [
   { key: "visit_date", label: "Tarehe" },
+  { key: "visit_session", label: "Muda" },
   { key: "patient_name", label: "Mgonjwa" },
   { key: "staff_name", label: "Staff" },
   { key: "location", label: "Location" },
@@ -21,9 +29,14 @@ interface Visit {
   patient_name: string;
   staff_name: string | null;
   visit_date: string;
+  visit_session: string | null;
   status: string;
   location: string | null;
+  check_in_lat: string | null;
+  check_in_lng: string | null;
   blood_pressure: string | null;
+  temperature: string | null;
+  pulse: number | null;
   blood_glucose: string | null;
   food_intake: string | null;
   treatment_notes: string | null;
@@ -135,6 +148,7 @@ export default function HomeVisitsListPage() {
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
+                <th className="py-2 pr-4">Muda</th>
                 <th className="py-2 pr-4">Mgonjwa</th>
                 <th className="py-2 pr-4">Staff</th>
                 <th className="py-2 pr-4">Location</th>
@@ -152,6 +166,11 @@ export default function HomeVisitsListPage() {
                 >
                   <td className="py-2 pr-4">{v.visit_date.slice(0, 10)}</td>
                   <td className="py-2 pr-4">
+                    {v.visit_session
+                      ? VISIT_SESSION_LABELS[v.visit_session] ?? v.visit_session
+                      : "-"}
+                  </td>
+                  <td className="py-2 pr-4">
                     <Link
                       href={`/home-visits/${v.id}`}
                       onClick={(e) => e.stopPropagation()}
@@ -161,9 +180,35 @@ export default function HomeVisitsListPage() {
                     </Link>
                   </td>
                   <td className="py-2 pr-4">{v.staff_name ?? "-"}</td>
-                  <td className="py-2 pr-4">{v.location ?? "-"}</td>
+                  <td className="py-2 pr-4">
+                    <span className="flex items-center gap-1.5">
+                      {v.location ?? "-"}
+                      {v.check_in_lat && v.check_in_lng && (
+                        <a
+                          href={`https://www.google.com/maps?q=${v.check_in_lat},${v.check_in_lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title="GPS check-in imerekodiwa — bofya kuona ramani"
+                          className="text-brand-blue"
+                        >
+                          📍
+                        </a>
+                      )}
+                    </span>
+                  </td>
                   <td className="py-2 pr-4">{v.blood_pressure ?? "-"}</td>
-                  <td className="py-2 pr-4">{v.status}</td>
+                  <td className="py-2 pr-4">
+                    <span className="flex items-center gap-1">
+                      {v.status}
+                      {hasVitalsAlert(v) && (
+                        <span
+                          title="Vitals nje ya kawaida"
+                          className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500"
+                        />
+                      )}
+                    </span>
+                  </td>
                   <td className="py-2 pr-4 text-right print:hidden">
                     <button
                       onClick={(e) => {

@@ -2,14 +2,27 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { hasVitalsAlert, vitalsAlertReasons } from "@/lib/vitals";
+
+const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
+const VISIT_SESSION_LABELS: Record<string, string> = {
+  MORNING: "Asubuhi",
+  AFTERNOON: "Mchana",
+  EVENING: "Jioni",
+};
 
 interface Visit {
   id: string;
   patient_name: string;
   staff_name: string | null;
   visit_date: string;
+  visit_session: string | null;
   status: string;
   location: string | null;
+  check_in_lat: string | null;
+  check_in_lng: string | null;
+  check_in_accuracy_m: string | null;
+  check_in_at: string | null;
   blood_pressure: string | null;
   temperature: string | null;
   pulse: number | null;
@@ -31,6 +44,7 @@ export default function HomeVisitDetailPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [status, setStatus] = useState("SCHEDULED");
+  const [visitSession, setVisitSession] = useState("");
   const [location, setLocation] = useState("");
   const [bloodPressure, setBloodPressure] = useState("");
   const [temperature, setTemperature] = useState("");
@@ -50,6 +64,7 @@ export default function HomeVisitDetailPage() {
     setVisit(json.visit ?? null);
     if (json.visit) {
       setStatus(json.visit.status);
+      setVisitSession(json.visit.visit_session ?? "");
       setLocation(json.visit.location ?? "");
       setBloodPressure(json.visit.blood_pressure ?? "");
       setTemperature(json.visit.temperature ?? "");
@@ -77,6 +92,7 @@ export default function HomeVisitDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status,
+          visitSession: visitSession || undefined,
           location: location || undefined,
           bloodPressure: bloodPressure || undefined,
           temperature: temperature || undefined,
@@ -137,7 +153,11 @@ export default function HomeVisitDetailPage() {
             {visit.patient_name}
           </h1>
           <p className="text-sm text-zinc-600">
-            {visit.visit_date.slice(0, 10)} — Staff: {visit.staff_name ?? "-"}
+            {visit.visit_date.slice(0, 10)}
+            {visit.visit_session
+              ? ` (${VISIT_SESSION_LABELS[visit.visit_session] ?? visit.visit_session})`
+              : ""}
+            {" "}— Staff: {visit.staff_name ?? "-"}
             {visit.location ? ` — ${visit.location}` : ""}
           </p>
         </div>
@@ -178,6 +198,23 @@ export default function HomeVisitDetailPage() {
                 <option value="SCHEDULED">Scheduled</option>
                 <option value="COMPLETED">Completed</option>
                 <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Muda (Session)
+              </label>
+              <select
+                value={visitSession}
+                onChange={(e) => setVisitSession(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              >
+                <option value="">-- hakuna --</option>
+                {VISIT_SESSIONS.map((session) => (
+                  <option key={session} value={session}>
+                    {VISIT_SESSION_LABELS[session]}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2">
@@ -306,14 +343,61 @@ export default function HomeVisitDetailPage() {
         </form>
       ) : (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          {hasVitalsAlert(visit) && (
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 text-xs text-orange-800">
+              <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+              <div>
+                <p className="font-semibold">
+                  Onyo: vitals za ziara hii ziko nje ya kawaida
+                </p>
+                <ul className="mt-1 list-inside list-disc">
+                  {vitalsAlertReasons(visit).map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
             <div>
               <p className="text-xs text-zinc-500">Status</p>
               <p className="font-medium">{visit.status}</p>
             </div>
             <div>
+              <p className="text-xs text-zinc-500">Muda (Session)</p>
+              <p className="font-medium">
+                {visit.visit_session
+                  ? VISIT_SESSION_LABELS[visit.visit_session] ?? visit.visit_session
+                  : "-"}
+              </p>
+            </div>
+            <div>
               <p className="text-xs text-zinc-500">Location</p>
               <p className="font-medium">{visit.location ?? "-"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">GPS Check-in</p>
+              {visit.check_in_lat && visit.check_in_lng ? (
+                <div className="font-medium">
+                  <a
+                    href={`https://www.google.com/maps?q=${visit.check_in_lat},${visit.check_in_lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-blue underline"
+                  >
+                    Tazama kwenye Ramani
+                  </a>
+                  {visit.check_in_accuracy_m && (
+                    <p className="text-xs font-normal text-zinc-400">
+                      usahihi ~{Math.round(Number(visit.check_in_accuracy_m))}m
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="font-medium text-zinc-400">
+                  Hakuna check-in iliyorekodiwa
+                </p>
+              )}
             </div>
             <div>
               <p className="text-xs text-zinc-500">Blood Pressure</p>

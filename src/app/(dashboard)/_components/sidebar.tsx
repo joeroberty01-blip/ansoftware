@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
   Megaphone,
   Settings,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
@@ -26,7 +27,7 @@ interface NavItem {
   href: string | ((role: UserRole) => string);
   icon: LucideIcon;
   hideForStaff?: boolean;
-  badgeKey?: "pendingStaff" | "lowStock" | "outstanding";
+  badgeKey?: "pendingStaff" | "lowStock" | "outstanding" | "newBookings";
   group: "main" | "billing" | "other";
 }
 
@@ -34,6 +35,14 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
   { label: "Patients", href: "/patients", icon: HeartPulse, group: "main" },
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, group: "main" },
+  {
+    label: "Bookings",
+    href: "/bookings",
+    icon: CalendarClock,
+    hideForStaff: true,
+    badgeKey: "newBookings",
+    group: "main",
+  },
   {
     label: "Staff Management",
     labelForStaff: "My Profile",
@@ -110,12 +119,14 @@ export function Sidebar({
   pendingStaffCount = 0,
   lowStockCount = 0,
   outstandingCount = 0,
+  newBookingsCount = 0,
   onNavigate,
 }: {
   role: UserRole;
   pendingStaffCount?: number;
   lowStockCount?: number;
   outstandingCount?: number;
+  newBookingsCount?: number;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -126,6 +137,7 @@ export function Sidebar({
     pendingStaff: pendingStaffCount,
     lowStock: lowStockCount,
     outstanding: outstandingCount,
+    newBookings: newBookingsCount,
   };
 
   const items = NAV_ITEMS.filter(

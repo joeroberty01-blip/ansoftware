@@ -45,11 +45,27 @@ interface CreateInvoiceItemInput {
 
 interface CreateInvoiceInput {
   docType: DocType;
-  clientId: string;
+  documentNumber: string | null;
+  issueDate: string | null;
+  clientId: string | null;
+  newClient: {
+    name: string;
+    phone: string;
+    email: string | null;
+    type: string;
+    address: string | null;
+  } | null;
   dueDate: string | null;
   notes: string | null;
   items: CreateInvoiceItemInput[];
   createdById: string;
+}
+
+/** A caller-supplied document number collided with an existing one. */
+export class DuplicateDocumentNumberError extends Error {
+  constructor() {
+    super("DUPLICATE_DOCUMENT_NUMBER");
+  }
 }
 
 async function nextDocumentNumber(
@@ -85,26 +101,53 @@ export async function createInvoiceWithItems(
   const totalAmount = new Decimal(subtotal).plus(taxAmount).toFixed(2);
 
   return withTransaction(async (client) => {
-    const documentNumber = await nextDocumentNumber(client, input.docType);
+    const documentNumber =
+      input.documentNumber ?? (await nextDocumentNumber(client, input.docType));
 
-    const invoiceRes = await client.query<InvoiceRow>(
-      `INSERT INTO invoices
-         (document_number, doc_type, client_id, due_date, subtotal, tax_amount, total_amount, notes, created_by_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [
-        documentNumber,
-        input.docType,
-        input.clientId,
-        input.dueDate,
-        subtotal,
-        taxAmount,
-        totalAmount,
-        input.notes,
-        input.createdById,
-      ]
-    );
-    const invoice = invoiceRes.rows[0];
+    let clientId = input.clientId;
+    if (!clientId && input.newClient) {
+      const newClientRes = await client.query<{ id: string }>(
+        `INSERT INTO clients (name, phone, email, type, address)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id`,
+        [
+          input.newClient.name,
+          input.newClient.phone,
+          input.newClient.email,
+          input.newClient.type,
+          input.newClient.address,
+        ]
+      );
+      clientId = newClientRes.rows[0].id;
+    }
+    if (!clientId) throw new Error("NO_CLIENT");
+
+    let invoice: InvoiceRow;
+    try {
+      const invoiceRes = await client.query<InvoiceRow>(
+        `INSERT INTO invoices
+           (document_number, doc_type, client_id, issue_date, due_date, subtotal, tax_amount, total_amount, notes, created_by_id)
+         VALUES ($1, $2, $3, COALESCE($4::timestamptz, now()), $5, $6, $7, $8, $9, $10)
+         RETURNING *`,
+        [
+          documentNumber,
+          input.docType,
+          clientId,
+          input.issueDate,
+          input.dueDate,
+          subtotal,
+          taxAmount,
+          totalAmount,
+          input.notes,
+          input.createdById,
+        ]
+      );
+      invoice = invoiceRes.rows[0];
+    } catch (err) {
+      const pgErr = err as { code?: string };
+      if (pgErr.code === "23505") throw new DuplicateDocumentNumberError();
+      throw err;
+    }
 
     const items: InvoiceItemRow[] = [];
     for (let i = 0; i < input.items.length; i++) {

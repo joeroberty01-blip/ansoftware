@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useGeoCheckIn } from "@/lib/use-geo-checkin";
+import { GeoCheckInButton } from "../../../_components/geo-checkin-button";
 
 interface Patient {
   id: string;
@@ -12,6 +14,20 @@ interface Patient {
 interface StaffOption {
   id: string;
   full_name: string;
+}
+
+const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
+const VISIT_SESSION_LABELS: Record<(typeof VISIT_SESSIONS)[number], string> = {
+  MORNING: "Asubuhi",
+  AFTERNOON: "Mchana",
+  EVENING: "Jioni",
+};
+
+function defaultSessionForNow(): (typeof VISIT_SESSIONS)[number] {
+  const hour = new Date().getHours();
+  if (hour < 12) return "MORNING";
+  if (hour < 17) return "AFTERNOON";
+  return "EVENING";
 }
 
 export function NewHomeVisitForm({
@@ -35,6 +51,9 @@ export function NewHomeVisitForm({
   const [visitDate, setVisitDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
+  const [visitSession, setVisitSession] = useState<
+    (typeof VISIT_SESSIONS)[number]
+  >(defaultSessionForNow());
   const [status, setStatus] = useState("COMPLETED");
   const [location, setLocation] = useState("");
   const [bloodPressure, setBloodPressure] = useState("");
@@ -47,6 +66,7 @@ export function NewHomeVisitForm({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const geo = useGeoCheckIn();
 
   useEffect(() => {
     fetch("/api/patients")
@@ -91,8 +111,12 @@ export function NewHomeVisitForm({
           patientId,
           staffId: staffId || undefined,
           visitDate,
+          visitSession,
           status,
           location: location || undefined,
+          checkInLat: geo.checkIn?.lat,
+          checkInLng: geo.checkIn?.lng,
+          checkInAccuracyM: geo.checkIn?.accuracy,
           bloodPressure: bloodPressure || undefined,
           temperature: temperature || undefined,
           pulse: pulse ? Number(pulse) : undefined,
@@ -159,6 +183,13 @@ export function NewHomeVisitForm({
             />
           </div>
 
+          <GeoCheckInButton
+            checkIn={geo.checkIn}
+            checking={geo.checking}
+            error={geo.error}
+            onCapture={geo.captureLocation}
+          />
+
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">Staff</label>
             {isAdmin ? (
@@ -193,6 +224,27 @@ export function NewHomeVisitForm({
               onChange={(e) => setVisitDate(e.target.value)}
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-600">
+              Muda (Session)
+            </label>
+            <select
+              value={visitSession}
+              onChange={(e) =>
+                setVisitSession(
+                  e.target.value as (typeof VISIT_SESSIONS)[number]
+                )
+              }
+              className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            >
+              {VISIT_SESSIONS.map((session) => (
+                <option key={session} value={session}>
+                  {VISIT_SESSION_LABELS[session]}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col gap-1">

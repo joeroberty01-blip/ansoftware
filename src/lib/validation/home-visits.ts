@@ -11,13 +11,22 @@ const optionalDecimal = (message: string) =>
     .or(z.literal(""));
 
 export const HOME_VISIT_STATUSES = ["SCHEDULED", "COMPLETED", "CANCELLED"] as const;
+export const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
+
+const optionalLat = z.number().min(-90).max(90).optional();
+const optionalLng = z.number().min(-180).max(180).optional();
+const optionalAccuracy = z.number().nonnegative().optional();
 
 export const createHomeVisitSchema = z.object({
   patientId: z.string().min(1, "Mgonjwa anahitajika"),
   staffId: z.string().optional().or(z.literal("")),
   visitDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi"),
+  visitSession: z.enum(VISIT_SESSIONS).optional().or(z.literal("")),
   status: z.enum(HOME_VISIT_STATUSES).default("SCHEDULED"),
   location: optionalText(300),
+  checkInLat: optionalLat,
+  checkInLng: optionalLng,
+  checkInAccuracyM: optionalAccuracy,
   bloodPressure: optionalText(20),
   temperature: optionalDecimal("Joto sio sahihi (mf. 36.5)"),
   pulse: z.number().int().positive().optional(),
@@ -33,6 +42,7 @@ export type CreateHomeVisitInput = z.infer<typeof createHomeVisitSchema>;
 
 export const updateHomeVisitSchema = z.object({
   status: z.enum(HOME_VISIT_STATUSES).optional(),
+  visitSession: z.enum(VISIT_SESSIONS).optional().or(z.literal("")),
   location: optionalText(300),
   bloodPressure: optionalText(20),
   temperature: optionalDecimal("Joto sio sahihi (mf. 36.5)"),

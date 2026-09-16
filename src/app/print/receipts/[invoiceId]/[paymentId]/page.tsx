@@ -32,6 +32,14 @@ export default async function ReceiptPrintPage(
       <AutoPrint />
       <style>{`@page { size: 80mm auto; margin: 3mm; }`}</style>
 
+      <div className="flex justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-afyanyumbani-icon.png"
+          alt=""
+          className="mb-1 h-8 w-auto"
+        />
+      </div>
       <p className="text-center text-sm font-bold">Afya Nyumbani Home Care</p>
       <p className="text-center text-[10px] text-zinc-600">
         Dar es Salaam, Tanzania

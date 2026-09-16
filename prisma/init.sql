@@ -21,9 +21,13 @@ CREATE TYPE income_category AS ENUM ('HUDUMA', 'MSAADA', 'UWEKEZAJI', 'MENGINEYO
 CREATE TYPE stock_movement_type AS ENUM ('IN', 'OUT');
 CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE home_visit_status AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED');
+CREATE TYPE visit_session_type AS ENUM ('MORNING', 'AFTERNOON', 'EVENING');
 CREATE TYPE duty_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
 CREATE TYPE bill_status AS ENUM ('PENDING', 'PAID', 'OVERDUE');
 CREATE TYPE marketing_platform AS ENUM ('FACEBOOK', 'INSTAGRAM', 'WHATSAPP', 'TIKTOK', 'X', 'OTHER');
+CREATE TYPE booking_status AS ENUM ('NEW', 'ASSIGNED', 'COMPLETED', 'CANCELLED');
+CREATE TYPE care_plan_frequency AS ENUM ('DAILY', 'WEEKLY');
+CREATE TYPE care_plan_status AS ENUM ('ACTIVE', 'PAUSED', 'ENDED');
 
 -- ================= USERS (AUTH) =================
 CREATE TABLE users (
@@ -158,6 +162,25 @@ CREATE TABLE payments (
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Stand-alone printable receipts (e.g. for cash handed over outside the
+-- invoice flow). Deliberately NOT summed anywhere in finance/income
+-- reporting — kept in their own table so they can never be added to
+-- getFinanceSummary's totals by accident.
+CREATE TABLE manual_receipts (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  receipt_number TEXT UNIQUE NOT NULL,
+  client_name    TEXT NOT NULL,
+  phone          TEXT,
+  amount         DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  method         payment_method NOT NULL,
+  reference      TEXT,
+  description    TEXT,
+  issued_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  issued_by_id   TEXT NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_manual_receipts_issued_at ON manual_receipts(issued_at);
+
 -- ================= FINANCE / EXPENSES =================
 CREATE TABLE expenses (
   id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -285,8 +308,14 @@ CREATE TABLE home_visits (
   patient_id        TEXT NOT NULL REFERENCES patients(id),
   staff_id          TEXT REFERENCES staff(id),
   visit_date        DATE NOT NULL,
+  visit_session     visit_session_type,
   status            home_visit_status NOT NULL DEFAULT 'SCHEDULED',
   location          TEXT,
+  check_in_lat      DECIMAL(9,6),
+  check_in_lng      DECIMAL(9,6),
+  check_in_accuracy_m DECIMAL(8,2),
+  check_in_at       TIMESTAMPTZ,
+  care_plan_id      TEXT,
   blood_pressure    TEXT,
   temperature       DECIMAL(4,1),
   pulse             INT CHECK (pulse IS NULL OR pulse > 0),
@@ -300,6 +329,55 @@ CREATE TABLE home_visits (
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ================= BOOKINGS =================
+-- Incoming service requests, before (or in addition to) an existing patient
+-- record. Lifecycle: NEW -> ASSIGNED (staff + patient linked) -> COMPLETED
+-- (a home visit was scheduled from it) or CANCELLED.
+CREATE TABLE bookings (
+  id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  full_name         TEXT NOT NULL,
+  phone             TEXT NOT NULL,
+  service_type      TEXT NOT NULL,
+  preferred_date    DATE,
+  status            booking_status NOT NULL DEFAULT 'NEW',
+  assigned_staff_id TEXT REFERENCES staff(id) ON DELETE SET NULL,
+  patient_id        TEXT REFERENCES patients(id) ON DELETE SET NULL,
+  notes             TEXT,
+  created_by_id     TEXT NOT NULL REFERENCES users(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_bookings_patient ON bookings(patient_id);
+
+-- ================= CARE PLANS =================
+-- A recurring-visit schedule for a patient. "Generate Visits" reads the
+-- plan's rule and inserts SCHEDULED home_visits rows for each matching day
+-- in [start_date, end_date], skipping any that already exist.
+CREATE TABLE care_plans (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  patient_id     TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  staff_id       TEXT REFERENCES staff(id) ON DELETE SET NULL,
+  frequency      care_plan_frequency NOT NULL DEFAULT 'DAILY',
+  weekdays       INT[],
+  sessions       TEXT[] NOT NULL,
+  start_date     DATE NOT NULL,
+  end_date       DATE NOT NULL,
+  status         care_plan_status NOT NULL DEFAULT 'ACTIVE',
+  notes          TEXT,
+  created_by_id  TEXT NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (end_date >= start_date)
+);
+CREATE INDEX idx_care_plans_patient ON care_plans(patient_id);
+CREATE INDEX idx_care_plans_status ON care_plans(status);
+
+ALTER TABLE home_visits
+  ADD CONSTRAINT home_visits_care_plan_id_fkey
+  FOREIGN KEY (care_plan_id) REFERENCES care_plans(id) ON DELETE SET NULL;
+CREATE INDEX idx_home_visits_care_plan ON home_visits(care_plan_id);
 
 -- ================= AUDIT LOG =================
 CREATE TABLE audit_logs (
@@ -350,3 +428,4 @@ CREATE INDEX idx_patients_name ON patients(full_name);
 CREATE INDEX idx_home_visits_patient ON home_visits(patient_id);
 CREATE INDEX idx_home_visits_staff ON home_visits(staff_id);
 CREATE INDEX idx_home_visits_date ON home_visits(visit_date);
+CREATE INDEX idx_home_visits_patient_date ON home_visits(patient_id, visit_date);

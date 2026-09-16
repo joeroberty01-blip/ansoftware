@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
+import QRCode from "qrcode";
 import { getCurrentUser } from "@/lib/auth";
 import { getInvoiceDetail } from "@/lib/repo/invoices";
 import { InvoiceDocument } from "@/lib/pdf/invoice-document";
+import { invoiceQrText } from "@/lib/invoice-brand";
 
 export async function GET(
   _req: Request,
@@ -25,7 +27,14 @@ export async function GET(
     );
   }
 
-  const buffer = await renderToBuffer(<InvoiceDocument invoice={invoice} />);
+  const qrDataUri = await QRCode.toDataURL(invoiceQrText(invoice), {
+    margin: 1,
+    width: 200,
+  });
+
+  const buffer = await renderToBuffer(
+    <InvoiceDocument invoice={invoice} qrDataUri={qrDataUri} />
+  );
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

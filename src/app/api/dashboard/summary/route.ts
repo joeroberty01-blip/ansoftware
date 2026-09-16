@@ -18,7 +18,9 @@ export async function GET(req: NextRequest) {
 
   const periodParam = req.nextUrl.searchParams.get("period");
   const period: FinancePeriod =
-    periodParam === "today" || periodParam === "week" ? periodParam : "month";
+    periodParam === "today" || periodParam === "week" || periodParam === "all"
+      ? periodParam
+      : "month";
 
   const overview = await getDashboardOverview(period);
   return NextResponse.json(overview);

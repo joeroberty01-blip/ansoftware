@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createInvoiceSchema, DOC_TYPES } from "@/lib/validation/invoices";
-import { createInvoiceWithItems, listInvoices } from "@/lib/repo/invoices";
+import {
+  createInvoiceWithItems,
+  listInvoices,
+  DuplicateDocumentNumberError,
+} from "@/lib/repo/invoices";
 import type { DocType } from "@/lib/repo/invoices";
 
 export async function GET(req: NextRequest) {
@@ -51,14 +55,37 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const invoice = await createInvoiceWithItems({
-    docType: parsed.data.docType,
-    clientId: parsed.data.clientId,
-    dueDate: parsed.data.dueDate ? parsed.data.dueDate : null,
-    notes: parsed.data.notes ? parsed.data.notes : null,
-    items: parsed.data.items,
-    createdById: session.id,
-  });
+  try {
+    const invoice = await createInvoiceWithItems({
+      docType: parsed.data.docType,
+      documentNumber: parsed.data.documentNumber ? parsed.data.documentNumber : null,
+      issueDate: parsed.data.issueDate ? parsed.data.issueDate : null,
+      clientId: parsed.data.clientId ? parsed.data.clientId : null,
+      newClient: parsed.data.newClient
+        ? {
+            name: parsed.data.newClient.name,
+            phone: parsed.data.newClient.phone,
+            email: parsed.data.newClient.email ? parsed.data.newClient.email : null,
+            type: parsed.data.newClient.type,
+            address: parsed.data.newClient.address
+              ? parsed.data.newClient.address
+              : null,
+          }
+        : null,
+      dueDate: parsed.data.dueDate ? parsed.data.dueDate : null,
+      notes: parsed.data.notes ? parsed.data.notes : null,
+      items: parsed.data.items,
+      createdById: session.id,
+    });
 
-  return NextResponse.json({ invoice }, { status: 201 });
+    return NextResponse.json({ invoice }, { status: 201 });
+  } catch (err) {
+    if (err instanceof DuplicateDocumentNumberError) {
+      return NextResponse.json(
+        { error: "Namba hii ya hati tayari ipo. Tumia namba nyingine." },
+        { status: 400 }
+      );
+    }
+    throw err;
+  }
 }

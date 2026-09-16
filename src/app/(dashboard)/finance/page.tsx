@@ -59,13 +59,21 @@ interface CategoryBreakdown {
   total: string;
 }
 
-type Period = "today" | "week" | "month";
+type Period = "today" | "week" | "month" | "all";
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
   { value: "today", label: "Leo" },
   { value: "week", label: "Wiki Hii" },
   { value: "month", label: "Mwezi Huu" },
+  { value: "all", label: "Muda Wote" },
 ];
+
+const PERIOD_KPI_LABELS: Record<Period, { income: string; expenses: string }> = {
+  today: { income: "Mapato ya Leo", expenses: "Matumizi ya Leo" },
+  week: { income: "Mapato ya Wiki", expenses: "Matumizi ya Wiki" },
+  month: { income: "Mapato ya Mwezi", expenses: "Matumizi ya Mwezi" },
+  all: { income: "Mapato Yote", expenses: "Matumizi Yote" },
+};
 
 const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
   { value: "MISHAHARA", label: "Mishahara" },
@@ -146,6 +154,7 @@ function KpiCard({
   value,
   changePct,
   invertColor = false,
+  compareLabel = "vs mwezi uliopita",
 }: {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
@@ -154,6 +163,7 @@ function KpiCard({
   value: string;
   changePct: number | null;
   invertColor?: boolean;
+  compareLabel?: string;
 }) {
   const isUp = (changePct ?? 0) > 0;
   const isFlat = !changePct;
@@ -166,10 +176,13 @@ function KpiCard({
       <div className="min-w-0">
         <p className="text-xs text-zinc-500">{label}</p>
         <p className="mt-0.5 text-lg font-bold text-zinc-900">{value}</p>
-        <p className={`mt-0.5 text-xs ${isFlat ? "text-zinc-400" : good ? "text-green-600" : "text-red-600"}`}>
-          {changePct === null ? "-" : isFlat ? "↔" : isUp ? "↑" : "↓"}{" "}
-          {changePct === null ? "" : `${Math.abs(changePct)}%`} vs mwezi uliopita
-        </p>
+        {changePct === null ? (
+          <p className="mt-0.5 text-xs text-zinc-400">-</p>
+        ) : (
+          <p className={`mt-0.5 text-xs ${isFlat ? "text-zinc-400" : good ? "text-green-600" : "text-red-600"}`}>
+            {isFlat ? "↔" : isUp ? "↑" : "↓"} {Math.abs(changePct)}% {compareLabel}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -394,7 +407,7 @@ export default function FinancePage() {
                 </option>
               ))}
             </select>
-            {summary && (
+            {summary && period !== "all" && (
               <span className="text-xs text-zinc-400">
                 ({formatDateRange(summary.from, summary.to)})
               </span>
@@ -431,17 +444,17 @@ export default function FinancePage() {
           icon={Wallet}
           iconBg="bg-blue-100"
           iconColor="text-blue-600"
-          label="Mapato ya Mwezi"
+          label={PERIOD_KPI_LABELS[period].income}
           value={summary ? `TZS ${formatMoney(summary.income)}` : "..."}
-          changePct={incomeChangePct}
+          changePct={period === "all" ? null : incomeChangePct}
         />
         <KpiCard
           icon={TrendingUp}
           iconBg="bg-green-100"
           iconColor="text-green-600"
-          label="Matumizi ya Mwezi"
+          label={PERIOD_KPI_LABELS[period].expenses}
           value={summary ? `TZS ${formatMoney(summary.expenses)}` : "..."}
-          changePct={expenseChangePct}
+          changePct={period === "all" ? null : expenseChangePct}
           invertColor
         />
         <KpiCard
@@ -450,7 +463,7 @@ export default function FinancePage() {
           iconColor="text-orange-600"
           label="Net Profit"
           value={summary ? `TZS ${formatMoney(summary.netProfit)}` : "..."}
-          changePct={expenseChangePct}
+          changePct={period === "all" ? null : expenseChangePct}
           invertColor
         />
         <KpiCard
@@ -459,7 +472,7 @@ export default function FinancePage() {
           iconColor="text-purple-600"
           label="Outstanding Invoices"
           value={summary ? String(summary.outstandingInvoices) : "..."}
-          changePct={0}
+          changePct={null}
         />
       </div>
 

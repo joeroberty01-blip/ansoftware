@@ -64,6 +64,8 @@ export async function PATCH(
   const d = parsed.data;
   const visit = await updateHomeVisit(id, {
     status: d.status,
+    visitSession:
+      d.visitSession === undefined ? undefined : d.visitSession || null,
     location: d.location === undefined ? undefined : d.location || null,
     bloodPressure: d.bloodPressure === undefined ? undefined : d.bloodPressure || null,
     temperature: d.temperature === undefined ? undefined : d.temperature || null,

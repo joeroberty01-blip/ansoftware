@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { ListToolbar } from "../_components/list-toolbar";
+
+const CREATE_DOC_TYPE_LINKS = [
+  { value: "QUOTATION", label: "Quotation" },
+  { value: "PROFORMA", label: "Proforma Invoice" },
+  { value: "INVOICE", label: "Invoice" },
+  { value: "TAX_INVOICE", label: "Tax Invoice" },
+];
 
 const CSV_COLUMNS = [
   { key: "document_number", label: "Namba" },
@@ -58,6 +66,7 @@ export default function BillingPage() {
   const [status, setStatus] = useState("");
   const [outstandingOnly, setOutstandingOnly] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,12 +96,36 @@ export default function BillingPage() {
             columns={CSV_COLUMNS}
             rows={invoices}
           />
-          <Link
-            href="/billing/new"
-            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
-          >
-            Tengeneza Mpya
-          </Link>
+          <div className="relative print:hidden">
+            <button
+              type="button"
+              onClick={() => setCreateOpen((v) => !v)}
+              className="flex items-center gap-1 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
+            >
+              Tengeneza Invoice
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            {createOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setCreateOpen(false)}
+                />
+                <div className="absolute right-0 z-20 mt-2 w-52 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg">
+                  {CREATE_DOC_TYPE_LINKS.map((opt) => (
+                    <Link
+                      key={opt.value}
+                      href={`/billing/new?docType=${opt.value}`}
+                      onClick={() => setCreateOpen(false)}
+                      className="block px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                    >
+                      {opt.label}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

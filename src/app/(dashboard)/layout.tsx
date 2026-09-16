@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { listPendingStaff } from "@/lib/repo/users";
 import { listLowStockItems } from "@/lib/repo/inventory";
 import { countOutstandingInvoices } from "@/lib/repo/invoices";
+import { countNewBookings } from "@/lib/repo/bookings";
 import { DashboardShell } from "./_components/dashboard-shell";
 
 export default async function DashboardLayout({
@@ -19,19 +20,23 @@ export default async function DashboardLayout({
   let pendingStaffCount = 0;
   let lowStockCount = 0;
   let outstandingCount = 0;
+  let newBookingsCount = 0;
 
   if (user.role === "ADMIN") {
-    const [pendingStaff, lowStock, outstanding] = await Promise.all([
+    const [pendingStaff, lowStock, outstanding, newBookings] = await Promise.all([
       listPendingStaff(),
       listLowStockItems(),
       countOutstandingInvoices(),
+      countNewBookings(),
     ]);
     pendingStaffCount = pendingStaff.length;
     lowStockCount = lowStock.length;
     outstandingCount = outstanding;
+    newBookingsCount = newBookings;
   }
 
-  const notificationCount = pendingStaffCount + lowStockCount + outstandingCount;
+  const notificationCount =
+    pendingStaffCount + lowStockCount + outstandingCount + newBookingsCount;
 
   return (
     <DashboardShell
@@ -40,6 +45,7 @@ export default async function DashboardLayout({
       pendingStaffCount={pendingStaffCount}
       lowStockCount={lowStockCount}
       outstandingCount={outstandingCount}
+      newBookingsCount={newBookingsCount}
       notificationCount={notificationCount}
     >
       {children}

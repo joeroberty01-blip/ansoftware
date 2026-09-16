@@ -19,6 +19,7 @@ import type { UserRole } from "@/lib/types";
 const CREATE_LINKS = [
   { label: "New Patient", href: "/patients/new" },
   { label: "New Home Visit", href: "/home-visits/new" },
+  { label: "New Booking", href: "/bookings/new" },
   { label: "New Invoice/Quotation", href: "/billing/new" },
   { label: "New Inventory Item", href: "/inventory/new" },
 ];
@@ -29,6 +30,7 @@ export function DashboardShell({
   pendingStaffCount,
   lowStockCount,
   outstandingCount,
+  newBookingsCount,
   notificationCount,
   children,
 }: {
@@ -37,6 +39,7 @@ export function DashboardShell({
   pendingStaffCount: number;
   lowStockCount: number;
   outstandingCount: number;
+  newBookingsCount: number;
   notificationCount: number;
   children: React.ReactNode;
 }) {
@@ -107,6 +110,7 @@ export function DashboardShell({
           pendingStaffCount={pendingStaffCount}
           lowStockCount={lowStockCount}
           outstandingCount={outstandingCount}
+          newBookingsCount={newBookingsCount}
           onNavigate={() => setSidebarOpen(false)}
         />
 
@@ -175,7 +179,9 @@ export function DashboardShell({
                   />
                   <div className="absolute right-0 z-20 mt-2 w-52 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg">
                     {CREATE_LINKS.filter(
-                      (link) => role === "ADMIN" || link.href !== "/patients/new"
+                      (link) =>
+                        role === "ADMIN" ||
+                        (link.href !== "/patients/new" && link.href !== "/bookings/new")
                     ).map((link) => (
                       <Link
                         key={link.href}

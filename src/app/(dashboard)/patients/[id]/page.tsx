@@ -5,6 +5,18 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { calculateAge } from "@/lib/date-utils";
 import {
+  parseBloodPressure,
+  bpStatus,
+  glucoseStatus,
+  temperatureStatus,
+  pulseStatus,
+  bmiStatus,
+  hasVitalsAlert,
+  vitalsAlertReasons,
+} from "@/lib/vitals";
+import { useGeoCheckIn } from "@/lib/use-geo-checkin";
+import { GeoCheckInButton } from "../../_components/geo-checkin-button";
+import {
   ClipboardPlus,
   User,
   Phone,
@@ -34,6 +46,20 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
+
+const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
+const VISIT_SESSION_LABELS: Record<(typeof VISIT_SESSIONS)[number], string> = {
+  MORNING: "Asubuhi",
+  AFTERNOON: "Mchana",
+  EVENING: "Jioni",
+};
+
+function defaultSessionForNow(): (typeof VISIT_SESSIONS)[number] {
+  const hour = new Date().getHours();
+  if (hour < 12) return "MORNING";
+  if (hour < 17) return "AFTERNOON";
+  return "EVENING";
+}
 
 function InfoField({
   icon: Icon,
@@ -70,42 +96,6 @@ function InfoField({
   );
 }
 
-function parseBloodPressure(
-  bp: string | null | undefined
-): { systolic: number; diastolic: number } | null {
-  if (!bp) return null;
-  const m = bp.match(/^(\d{2,3})\s*\/\s*(\d{2,3})$/);
-  if (!m) return null;
-  return { systolic: Number(m[1]), diastolic: Number(m[2]) };
-}
-
-function bpStatus(bp: string | null | undefined): "normal" | "warning" | null {
-  const parsed = parseBloodPressure(bp);
-  if (!parsed) return null;
-  const { systolic, diastolic } = parsed;
-  return systolic >= 90 && systolic <= 140 && diastolic >= 60 && diastolic <= 90
-    ? "normal"
-    : "warning";
-}
-
-function glucoseStatus(glucose: string | null | undefined): "normal" | "warning" | null {
-  if (!glucose) return null;
-  const v = Number(glucose);
-  if (Number.isNaN(v)) return null;
-  return v >= 3.9 && v <= 7.8 ? "normal" : "warning";
-}
-
-function bmiStatus(
-  weight: string | null | undefined,
-  heightCm: string | null | undefined
-): "normal" | "warning" | null {
-  if (!weight || !heightCm) return null;
-  const w = Number(weight);
-  const hM = Number(heightCm) / 100;
-  if (Number.isNaN(w) || Number.isNaN(hM) || hM <= 0) return null;
-  const bmi = w / (hM * hM);
-  return bmi >= 18.5 && bmi <= 24.9 ? "normal" : "warning";
-}
 
 const VISIT_STATUS_LABELS: Record<string, { label: string; className: string }> = {
   COMPLETED: { label: "Completed", className: "bg-green-100 text-green-700" },
@@ -333,6 +323,22 @@ interface StaffOption {
   full_name: string;
 }
 
+interface CarePlan {
+  id: string;
+  staff_id: string | null;
+  staff_name: string | null;
+  frequency: string;
+  weekdays: number[] | null;
+  sessions: string[];
+  start_date: string;
+  end_date: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+}
+
+const WEEKDAY_LABELS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+
 interface Medication {
   id: string;
   medication_name: string;
@@ -355,6 +361,7 @@ interface HomeVisit {
   id: string;
   staff_name: string | null;
   visit_date: string;
+  visit_session: string | null;
   status: string;
   location: string | null;
   blood_pressure: string | null;
@@ -376,7 +383,7 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "overview" | "medications" | "documents" | "homeVisits"
+    "overview" | "medications" | "documents" | "homeVisits" | "carePlans"
   >("overview");
   const [isAdmin, setIsAdmin] = useState(false);
   const [myStaffId, setMyStaffId] = useState<string | null>(null);
@@ -654,8 +661,130 @@ export default function PatientDetailPage() {
     loadHomeVisits();
   }, [loadHomeVisits]);
 
+  // --- Care Plans (recurring visit scheduling) ---
+  const [carePlans, setCarePlans] = useState<CarePlan[]>([]);
+  const [showCarePlanForm, setShowCarePlanForm] = useState(false);
+  const [cpFrequency, setCpFrequency] = useState<"DAILY" | "WEEKLY">("DAILY");
+  const [cpWeekdays, setCpWeekdays] = useState<number[]>([]);
+  const [cpSessions, setCpSessions] = useState<string[]>(["MORNING"]);
+  const [cpStaffId, setCpStaffId] = useState("");
+  const [cpStartDate, setCpStartDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [cpEndDate, setCpEndDate] = useState("");
+  const [cpNotes, setCpNotes] = useState("");
+  const [cpError, setCpError] = useState<string | null>(null);
+  const [cpSubmitting, setCpSubmitting] = useState(false);
+  const [cpBusyId, setCpBusyId] = useState<string | null>(null);
+  const [cpMessage, setCpMessage] = useState<string | null>(null);
+
+  const loadCarePlans = useCallback(async () => {
+    const res = await fetch(`/api/care-plans?patientId=${id}`);
+    const json = await res.json();
+    setCarePlans(json.carePlans ?? []);
+  }, [id]);
+
+  useEffect(() => {
+    loadCarePlans();
+  }, [loadCarePlans]);
+
+  const toggleCpWeekday = (day: number) => {
+    setCpWeekdays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  const toggleCpSession = (session: string) => {
+    setCpSessions((prev) =>
+      prev.includes(session) ? prev.filter((s) => s !== session) : [...prev, session]
+    );
+  };
+
+  const onCreateCarePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCpError(null);
+    setCpSubmitting(true);
+    try {
+      const res = await fetch("/api/care-plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId: id,
+          staffId: cpStaffId || undefined,
+          frequency: cpFrequency,
+          weekdays: cpFrequency === "WEEKLY" ? cpWeekdays : undefined,
+          sessions: cpSessions,
+          startDate: cpStartDate,
+          endDate: cpEndDate,
+          notes: cpNotes || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setCpError(json.error ?? "Imeshindwa kutengeneza care plan.");
+        return;
+      }
+      setCpEndDate("");
+      setCpNotes("");
+      setShowCarePlanForm(false);
+      await loadCarePlans();
+    } catch {
+      setCpError("Network error.");
+    } finally {
+      setCpSubmitting(false);
+    }
+  };
+
+  const onGenerateVisits = async (planId: string) => {
+    setCpBusyId(planId);
+    setCpMessage(null);
+    try {
+      const res = await fetch(`/api/care-plans/${planId}/generate`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setCpMessage(json.error ?? "Imeshindwa kutengeneza ziara.");
+        return;
+      }
+      setCpMessage(
+        `Ziara ${json.created} mpya zimetengenezwa (${json.skipped} zilikuwepo tayari).`
+      );
+      await loadHomeVisits();
+    } finally {
+      setCpBusyId(null);
+    }
+  };
+
+  const onSetCarePlanStatus = async (planId: string, status: string) => {
+    setCpBusyId(planId);
+    try {
+      await fetch(`/api/care-plans/${planId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      await loadCarePlans();
+    } finally {
+      setCpBusyId(null);
+    }
+  };
+
+  const todaySessionsDone = new Set(
+    homeVisits
+      .filter(
+        (v) =>
+          v.visit_date.slice(0, 10) === new Date().toISOString().slice(0, 10) &&
+          v.status === "COMPLETED"
+      )
+      .map((v) => v.visit_session)
+  );
+
   // --- Quick daily report (add today's visit without leaving this page) ---
   const [showQuickReport, setShowQuickReport] = useState(false);
+  const [qrVisitSession, setQrVisitSession] = useState<
+    (typeof VISIT_SESSIONS)[number]
+  >(defaultSessionForNow());
   const [qrBloodPressure, setQrBloodPressure] = useState("");
   const [qrTemperature, setQrTemperature] = useState("");
   const [qrPulse, setQrPulse] = useState("");
@@ -667,6 +796,8 @@ export default function PatientDetailPage() {
   const [qrNotes, setQrNotes] = useState("");
   const [qrError, setQrError] = useState<string | null>(null);
   const [qrSubmitting, setQrSubmitting] = useState(false);
+  const [vitalsAlert, setVitalsAlert] = useState<string[] | null>(null);
+  const qrGeo = useGeoCheckIn();
 
   const onAddQuickReport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -680,8 +811,12 @@ export default function PatientDetailPage() {
           patientId: id,
           staffId: myStaffId || undefined,
           visitDate: new Date().toISOString().slice(0, 10),
+          visitSession: qrVisitSession,
           status: "COMPLETED",
           location: patient?.address || undefined,
+          checkInLat: qrGeo.checkIn?.lat,
+          checkInLng: qrGeo.checkIn?.lng,
+          checkInAccuracyM: qrGeo.checkIn?.accuracy,
           bloodPressure: qrBloodPressure || undefined,
           temperature: qrTemperature || undefined,
           pulse: qrPulse ? Number(qrPulse) : undefined,
@@ -698,6 +833,15 @@ export default function PatientDetailPage() {
         setQrError(json.error ?? "Failed to add report.");
         return;
       }
+      const reasons = vitalsAlertReasons({
+        blood_pressure: qrBloodPressure || null,
+        temperature: qrTemperature || null,
+        pulse: qrPulse ? Number(qrPulse) : null,
+        blood_glucose: qrBloodGlucose || null,
+      });
+      setVitalsAlert(reasons.length > 0 ? reasons : null);
+      qrGeo.reset();
+      setQrVisitSession(defaultSessionForNow());
       setQrBloodPressure("");
       setQrTemperature("");
       setQrPulse("");
@@ -828,16 +972,10 @@ export default function PatientDetailPage() {
               <div className="flex items-center gap-1.5 text-xs text-zinc-500">
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
-                    bpStatus(latestVisit.blood_pressure) === "warning" ||
-                    glucoseStatus(latestVisit.blood_glucose) === "warning"
-                      ? "bg-orange-500"
-                      : "bg-green-500"
+                    hasVitalsAlert(latestVisit) ? "bg-orange-500" : "bg-green-500"
                   }`}
                 />
-                {bpStatus(latestVisit.blood_pressure) === "warning" ||
-                glucoseStatus(latestVisit.blood_glucose) === "warning"
-                  ? "Needs Attention"
-                  : "Stable"}
+                {hasVitalsAlert(latestVisit) ? "Needs Attention" : "Stable"}
                 <span className="text-zinc-300">·</span>
                 Last updated {latestVisit.visit_date.slice(0, 10)}
               </div>
@@ -1076,6 +1214,7 @@ export default function PatientDetailPage() {
             { key: "medications", label: "Medications", icon: Pill },
             { key: "documents", label: "Documents", icon: FileText },
             { key: "homeVisits", label: "Home Visits", icon: Home },
+            { key: "carePlans", label: "Care Plan", icon: CalendarClock },
           ] as const
         ).map((t) => (
           <button
@@ -1095,13 +1234,27 @@ export default function PatientDetailPage() {
 
       {tab === "overview" && (
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             <VitalCard
               icon={Activity}
               label="Blood Pressure"
               value={latestVisit?.blood_pressure ?? "-"}
               unit={latestVisit?.blood_pressure ? "mmHg" : undefined}
               status={bpStatus(latestVisit?.blood_pressure)}
+            />
+            <VitalCard
+              icon={Heart}
+              label="Temperature"
+              value={latestVisit?.temperature ?? "-"}
+              unit={latestVisit?.temperature ? "°C" : undefined}
+              status={temperatureStatus(latestVisit?.temperature)}
+            />
+            <VitalCard
+              icon={TrendingUp}
+              label="Pulse"
+              value={latestVisit?.pulse != null ? String(latestVisit.pulse) : "-"}
+              unit={latestVisit?.pulse != null ? "bpm" : undefined}
+              status={pulseStatus(latestVisit?.pulse)}
             />
             <VitalCard
               icon={Droplet}
@@ -1531,6 +1684,50 @@ export default function PatientDetailPage() {
             </button>
           </div>
 
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-zinc-500">
+              Vitals za Leo:
+            </span>
+            {VISIT_SESSIONS.map((session) => {
+              const done = todaySessionsDone.has(session);
+              return (
+                <span
+                  key={session}
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    done
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-zinc-100 text-zinc-500"
+                  }`}
+                >
+                  {done ? "✓" : "○"} {VISIT_SESSION_LABELS[session]}
+                </span>
+              );
+            })}
+          </div>
+
+          {vitalsAlert && (
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 text-xs text-orange-800">
+              <Activity className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+              <div>
+                <p className="font-semibold">
+                  Onyo: vitals za mwisho zilizorekodiwa ziko nje ya kawaida
+                </p>
+                <ul className="mt-1 list-inside list-disc">
+                  {vitalsAlert.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVitalsAlert(null)}
+                className="ml-auto shrink-0 text-orange-400 hover:text-orange-600"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {showQuickReport && (
             <form
               onSubmit={onAddQuickReport}
@@ -1540,6 +1737,33 @@ export default function PatientDetailPage() {
                 Rekodi ripoti/vitals za leo ({new Date().toISOString().slice(0, 10)})
                 kwa mgonjwa huyu bila kuondoka ukurasa huu.
               </p>
+              <div className="flex flex-col gap-1 sm:max-w-xs">
+                <label className="text-xs font-medium text-zinc-600">
+                  Muda (Session)
+                </label>
+                <select
+                  value={qrVisitSession}
+                  onChange={(e) =>
+                    setQrVisitSession(
+                      e.target.value as (typeof VISIT_SESSIONS)[number]
+                    )
+                  }
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                >
+                  {VISIT_SESSIONS.map((session) => (
+                    <option key={session} value={session}>
+                      {VISIT_SESSION_LABELS[session]}
+                      {todaySessionsDone.has(session) ? " (tayari imerekodiwa)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <GeoCheckInButton
+                checkIn={qrGeo.checkIn}
+                checking={qrGeo.checking}
+                error={qrGeo.error}
+                onCapture={qrGeo.captureLocation}
+              />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
@@ -1687,6 +1911,7 @@ export default function PatientDetailPage() {
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4">Session</th>
                   <th className="py-2 pr-4">Nurse</th>
                   <th className="py-2 pr-4">Location</th>
                   <th className="py-2 pr-4">Status</th>
@@ -1711,9 +1936,26 @@ export default function PatientDetailPage() {
                         {v.visit_date.slice(0, 10)}
                       </Link>
                     </td>
+                    <td className="py-2 pr-4">
+                      {v.visit_session
+                        ? VISIT_SESSION_LABELS[
+                            v.visit_session as (typeof VISIT_SESSIONS)[number]
+                          ]
+                        : "-"}
+                    </td>
                     <td className="py-2 pr-4">{v.staff_name ?? "-"}</td>
                     <td className="py-2 pr-4">{v.location ?? "-"}</td>
-                    <td className="py-2 pr-4">{v.status}</td>
+                    <td className="py-2 pr-4">
+                      <span className="flex items-center gap-1">
+                        {v.status}
+                        {hasVitalsAlert(v) && (
+                          <span
+                            title="Vitals nje ya kawaida"
+                            className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500"
+                          />
+                        )}
+                      </span>
+                    </td>
                     <td className="py-2 pr-4">{v.blood_pressure ?? "-"}</td>
                     <td className="py-2 pr-4">
                       {v.temperature ? `${v.temperature} °C` : "-"}
@@ -1757,6 +1999,274 @@ export default function PatientDetailPage() {
               kuboresha huduma zinazotolewa.
             </p>
           </div>
+        </div>
+      )}
+
+      {tab === "carePlans" && (
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-blue-light text-brand-blue">
+                <CalendarClock className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-sm font-semibold text-zinc-900">
+                  Care Plan (Ratiba ya Kudumu)
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  Panga ziara za kila siku/wiki kiotomatiki badala ya kuongeza
+                  moja moja.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowCarePlanForm((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm transition-colors ${
+                showCarePlanForm
+                  ? "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+                  : "bg-brand-blue text-white hover:bg-brand-blue-dark"
+              }`}
+            >
+              <CalendarClock className="h-4 w-4" />
+              {showCarePlanForm ? "Close" : "Care Plan Mpya"}
+            </button>
+          </div>
+
+          {cpMessage && (
+            <div className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">
+              {cpMessage}
+            </div>
+          )}
+
+          {showCarePlanForm && (
+            <form
+              onSubmit={onCreateCarePlan}
+              className="mb-4 flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+            >
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Frequency
+                  </label>
+                  <select
+                    value={cpFrequency}
+                    onChange={(e) =>
+                      setCpFrequency(e.target.value as "DAILY" | "WEEKLY")
+                    }
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  >
+                    <option value="DAILY">Kila Siku</option>
+                    <option value="WEEKLY">Siku Maalum za Wiki</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Staff (hiari)
+                  </label>
+                  <select
+                    value={cpStaffId}
+                    onChange={(e) => setCpStaffId(e.target.value)}
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  >
+                    <option value="">-- chagua staff --</option>
+                    {staffOptions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Anza Tarehe
+                  </label>
+                  <input
+                    type="date"
+                    value={cpStartDate}
+                    onChange={(e) => setCpStartDate(e.target.value)}
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Mwisho Tarehe
+                  </label>
+                  <input
+                    type="date"
+                    value={cpEndDate}
+                    onChange={(e) => setCpEndDate(e.target.value)}
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
+
+              {cpFrequency === "WEEKLY" && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Siku za Wiki
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {WEEKDAY_LABELS.map((label, i) => (
+                      <button
+                        type="button"
+                        key={label}
+                        onClick={() => toggleCpWeekday(i)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                          cpWeekdays.includes(i)
+                            ? "bg-brand-blue text-white"
+                            : "bg-zinc-100 text-zinc-600"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-600">
+                  Muda wa Ziara (Sessions)
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {VISIT_SESSIONS.map((session) => (
+                    <button
+                      type="button"
+                      key={session}
+                      onClick={() => toggleCpSession(session)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        cpSessions.includes(session)
+                          ? "bg-brand-blue text-white"
+                          : "bg-zinc-100 text-zinc-600"
+                      }`}
+                    >
+                      {VISIT_SESSION_LABELS[session]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-600">
+                  Maelezo (hiari)
+                </label>
+                <textarea
+                  value={cpNotes}
+                  onChange={(e) => setCpNotes(e.target.value)}
+                  rows={2}
+                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                />
+              </div>
+
+              {cpError && (
+                <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {cpError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={cpSubmitting || !cpEndDate || cpSessions.length === 0}
+                className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
+              >
+                {cpSubmitting ? "Inatengeneza..." : "Tengeneza Care Plan"}
+              </button>
+            </form>
+          )}
+
+          {carePlans.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Hakuna care plan bado kwa mgonjwa huyu.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {carePlans.map((cp) => (
+                <div key={cp.id} className="rounded-lg border border-zinc-200 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-900">
+                        {cp.frequency === "DAILY" ? "Kila Siku" : "Siku Maalum"} —{" "}
+                        {cp.sessions
+                          .map(
+                            (s) =>
+                              VISIT_SESSION_LABELS[
+                                s as (typeof VISIT_SESSIONS)[number]
+                              ]
+                          )
+                          .join(", ")}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {cp.start_date.slice(0, 10)} hadi{" "}
+                        {cp.end_date.slice(0, 10)}
+                        {cp.staff_name ? ` · ${cp.staff_name}` : ""}
+                        {cp.frequency === "WEEKLY" && cp.weekdays
+                          ? ` · ${cp.weekdays
+                              .map((d) => WEEKDAY_LABELS[d])
+                              .join(", ")}`
+                          : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        cp.status === "ACTIVE"
+                          ? "bg-green-100 text-green-700"
+                          : cp.status === "PAUSED"
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-zinc-100 text-zinc-600"
+                      }`}
+                    >
+                      {cp.status}
+                    </span>
+                  </div>
+                  {cp.notes && (
+                    <p className="mt-2 text-xs text-zinc-600">{cp.notes}</p>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {cp.status === "ACTIVE" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onGenerateVisits(cp.id)}
+                          disabled={cpBusyId === cp.id}
+                          className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
+                        >
+                          {cpBusyId === cp.id ? "Inatengeneza..." : "Tengeneza Ziara"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onSetCarePlanStatus(cp.id, "PAUSED")}
+                          disabled={cpBusyId === cp.id}
+                          className="rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                        >
+                          Simamisha
+                        </button>
+                      </>
+                    )}
+                    {cp.status === "PAUSED" && (
+                      <button
+                        type="button"
+                        onClick={() => onSetCarePlanStatus(cp.id, "ACTIVE")}
+                        disabled={cpBusyId === cp.id}
+                        className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
+                      >
+                        Anzisha Tena
+                      </button>
+                    )}
+                    {cp.status !== "ENDED" && (
+                      <button
+                        type="button"
+                        onClick={() => onSetCarePlanStatus(cp.id, "ENDED")}
+                        disabled={cpBusyId === cp.id}
+                        className="rounded border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Maliza
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -145,6 +145,20 @@ export interface PaymentRow {
   created_at: string;
 }
 
+export interface ManualReceiptRow {
+  id: string;
+  receipt_number: string;
+  client_name: string;
+  phone: string | null;
+  amount: string;
+  method: PaymentMethod;
+  reference: string | null;
+  description: string | null;
+  issued_at: string;
+  issued_by_id: string;
+  created_at: string;
+}
+
 export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface ExpenseRow {
@@ -260,6 +274,7 @@ export interface PatientDocumentRow {
 }
 
 export type HomeVisitStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
+export type VisitSession = "MORNING" | "AFTERNOON" | "EVENING";
 
 export type DutyStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
 
@@ -280,8 +295,14 @@ export interface HomeVisitRow {
   patient_id: string;
   staff_id: string | null;
   visit_date: string;
+  visit_session: VisitSession | null;
   status: HomeVisitStatus;
   location: string | null;
+  check_in_lat: string | null;
+  check_in_lng: string | null;
+  check_in_accuracy_m: string | null;
+  check_in_at: string | null;
+  care_plan_id: string | null;
   blood_pressure: string | null;
   temperature: string | null;
   pulse: number | null;
@@ -290,6 +311,42 @@ export interface HomeVisitRow {
   blood_glucose: string | null;
   food_intake: string | null;
   treatment_notes: string | null;
+  notes: string | null;
+  created_by_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BookingStatus = "NEW" | "ASSIGNED" | "COMPLETED" | "CANCELLED";
+
+export interface BookingRow {
+  id: string;
+  full_name: string;
+  phone: string;
+  service_type: string;
+  preferred_date: string | null;
+  status: BookingStatus;
+  assigned_staff_id: string | null;
+  patient_id: string | null;
+  notes: string | null;
+  created_by_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CarePlanFrequency = "DAILY" | "WEEKLY";
+export type CarePlanStatus = "ACTIVE" | "PAUSED" | "ENDED";
+
+export interface CarePlanRow {
+  id: string;
+  patient_id: string;
+  staff_id: string | null;
+  frequency: CarePlanFrequency;
+  weekdays: number[] | null;
+  sessions: VisitSession[];
+  start_date: string;
+  end_date: string;
+  status: CarePlanStatus;
   notes: string | null;
   created_by_id: string;
   created_at: string;

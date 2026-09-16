@@ -1,5 +1,6 @@
 import { query, queryOne } from "../db";
 import type { HomeVisitRow } from "../types";
+import { hasVitalsAlert } from "../vitals";
 
 export interface HomeVisitStatusCounts {
   scheduled: number;
@@ -36,8 +37,12 @@ export async function createHomeVisit(input: {
   patientId: string;
   staffId: string | null;
   visitDate: string;
+  visitSession: string | null;
   status: string;
   location: string | null;
+  checkInLat: number | null;
+  checkInLng: number | null;
+  checkInAccuracyM: number | null;
   bloodPressure: string | null;
   temperature: string | null;
   pulse: number | null;
@@ -49,18 +54,26 @@ export async function createHomeVisit(input: {
   notes: string | null;
   createdById: string;
 }): Promise<HomeVisitRow> {
+  const hasCheckIn = input.checkInLat != null && input.checkInLng != null;
   const row = await queryOne<HomeVisitRow>(
     `INSERT INTO home_visits
-       (patient_id, staff_id, visit_date, status, location, blood_pressure, temperature,
+       (patient_id, staff_id, visit_date, visit_session, status, location,
+        check_in_lat, check_in_lng, check_in_accuracy_m, check_in_at,
+        blood_pressure, temperature,
         pulse, weight, height_cm, blood_glucose, food_intake, treatment_notes, notes, created_by_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
      RETURNING *`,
     [
       input.patientId,
       input.staffId,
       input.visitDate,
+      input.visitSession,
       input.status,
       input.location,
+      input.checkInLat,
+      input.checkInLng,
+      input.checkInAccuracyM,
+      hasCheckIn ? new Date().toISOString() : null,
       input.bloodPressure,
       input.temperature,
       input.pulse,
@@ -138,6 +151,21 @@ export async function countMissedVisits(): Promise<number> {
      WHERE status = 'SCHEDULED' AND visit_date < CURRENT_DATE`
   );
   return parseInt(row?.count ?? "0", 10);
+}
+
+/** Completed visits today whose recorded vitals fall outside the normal range. */
+export async function countAbnormalVitalsToday(): Promise<number> {
+  const rows = await query<{
+    blood_pressure: string | null;
+    temperature: string | null;
+    pulse: number | null;
+    blood_glucose: string | null;
+  }>(
+    `SELECT blood_pressure, temperature, pulse, blood_glucose
+     FROM home_visits
+     WHERE status = 'COMPLETED' AND visit_date = CURRENT_DATE`
+  );
+  return rows.filter((r) => hasVitalsAlert(r)).length;
 }
 
 export interface StaffVisitLeaderboardRow {
@@ -236,6 +264,7 @@ export async function updateHomeVisit(
   id: string,
   patch: {
     status?: string;
+    visitSession?: string | null;
     location?: string | null;
     bloodPressure?: string | null;
     temperature?: string | null;
@@ -250,6 +279,7 @@ export async function updateHomeVisit(
 ): Promise<HomeVisitRow | null> {
   const columnMap: Record<string, unknown> = {
     status: patch.status,
+    visit_session: patch.visitSession,
     location: patch.location,
     blood_pressure: patch.bloodPressure,
     temperature: patch.temperature,
