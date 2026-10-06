@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ReportsNav } from "../_components/reports-nav";
+import { ListToolbar } from "../_components/list-toolbar";
 
 interface Overview {
   days: number;
@@ -31,11 +33,19 @@ interface Overview {
   netProfit: string;
 }
 
+const ALL_TIME_DAYS = 36500;
+
 const DAYS_OPTIONS = [
   { value: 7, label: "Wiki 1" },
   { value: 30, label: "Siku 30" },
   { value: 90, label: "Siku 90" },
+  { value: 365, label: "Mwaka 1" },
+  { value: ALL_TIME_DAYS, label: "Muda Wote" },
 ];
+
+function periodLabel(days: number) {
+  return days >= ALL_TIME_DAYS ? "Muda Wote" : `Siku ${days} Zilizopita`;
+}
 
 function fmtMoney(value: string) {
   return new Intl.NumberFormat("en-TZ", { maximumFractionDigits: 0 }).format(
@@ -46,13 +56,28 @@ function fmtMoney(value: string) {
 function SectionCard({
   title,
   children,
+  download,
 }: {
   title: string;
   children: React.ReactNode;
+  download?: {
+    filename: string;
+    columns: { key: string; label: string }[];
+    rows: object[];
+  };
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-      <h2 className="mb-3 text-sm font-semibold text-zinc-900">{title}</h2>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+        {download && (
+          <ListToolbar
+            filename={download.filename}
+            columns={download.columns}
+            rows={download.rows}
+          />
+        )}
+      </div>
       {children}
     </div>
   );
@@ -73,6 +98,8 @@ export default function ReportsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      <ReportsNav />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Reports</h1>
         <div className="flex items-center gap-2 print:hidden">
@@ -127,7 +154,17 @@ export default function ReportsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <SectionCard title="Wagonjwa kwa Jinsia (Gender)">
+            <SectionCard
+              title="Wagonjwa kwa Jinsia (Gender)"
+              download={{
+                filename: "wagonjwa-kwa-jinsia",
+                columns: [
+                  { key: "gender", label: "Jinsia" },
+                  { key: "count", label: "Idadi" },
+                ],
+                rows: data.genderBreakdown,
+              }}
+            >
               {data.genderBreakdown.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna data.</p>
               ) : (
@@ -180,7 +217,17 @@ export default function ReportsPage() {
             </SectionCard>
           </div>
 
-          <SectionCard title="Wagonjwa kwa Nurse (Patient Load per Nurse)">
+          <SectionCard
+            title="Wagonjwa kwa Nurse (Patient Load per Nurse)"
+            download={{
+              filename: "wagonjwa-kwa-nurse",
+              columns: [
+                { key: "staffName", label: "Nurse" },
+                { key: "patientCount", label: "Idadi ya Wagonjwa" },
+              ],
+              rows: data.patientsPerNurse,
+            }}
+          >
             {data.patientsPerNurse.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna staff active.</p>
             ) : (
@@ -208,7 +255,17 @@ export default function ReportsPage() {
           </SectionCard>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <SectionCard title={`Home Visits (Siku ${data.days} Zilizopita)`}>
+            <SectionCard
+              title={`Home Visits (${periodLabel(data.days)})`}
+              download={{
+                filename: "home-visits-status",
+                columns: [
+                  { key: "status", label: "Status" },
+                  { key: "count", label: "Idadi" },
+                ],
+                rows: data.visitStatusBreakdown,
+              }}
+            >
               {data.visitStatusBreakdown.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna ziara katika kipindi hiki.</p>
               ) : (
@@ -227,7 +284,17 @@ export default function ReportsPage() {
               )}
             </SectionCard>
 
-            <SectionCard title={`Staff Leaderboard (Ziara Zilizokamilika, Siku ${data.days})`}>
+            <SectionCard
+              title={`Staff Leaderboard (Ziara Zilizokamilika, ${periodLabel(data.days)})`}
+              download={{
+                filename: "staff-leaderboard",
+                columns: [
+                  { key: "staffName", label: "Nurse" },
+                  { key: "completedCount", label: "Ziara Zilizokamilika" },
+                ],
+                rows: data.staffLeaderboard,
+              }}
+            >
               {data.staffLeaderboard.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna data kwa kipindi hiki.</p>
               ) : (
@@ -255,7 +322,17 @@ export default function ReportsPage() {
             </SectionCard>
           </div>
 
-          <SectionCard title="Leseni Zinazokaribia Kuisha (siku 90)">
+          <SectionCard
+            title="Leseni Zinazokaribia Kuisha (siku 90)"
+            download={{
+              filename: "leseni-zinazokaribia-kuisha",
+              columns: [
+                { key: "staffName", label: "Nurse" },
+                { key: "expiryDate", label: "Leseni Inaisha" },
+              ],
+              rows: data.expiringLicenses,
+            }}
+          >
             {data.expiringLicenses.length === 0 ? (
               <p className="text-sm text-zinc-500">Hakuna leseni zinazokaribia kuisha.</p>
             ) : (
@@ -283,7 +360,18 @@ export default function ReportsPage() {
           </SectionCard>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <SectionCard title="Stock Chini ya Reorder Level">
+            <SectionCard
+              title="Stock Chini ya Reorder Level"
+              download={{
+                filename: "stock-chini-ya-reorder",
+                columns: [
+                  { key: "name", label: "Item" },
+                  { key: "currentStock", label: "Stock" },
+                  { key: "reorderLevel", label: "Reorder Level" },
+                ],
+                rows: data.lowStockItems,
+              }}
+            >
               {data.lowStockItems.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna item chini ya reorder level.</p>
               ) : (
@@ -312,7 +400,19 @@ export default function ReportsPage() {
               )}
             </SectionCard>
 
-            <SectionCard title="Batches Zinazokaribia Kuisha (siku 90)">
+            <SectionCard
+              title="Batches Zinazokaribia Kuisha (siku 90)"
+              download={{
+                filename: "batches-zinazokaribia-kuisha",
+                columns: [
+                  { key: "itemName", label: "Item" },
+                  { key: "batchNumber", label: "Batch" },
+                  { key: "expiryDate", label: "Inaisha" },
+                  { key: "quantity", label: "Qty" },
+                ],
+                rows: data.expiringBatches,
+              }}
+            >
               {data.expiringBatches.length === 0 ? (
                 <p className="text-sm text-zinc-500">Hakuna batch zinazokaribia kuisha.</p>
               ) : (
