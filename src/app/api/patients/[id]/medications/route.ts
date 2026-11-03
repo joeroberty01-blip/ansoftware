@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { addMedicationSchema } from "@/lib/validation/patients";
 import { addMedication, listMedications } from "@/lib/repo/patients";
 import { assertPatientAccess } from "@/lib/patient-access";
@@ -57,7 +58,9 @@ export async function POST(
     startDate: parsed.data.startDate ? parsed.data.startDate : null,
     endDate: parsed.data.endDate ? parsed.data.endDate : null,
     notes: parsed.data.notes ? parsed.data.notes : null,
+    scheduleSlots: parsed.data.scheduleSlots,
   });
 
+  await logAudit({ userId: session.id, action: "MEDICATION_ADDED", entity: "medication", entityId: medication.id, meta: { patientId: id, name: medication.medication_name } });
   return NextResponse.json({ medication }, { status: 201 });
 }

@@ -14,6 +14,7 @@ export default async function NewHomeVisitPage() {
       isAdmin={session?.role === "ADMIN"}
       ownStaffId={ownStaff?.id ?? null}
       ownStaffName={ownStaff?.full_name ?? null}
+      canRecordPartTime={session?.role === "ADMIN" || !!ownStaff?.is_chief_co}
     />
   );
 }

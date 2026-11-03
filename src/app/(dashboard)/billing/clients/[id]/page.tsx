@@ -25,6 +25,8 @@ interface Invoice {
 
 interface Payment {
   id: string;
+  receipt_number: string;
+  balance_after: string;
   amount: string;
   method: string;
   reference: string | null;
@@ -337,16 +339,20 @@ export default function ClientBillingDetailPage() {
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
+                <th className="py-2 pr-4">Risiti Na.</th>
                 <th className="py-2 pr-4">Hati</th>
                 <th className="py-2 pr-4">Njia</th>
                 <th className="py-2 pr-4">Kumbukumbu</th>
                 <th className="py-2 pr-4 text-right">Kiasi</th>
+                <th className="py-2 pr-4 text-right">Salio</th>
+                <th className="py-2 pr-4"></th>
               </tr>
             </thead>
             <tbody>
               {payments.map((p) => (
                 <tr key={p.id} className="border-b border-zinc-100 last:border-0">
                   <td className="py-2 pr-4">{p.paid_at.slice(0, 10)}</td>
+                  <td className="py-2 pr-4 font-medium">{p.receipt_number}</td>
                   <td className="py-2 pr-4">
                     <Link
                       href={`/billing/${p.invoice_id}`}
@@ -358,6 +364,25 @@ export default function ClientBillingDetailPage() {
                   <td className="py-2 pr-4">{p.method}</td>
                   <td className="py-2 pr-4">{p.reference ?? "-"}</td>
                   <td className="py-2 pr-4 text-right">{fmt(p.amount)}</td>
+                  <td className="py-2 pr-4 text-right">{fmt(p.balance_after)}</td>
+                  <td className="py-2 pr-4 text-right">
+                    <span className="flex justify-end gap-3">
+                      <a
+                        href={`/print/receipts/${p.invoice_id}/${p.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-zinc-900 underline"
+                      >
+                        Print
+                      </a>
+                      <a
+                        href={`/api/invoices/${p.invoice_id}/payments/${p.id}/receipt?download=1`}
+                        className="text-xs font-medium text-zinc-900 underline"
+                      >
+                        PDF
+                      </a>
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

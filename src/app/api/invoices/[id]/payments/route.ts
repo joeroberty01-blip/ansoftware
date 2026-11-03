@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { recordPaymentSchema } from "@/lib/validation/invoices";
 import { recordPayment } from "@/lib/repo/invoices";
 
@@ -27,6 +28,8 @@ export async function POST(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
   const body = await req.json();

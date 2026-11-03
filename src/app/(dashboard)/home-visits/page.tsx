@@ -15,12 +15,19 @@ const VISIT_SESSION_LABELS: Record<string, string> = {
 const CSV_COLUMNS = [
   { key: "visit_date", label: "Tarehe" },
   { key: "visit_session", label: "Muda" },
+  { key: "visit_type", label: "Aina" },
   { key: "patient_name", label: "Mgonjwa" },
   { key: "staff_name", label: "Staff" },
   { key: "location", label: "Location" },
   { key: "blood_pressure", label: "BP" },
+  { key: "temperature", label: "Joto (°C)" },
+  { key: "pulse", label: "Pulse" },
   { key: "blood_glucose", label: "Sukari" },
+  { key: "spo2", label: "SpO2 (%)" },
+  { key: "weight", label: "Uzito (kg)" },
   { key: "food_intake", label: "Chakula" },
+  { key: "treatment_notes", label: "Matibabu / Procedures" },
+  { key: "notes", label: "Maendeleo / Maelezo" },
   { key: "status", label: "Status" },
 ];
 
@@ -30,6 +37,7 @@ interface Visit {
   staff_name: string | null;
   visit_date: string;
   visit_session: string | null;
+  visit_type: string;
   status: string;
   location: string | null;
   check_in_lat: string | null;
@@ -38,6 +46,7 @@ interface Visit {
   temperature: string | null;
   pulse: number | null;
   blood_glucose: string | null;
+  spo2: number | null;
   food_intake: string | null;
   treatment_notes: string | null;
 }
@@ -149,6 +158,7 @@ export default function HomeVisitsListPage() {
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
                 <th className="py-2 pr-4">Muda</th>
+                <th className="py-2 pr-4">Aina</th>
                 <th className="py-2 pr-4">Mgonjwa</th>
                 <th className="py-2 pr-4">Staff</th>
                 <th className="py-2 pr-4">Location</th>
@@ -169,6 +179,9 @@ export default function HomeVisitsListPage() {
                     {v.visit_session
                       ? VISIT_SESSION_LABELS[v.visit_session] ?? v.visit_session
                       : "-"}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {v.visit_type === "PART_TIME" ? "Part-time" : "Full-time"}
                   </td>
                   <td className="py-2 pr-4">
                     <Link

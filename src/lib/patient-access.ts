@@ -21,7 +21,7 @@ export async function assertPatientAccess(
     return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 403 });
   }
 
-  if (staff.profession === "ADMIN_STAFF") return null;
+  if (staff.profession === "ADMIN_STAFF" || staff.is_chief_co) return null;
 
   const patient = await getPatientById(patientId);
   if (!patient) {

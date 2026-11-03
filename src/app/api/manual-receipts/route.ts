@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { createManualReceiptSchema } from "@/lib/validation/manual-receipts";
 import {
   createManualReceipt,
@@ -15,6 +16,8 @@ export async function GET() {
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const receipts = await listManualReceipts();
   return NextResponse.json({ receipts });
@@ -28,6 +31,8 @@ export async function POST(req: Request) {
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const body = await req.json();
   const parsed = createManualReceiptSchema.safeParse(body);

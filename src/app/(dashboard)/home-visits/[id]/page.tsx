@@ -28,6 +28,7 @@ interface Visit {
   pulse: number | null;
   weight: string | null;
   blood_glucose: string | null;
+  spo2: number | null;
   food_intake: string | null;
   treatment_notes: string | null;
   notes: string | null;
@@ -51,6 +52,7 @@ export default function HomeVisitDetailPage() {
   const [pulse, setPulse] = useState("");
   const [weight, setWeight] = useState("");
   const [bloodGlucose, setBloodGlucose] = useState("");
+  const [spo2, setSpo2] = useState("");
   const [foodIntake, setFoodIntake] = useState("");
   const [treatmentNotes, setTreatmentNotes] = useState("");
   const [notes, setNotes] = useState("");
@@ -71,6 +73,7 @@ export default function HomeVisitDetailPage() {
       setPulse(json.visit.pulse != null ? String(json.visit.pulse) : "");
       setWeight(json.visit.weight ?? "");
       setBloodGlucose(json.visit.blood_glucose ?? "");
+      setSpo2(json.visit.spo2 != null ? String(json.visit.spo2) : "");
       setFoodIntake(json.visit.food_intake ?? "");
       setTreatmentNotes(json.visit.treatment_notes ?? "");
       setNotes(json.visit.notes ?? "");
@@ -99,6 +102,7 @@ export default function HomeVisitDetailPage() {
           pulse: pulse ? Number(pulse) : undefined,
           weight: weight || undefined,
           bloodGlucose: bloodGlucose || undefined,
+          spo2: spo2 ? Number(spo2) : undefined,
           foodIntake: foodIntake || undefined,
           treatmentNotes: treatmentNotes || undefined,
           notes: notes || undefined,
@@ -163,6 +167,12 @@ export default function HomeVisitDetailPage() {
         </div>
         {!editing && (
           <div className="flex gap-2">
+            <a
+              href={`/api/home-visits/${id}/pdf`}
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
+            >
+              Pakua PDF
+            </a>
             <button
               onClick={() => setEditing(true)}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
@@ -280,6 +290,18 @@ export default function HomeVisitDetailPage() {
                 onChange={(e) => setBloodGlucose(e.target.value)}
                 inputMode="decimal"
                 placeholder="e.g. 5.5"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                SpO₂ / Oxygen (%)
+              </label>
+              <input
+                value={spo2}
+                onChange={(e) => setSpo2(e.target.value)}
+                inputMode="numeric"
+                placeholder="e.g. 97"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -423,6 +445,12 @@ export default function HomeVisitDetailPage() {
               <p className="text-xs text-zinc-500">Sukari (Blood Glucose)</p>
               <p className="font-medium">
                 {visit.blood_glucose ? `${visit.blood_glucose} mmol/L` : "-"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">SpO₂ (Oxygen)</p>
+              <p className="font-medium">
+                {visit.spo2 != null ? `${visit.spo2}%` : "-"}
               </p>
             </div>
             <div>

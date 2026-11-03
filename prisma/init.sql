@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ================= ENUMS =================
 CREATE TYPE user_role AS ENUM ('ADMIN', 'STAFF');
 CREATE TYPE user_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED');
-CREATE TYPE profession AS ENUM ('NURSE', 'DOCTOR', 'CHW', 'ADMIN_STAFF');
+CREATE TYPE profession AS ENUM ('NURSE', 'DOCTOR', 'CHW', 'ADMIN_STAFF', 'ACCOUNTANT');
 CREATE TYPE employment_status AS ENUM ('ACTIVE', 'INACTIVE', 'TERMINATED');
 CREATE TYPE leave_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE payroll_status AS ENUM ('PENDING', 'PAID');
@@ -22,6 +22,7 @@ CREATE TYPE stock_movement_type AS ENUM ('IN', 'OUT');
 CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE home_visit_status AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED');
 CREATE TYPE visit_session_type AS ENUM ('MORNING', 'AFTERNOON', 'EVENING');
+CREATE TYPE visit_type AS ENUM ('FULL_TIME', 'PART_TIME');
 CREATE TYPE duty_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
 CREATE TYPE bill_status AS ENUM ('PENDING', 'PAID', 'OVERDUE');
 CREATE TYPE marketing_platform AS ENUM ('FACEBOOK', 'INSTAGRAM', 'WHATSAPP', 'TIKTOK', 'X', 'OTHER');
@@ -60,6 +61,7 @@ CREATE TABLE staff (
   base_salary          DECIMAL(14,2) NOT NULL CHECK (base_salary >= 0),
   allowances           DECIMAL(14,2) NOT NULL DEFAULT 0 CHECK (allowances >= 0),
   leave_balance_days    INT NOT NULL DEFAULT 28 CHECK (leave_balance_days >= 0),
+  is_chief_co          BOOLEAN NOT NULL DEFAULT false,
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -105,6 +107,10 @@ CREATE TABLE payrolls (
   net_pay           DECIMAL(14,2) NOT NULL CHECK (net_pay >= 0),
   status            payroll_status NOT NULL DEFAULT 'PENDING',
   paid_at           TIMESTAMPTZ,
+  payment_method    payment_method,
+  payment_reference TEXT,
+  payment_account   TEXT,
+  paid_by_id        TEXT REFERENCES users(id),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(staff_id, month, year)
@@ -150,8 +156,12 @@ CREATE TABLE invoice_items (
   total       DECIMAL(14,2) NOT NULL CHECK (total >= 0)
 );
 
+-- Unique, automatically generated receipt number for every payment.
+CREATE SEQUENCE payment_receipt_seq;
+
 CREATE TABLE payments (
   id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  receipt_number TEXT NOT NULL UNIQUE DEFAULT ('RCP-' || to_char(now(),'YYYY') || '-' || lpad(nextval('payment_receipt_seq')::text,5,'0')),
   invoice_id     TEXT NOT NULL REFERENCES invoices(id),
   amount         DECIMAL(14,2) NOT NULL CHECK (amount > 0),
   method         payment_method NOT NULL,
@@ -279,8 +289,29 @@ CREATE TABLE patient_medications (
   start_date      DATE,
   end_date        DATE,
   notes           TEXT,
+  -- MORNING / AFTERNOON / EVENING. Empty = legacy medication with no
+  -- schedule set; the MAR then shows it in every slot.
+  schedule_slots  TEXT[] NOT NULL DEFAULT '{}',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Medication Administration Record. A row exists only once a dose has been
+-- resolved (GIVEN / MISSED / REFUSED); no row for a slot means PENDING.
+CREATE TABLE medication_administrations (
+  id                  TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  medication_id       TEXT NOT NULL REFERENCES patient_medications(id) ON DELETE CASCADE,
+  patient_id          TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  administration_date DATE NOT NULL,
+  slot                TEXT NOT NULL CHECK (slot IN ('MORNING','AFTERNOON','EVENING')),
+  status              TEXT NOT NULL CHECK (status IN ('GIVEN','MISSED','REFUSED')),
+  given_at            TIMESTAMPTZ,
+  administered_by_id  TEXT REFERENCES users(id),
+  notes               TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (medication_id, administration_date, slot)
+);
+CREATE INDEX idx_med_admin_patient_date ON medication_administrations(patient_id, administration_date);
 
 CREATE TABLE patient_documents (
   id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -288,8 +319,19 @@ CREATE TABLE patient_documents (
   title          TEXT NOT NULL,
   document_type  TEXT NOT NULL,
   notes          TEXT,
+  file_name      TEXT,
+  mime_type      TEXT,
+  file_size      INT,
   uploaded_by_id TEXT NOT NULL REFERENCES users(id),
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Uploaded file bytes live in their own table so document listings never
+-- load them. Served only through an authenticated route.
+CREATE TABLE patient_document_files (
+  document_id TEXT PRIMARY KEY REFERENCES patient_documents(id) ON DELETE CASCADE,
+  data        BYTEA NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE staff_documents (
@@ -309,6 +351,7 @@ CREATE TABLE home_visits (
   staff_id          TEXT REFERENCES staff(id),
   visit_date        DATE NOT NULL,
   visit_session     visit_session_type,
+  visit_type        visit_type NOT NULL DEFAULT 'FULL_TIME',
   status            home_visit_status NOT NULL DEFAULT 'SCHEDULED',
   location          TEXT,
   check_in_lat      DECIMAL(9,6),
@@ -322,6 +365,7 @@ CREATE TABLE home_visits (
   weight            DECIMAL(5,2),
   height_cm         DECIMAL(5,1),
   blood_glucose     DECIMAL(5,1),
+  spo2              INT CHECK (spo2 IS NULL OR spo2 BETWEEN 50 AND 100),
   food_intake       TEXT,
   treatment_notes   TEXT,
   notes             TEXT,

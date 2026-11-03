@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { createInvoiceSchema, DOC_TYPES } from "@/lib/validation/invoices";
 import {
   createInvoiceWithItems,
@@ -17,6 +18,8 @@ export async function GET(req: NextRequest) {
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const docTypeParam = req.nextUrl.searchParams.get("docType");
   const paymentStatusParam = req.nextUrl.searchParams.get("paymentStatus");
@@ -45,6 +48,8 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const body = await req.json();
   const parsed = createInvoiceSchema.safeParse(body);

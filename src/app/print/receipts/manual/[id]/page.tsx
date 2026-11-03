@@ -1,3 +1,5 @@
+import { getCurrentUser } from "@/lib/auth";
+import { userCanAccessBilling } from "@/lib/permissions";
 import { getManualReceiptById } from "@/lib/repo/manual-receipts";
 import { AutoPrint } from "../../../_components/auto-print";
 
@@ -11,6 +13,10 @@ function fmt(value: string) {
 export default async function ManualReceiptPrintPage(
   props: PageProps<"/print/receipts/manual/[id]">
 ) {
+  const viewer = await getCurrentUser();
+  if (!viewer || !(await userCanAccessBilling(viewer))) {
+    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+  }
   const { id } = await props.params;
   const receipt = await getManualReceiptById(id);
 

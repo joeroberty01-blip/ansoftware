@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { updateClientSchema } from "@/lib/validation/clients";
 import { deleteClient, getClientById, updateClient } from "@/lib/repo/clients";
 
@@ -14,6 +15,8 @@ export async function GET(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
   const client = await getClientById(id);
@@ -35,6 +38,8 @@ export async function PATCH(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
   const body = await req.json();
@@ -81,6 +86,8 @@ export async function DELETE(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
   try {

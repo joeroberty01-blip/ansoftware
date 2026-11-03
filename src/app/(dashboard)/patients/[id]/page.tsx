@@ -8,6 +8,7 @@ import {
   parseBloodPressure,
   bpStatus,
   glucoseStatus,
+  spo2Status,
   temperatureStatus,
   pulseStatus,
   bmiStatus,
@@ -15,6 +16,10 @@ import {
   vitalsAlertReasons,
 } from "@/lib/vitals";
 import { useGeoCheckIn } from "@/lib/use-geo-checkin";
+import { compressImageForUpload } from "@/lib/compress-image";
+import { MAR_SLOTS, MAR_SLOT_LABELS, type MarSlot } from "@/lib/mar";
+import { MarPanel } from "./_components/mar-panel";
+import { downloadCsv } from "@/lib/csv-export";
 import { GeoCheckInButton } from "../../_components/geo-checkin-button";
 import {
   ClipboardPlus,
@@ -347,6 +352,7 @@ interface Medication {
   start_date: string | null;
   end_date: string | null;
   notes: string | null;
+  schedule_slots: string[];
 }
 
 interface PatientDocument {
@@ -354,6 +360,7 @@ interface PatientDocument {
   title: string;
   document_type: string;
   notes: string | null;
+  file_name: string | null;
   created_at: string;
 }
 
@@ -362,6 +369,7 @@ interface HomeVisit {
   staff_name: string | null;
   visit_date: string;
   visit_session: string | null;
+  visit_type?: string;
   status: string;
   location: string | null;
   blood_pressure: string | null;
@@ -370,6 +378,7 @@ interface HomeVisit {
   weight: string | null;
   height_cm: string | null;
   blood_glucose: string | null;
+  spo2: number | null;
   food_intake: string | null;
   treatment_notes: string | null;
   notes: string | null;
@@ -387,6 +396,10 @@ export default function PatientDetailPage() {
   >("overview");
   const [isAdmin, setIsAdmin] = useState(false);
   const [myStaffId, setMyStaffId] = useState<string | null>(null);
+  const [isChiefCo, setIsChiefCo] = useState(false);
+  const [reportFrom, setReportFrom] = useState("");
+  const [reportTo, setReportTo] = useState("");
+  const [qrVisitType, setQrVisitType] = useState<"FULL_TIME" | "PART_TIME">("FULL_TIME");
   const [deletingPatient, setDeletingPatient] = useState(false);
 
   useEffect(() => {
@@ -396,7 +409,10 @@ export default function PatientDetailPage() {
       .catch(() => {});
     fetch("/api/staff/me")
       .then((r) => (r.ok ? r.json() : null))
-      .then((json) => setMyStaffId(json?.staff?.id ?? null))
+      .then((json) => {
+        setMyStaffId(json?.staff?.id ?? null);
+        setIsChiefCo(!!json?.staff?.is_chief_co);
+      })
       .catch(() => {});
   }, []);
 
@@ -556,6 +572,8 @@ export default function PatientDetailPage() {
   const [medDosage, setMedDosage] = useState("");
   const [medFrequency, setMedFrequency] = useState("");
   const [medStartDate, setMedStartDate] = useState("");
+  const [medSlots, setMedSlots] = useState<MarSlot[]>(["MORNING"]);
+  const [marRefresh, setMarRefresh] = useState(0);
   const [medError, setMedError] = useState<string | null>(null);
   const [addingMed, setAddingMed] = useState(false);
 
@@ -582,6 +600,7 @@ export default function PatientDetailPage() {
           dosage: medDosage || undefined,
           frequency: medFrequency || undefined,
           startDate: medStartDate || undefined,
+          scheduleSlots: medSlots,
         }),
       });
       const json = await res.json();
@@ -593,7 +612,9 @@ export default function PatientDetailPage() {
       setMedDosage("");
       setMedFrequency("");
       setMedStartDate("");
+      setMedSlots(["MORNING"]);
       await loadMedications();
+      setMarRefresh((k) => k + 1);
     } catch {
       setMedError("Network error.");
     } finally {
@@ -606,6 +627,8 @@ export default function PatientDetailPage() {
   const [docTitle, setDocTitle] = useState("");
   const [docType, setDocType] = useState("LAB_RESULT");
   const [docNotes, setDocNotes] = useState("");
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [docFileKey, setDocFileKey] = useState(0);
   const [docError, setDocError] = useState<string | null>(null);
   const [addingDoc, setAddingDoc] = useState(false);
 
@@ -624,14 +647,14 @@ export default function PatientDetailPage() {
     setDocError(null);
     setAddingDoc(true);
     try {
+      const body = new FormData();
+      body.set("title", docTitle);
+      body.set("documentType", docType);
+      if (docNotes) body.set("notes", docNotes);
+      if (docFile) body.set("file", await compressImageForUpload(docFile));
       const res = await fetch(`/api/patients/${id}/documents`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: docTitle,
-          documentType: docType,
-          notes: docNotes || undefined,
-        }),
+        body,
       });
       const json = await res.json();
       if (!res.ok) {
@@ -640,6 +663,8 @@ export default function PatientDetailPage() {
       }
       setDocTitle("");
       setDocNotes("");
+      setDocFile(null);
+      setDocFileKey((k) => k + 1);
       await loadDocuments();
     } catch {
       setDocError("Network error.");
@@ -791,6 +816,7 @@ export default function PatientDetailPage() {
   const [qrWeight, setQrWeight] = useState("");
   const [qrHeightCm, setQrHeightCm] = useState("");
   const [qrBloodGlucose, setQrBloodGlucose] = useState("");
+  const [qrSpo2, setQrSpo2] = useState("");
   const [qrFoodIntake, setQrFoodIntake] = useState("");
   const [qrTreatmentNotes, setQrTreatmentNotes] = useState("");
   const [qrNotes, setQrNotes] = useState("");
@@ -812,6 +838,7 @@ export default function PatientDetailPage() {
           staffId: myStaffId || undefined,
           visitDate: new Date().toISOString().slice(0, 10),
           visitSession: qrVisitSession,
+          visitType: isChiefCo || isAdmin ? qrVisitType : "FULL_TIME",
           status: "COMPLETED",
           location: patient?.address || undefined,
           checkInLat: qrGeo.checkIn?.lat,
@@ -823,6 +850,7 @@ export default function PatientDetailPage() {
           weight: qrWeight || undefined,
           heightCm: qrHeightCm || undefined,
           bloodGlucose: qrBloodGlucose || undefined,
+          spo2: qrSpo2 ? Number(qrSpo2) : undefined,
           foodIntake: qrFoodIntake || undefined,
           treatmentNotes: qrTreatmentNotes || undefined,
           notes: qrNotes || undefined,
@@ -838,6 +866,7 @@ export default function PatientDetailPage() {
         temperature: qrTemperature || null,
         pulse: qrPulse ? Number(qrPulse) : null,
         blood_glucose: qrBloodGlucose || null,
+        spo2: qrSpo2 ? Number(qrSpo2) : null,
       });
       setVitalsAlert(reasons.length > 0 ? reasons : null);
       qrGeo.reset();
@@ -848,6 +877,7 @@ export default function PatientDetailPage() {
       setQrWeight("");
       setQrHeightCm("");
       setQrBloodGlucose("");
+      setQrSpo2("");
       setQrFoodIntake("");
       setQrTreatmentNotes("");
       setQrNotes("");
@@ -1264,6 +1294,13 @@ export default function PatientDetailPage() {
               status={glucoseStatus(latestVisit?.blood_glucose)}
             />
             <VitalCard
+              icon={Activity}
+              label="SpO₂ (Oxygen)"
+              value={latestVisit?.spo2 != null ? String(latestVisit.spo2) : "-"}
+              unit={latestVisit?.spo2 != null ? "%" : undefined}
+              status={spo2Status(latestVisit?.spo2)}
+            />
+            <VitalCard
               icon={Weight}
               label="Weight"
               value={latestVisit?.weight ?? "-"}
@@ -1330,6 +1367,7 @@ export default function PatientDetailPage() {
                             Nurse: {v.staff_name ?? "-"}
                             {v.blood_pressure ? ` · BP: ${v.blood_pressure} mmHg` : ""}
                             {v.blood_glucose ? ` · Sugar: ${v.blood_glucose} mmol/L` : ""}
+                            {v.spo2 != null ? ` · SpO₂: ${v.spo2}%` : ""}
                           </p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -1516,6 +1554,7 @@ export default function PatientDetailPage() {
 
       {tab === "medications" && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <MarPanel patientId={id} refreshKey={marRefresh} />
           <form
             onSubmit={onAddMedication}
             className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"
@@ -1551,6 +1590,27 @@ export default function PatientDetailPage() {
             >
               {addingMed ? "Adding..." : "Add Medication"}
             </button>
+            <div className="col-span-full flex flex-wrap items-center gap-4 text-sm">
+              <span className="text-xs font-medium text-zinc-600">
+                Anatumia dawa wakati gani:
+              </span>
+              {MAR_SLOTS.map((slot) => (
+                <label key={slot} className="flex items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    checked={medSlots.includes(slot)}
+                    onChange={(e) =>
+                      setMedSlots((prev) =>
+                        e.target.checked
+                          ? [...prev, slot]
+                          : prev.filter((x) => x !== slot)
+                      )
+                    }
+                  />
+                  {MAR_SLOT_LABELS[slot]}
+                </label>
+              ))}
+            </div>
           </form>
           {medError && (
             <p className="mb-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -1566,6 +1626,7 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Dawa</th>
                   <th className="py-2 pr-4">Dosage</th>
                   <th className="py-2 pr-4">Frequency</th>
+                  <th className="py-2 pr-4">Nyakati</th>
                   <th className="py-2 pr-4">Started</th>
                 </tr>
               </thead>
@@ -1575,6 +1636,13 @@ export default function PatientDetailPage() {
                     <td className="py-2 pr-4 font-medium">{m.medication_name}</td>
                     <td className="py-2 pr-4">{m.dosage ?? "-"}</td>
                     <td className="py-2 pr-4">{m.frequency ?? "-"}</td>
+                    <td className="py-2 pr-4">
+                      {m.schedule_slots.length > 0
+                        ? MAR_SLOTS.filter((x) => m.schedule_slots.includes(x))
+                            .map((x) => MAR_SLOT_LABELS[x])
+                            .join(", ")
+                        : "Zote"}
+                    </td>
                     <td className="py-2 pr-4">
                       {m.start_date?.slice(0, 10) ?? "-"}
                     </td>
@@ -1604,6 +1672,7 @@ export default function PatientDetailPage() {
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             >
               <option value="LAB_RESULT">Lab Result</option>
+              <option value="ID_PHOTO">Kitambulisho (ID)</option>
               <option value="CONSENT_FORM">Consent Form</option>
               <option value="PRESCRIPTION">Prescription</option>
               <option value="REFERRAL">Referral</option>
@@ -1615,12 +1684,19 @@ export default function PatientDetailPage() {
               placeholder="Notes (optional)"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
+            <input
+              key={docFileKey}
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setDocFile(e.target.files?.[0] ?? null)}
+              className="rounded border border-zinc-300 px-2 py-1.5 text-sm sm:col-span-2 lg:col-span-3"
+            />
             <button
               type="submit"
               disabled={addingDoc}
               className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {addingDoc ? "Adding..." : "Add Document"}
+              {addingDoc ? "Uploading..." : "Add Document"}
             </button>
           </form>
           {docError && (
@@ -1638,6 +1714,7 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Type</th>
                   <th className="py-2 pr-4">Notes</th>
                   <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4">File</th>
                 </tr>
               </thead>
               <tbody>
@@ -1647,6 +1724,28 @@ export default function PatientDetailPage() {
                     <td className="py-2 pr-4">{d.document_type}</td>
                     <td className="py-2 pr-4">{d.notes ?? "-"}</td>
                     <td className="py-2 pr-4">{d.created_at.slice(0, 10)}</td>
+                    <td className="py-2 pr-4">
+                      {d.file_name ? (
+                        <span className="flex gap-3">
+                          <a
+                            href={`/api/patients/${id}/documents/${d.id}/file`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-brand-blue underline"
+                          >
+                            Fungua
+                          </a>
+                          <a
+                            href={`/api/patients/${id}/documents/${d.id}/file?download=1`}
+                            className="font-medium text-brand-blue underline"
+                          >
+                            Pakua
+                          </a>
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1728,6 +1827,68 @@ export default function PatientDetailPage() {
             </div>
           )}
 
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 print:hidden">
+            <span className="text-xs font-semibold text-zinc-600">Pakua ripoti:</span>
+            <label className="text-xs text-zinc-500">Kutoka</label>
+            <input
+              type="date"
+              value={reportFrom}
+              onChange={(e) => setReportFrom(e.target.value)}
+              className="rounded border border-zinc-300 px-2 py-1 text-xs"
+            />
+            <label className="text-xs text-zinc-500">Hadi</label>
+            <input
+              type="date"
+              value={reportTo}
+              onChange={(e) => setReportTo(e.target.value)}
+              className="rounded border border-zinc-300 px-2 py-1 text-xs"
+            />
+            <a
+              href={`/api/patients/${id}/visit-reports/pdf?${new URLSearchParams({
+                ...(reportFrom ? { from: reportFrom } : {}),
+                ...(reportTo ? { to: reportTo } : {}),
+              }).toString()}`}
+              className="rounded-lg bg-brand-blue px-3 py-1 text-xs font-semibold text-white hover:bg-brand-blue-dark"
+            >
+              Pakua PDF
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                const rows = homeVisits
+                  .filter((v) => {
+                    const d = v.visit_date.slice(0, 10);
+                    return (!reportFrom || d >= reportFrom) && (!reportTo || d <= reportTo);
+                  })
+                  .map((v) => ({
+                    ...v,
+                    visit_date: v.visit_date.slice(0, 10),
+                    visit_type: v.visit_type === "PART_TIME" ? "Part-time" : "Full-time",
+                  }));
+                downloadCsv(`ripoti-za-ziara-${patient?.full_name ?? "mgonjwa"}`, [
+                  { key: "visit_date", label: "Tarehe" },
+                  { key: "visit_session", label: "Muda" },
+                  { key: "visit_type", label: "Aina" },
+                  { key: "status", label: "Status" },
+                  { key: "staff_name", label: "Nesi" },
+                  { key: "location", label: "Mahali" },
+                  { key: "blood_pressure", label: "BP" },
+                  { key: "temperature", label: "Joto (°C)" },
+                  { key: "pulse", label: "Pulse" },
+                  { key: "blood_glucose", label: "Sukari" },
+                  { key: "spo2", label: "SpO2 (%)" },
+                  { key: "weight", label: "Uzito (kg)" },
+                  { key: "food_intake", label: "Chakula" },
+                  { key: "treatment_notes", label: "Matibabu / Procedures" },
+                  { key: "notes", label: "Maendeleo / Maelezo" },
+                ], rows);
+              }}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-zinc-100"
+            >
+              Pakua CSV
+            </button>
+          </div>
+
           {showQuickReport && (
             <form
               onSubmit={onAddQuickReport}
@@ -1737,6 +1898,23 @@ export default function PatientDetailPage() {
                 Rekodi ripoti/vitals za leo ({new Date().toISOString().slice(0, 10)})
                 kwa mgonjwa huyu bila kuondoka ukurasa huu.
               </p>
+              {(isChiefCo || isAdmin) && (
+                <div className="flex flex-col gap-1 sm:max-w-xs">
+                  <label className="text-xs font-medium text-zinc-600">
+                    Aina ya Ziara
+                  </label>
+                  <select
+                    value={qrVisitType}
+                    onChange={(e) =>
+                      setQrVisitType(e.target.value as "FULL_TIME" | "PART_TIME")
+                    }
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  >
+                    <option value="FULL_TIME">Full-time</option>
+                    <option value="PART_TIME">Part-time</option>
+                  </select>
+                </div>
+              )}
               <div className="flex flex-col gap-1 sm:max-w-xs">
                 <label className="text-xs font-medium text-zinc-600">
                   Muda (Session)
@@ -1818,6 +1996,18 @@ export default function PatientDetailPage() {
                     onChange={(e) => setQrBloodGlucose(e.target.value)}
                     inputMode="decimal"
                     placeholder="e.g. 5.5"
+                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">
+                    SpO₂ / Oxygen (%)
+                  </label>
+                  <input
+                    value={qrSpo2}
+                    onChange={(e) => setQrSpo2(e.target.value)}
+                    inputMode="numeric"
+                    placeholder="e.g. 97"
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   />
                 </div>
@@ -1906,89 +2096,99 @@ export default function PatientDetailPage() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Date</th>
-                  <th className="py-2 pr-4">Session</th>
-                  <th className="py-2 pr-4">Nurse</th>
-                  <th className="py-2 pr-4">Location</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">BP</th>
-                  <th className="py-2 pr-4">Temp</th>
-                  <th className="py-2 pr-4">Pulse</th>
-                  <th className="py-2 pr-4">Weight</th>
-                  <th className="py-2 pr-4">Sugar</th>
-                  <th className="py-2 pr-4">Food</th>
-                  <th className="py-2 pr-4">Procedures</th>
-                  <th className="py-2 pr-4">Progress</th>
-                </tr>
-              </thead>
-              <tbody>
-                {homeVisits.map((v) => (
-                  <tr key={v.id} className="border-b border-zinc-100 last:border-0">
-                    <td className="py-2 pr-4">
-                      <Link
-                        href={`/home-visits/${v.id}`}
-                        className="font-medium text-zinc-900 underline"
-                      >
-                        {v.visit_date.slice(0, 10)}
-                      </Link>
-                    </td>
-                    <td className="py-2 pr-4">
-                      {v.visit_session
-                        ? VISIT_SESSION_LABELS[
-                            v.visit_session as (typeof VISIT_SESSIONS)[number]
-                          ]
-                        : "-"}
-                    </td>
-                    <td className="py-2 pr-4">{v.staff_name ?? "-"}</td>
-                    <td className="py-2 pr-4">{v.location ?? "-"}</td>
-                    <td className="py-2 pr-4">
-                      <span className="flex items-center gap-1">
-                        {v.status}
-                        {hasVitalsAlert(v) && (
-                          <span
-                            title="Vitals nje ya kawaida"
-                            className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500"
-                          />
+            <div className="flex flex-col gap-3">
+              {homeVisits.map((v) => {
+                const alert = hasVitalsAlert(v);
+                const chips: { label: string; value: string | null; status: "normal" | "warning" | null }[] = [
+                  { label: "BP", value: v.blood_pressure ? `${v.blood_pressure} mmHg` : null, status: bpStatus(v.blood_pressure) },
+                  { label: "Joto", value: v.temperature ? `${v.temperature} °C` : null, status: temperatureStatus(v.temperature) },
+                  { label: "Pulse", value: v.pulse != null ? `${v.pulse} bpm` : null, status: pulseStatus(v.pulse) },
+                  { label: "Sukari", value: v.blood_glucose ? `${v.blood_glucose} mmol/L` : null, status: glucoseStatus(v.blood_glucose) },
+                  { label: "SpO₂", value: v.spo2 != null ? `${v.spo2}%` : null, status: spo2Status(v.spo2) },
+                  { label: "Uzito", value: v.weight ? `${v.weight} kg` : null, status: null },
+                ];
+                const textBlocks = [
+                  { label: "Chakula (Food Intake)", value: v.food_intake },
+                  { label: "Matibabu / Procedures", value: v.treatment_notes },
+                  { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+                ];
+                return (
+                  <article
+                    key={v.id}
+                    className={`rounded-lg border p-4 ${
+                      alert ? "border-orange-300 bg-orange-50/40" : "border-zinc-200 bg-white"
+                    }`}
+                  >
+                    <header className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/home-visits/${v.id}`}
+                          className="text-sm font-bold text-zinc-900 underline"
+                        >
+                          {v.visit_date.slice(0, 10)}
+                        </Link>
+                        {v.visit_session && (
+                          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600">
+                            {VISIT_SESSION_LABELS[v.visit_session as (typeof VISIT_SESSIONS)[number]]}
+                          </span>
                         )}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4">{v.blood_pressure ?? "-"}</td>
-                    <td className="py-2 pr-4">
-                      {v.temperature ? `${v.temperature} °C` : "-"}
-                    </td>
-                    <td className="py-2 pr-4">{v.pulse ?? "-"}</td>
-                    <td className="py-2 pr-4">
-                      {v.weight ? `${v.weight} kg` : "-"}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {v.blood_glucose ? `${v.blood_glucose} mmol/L` : "-"}
-                    </td>
-                    <td
-                      className="max-w-[140px] truncate py-2 pr-4"
-                      title={v.food_intake ?? undefined}
-                    >
-                      {v.food_intake ?? "-"}
-                    </td>
-                    <td
-                      className="max-w-[160px] truncate py-2 pr-4"
-                      title={v.treatment_notes ?? undefined}
-                    >
-                      {v.treatment_notes ?? "-"}
-                    </td>
-                    <td
-                      className="max-w-[160px] truncate py-2 pr-4"
-                      title={v.notes ?? undefined}
-                    >
-                      {v.notes ?? "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        {v.visit_type === "PART_TIME" && (
+                          <span className="rounded-full bg-brand-orange-light px-2 py-0.5 text-[11px] font-semibold text-brand-orange">
+                            Part-time
+                          </span>
+                        )}
+                        <VisitStatusBadge status={v.status} />
+                        {alert && (
+                          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
+                            Vitals nje ya kawaida
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-500">
+                        {v.staff_name ?? "-"}
+                        {v.location ? ` · ${v.location}` : ""}
+                      </p>
+                    </header>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {chips
+                        .filter((c) => c.value)
+                        .map((c) => (
+                          <span
+                            key={c.label}
+                            className={`rounded-md px-2 py-1 text-xs ${
+                              c.status === "warning"
+                                ? "bg-orange-100 font-semibold text-orange-800"
+                                : "bg-zinc-100 text-zinc-700"
+                            }`}
+                          >
+                            <span className="text-zinc-500">{c.label}: </span>
+                            {c.value}
+                          </span>
+                        ))}
+                      {chips.every((c) => !c.value) && (
+                        <span className="text-xs text-zinc-400">Hakuna vitals zilizorekodiwa.</span>
+                      )}
+                    </div>
+
+                    <dl className="mt-3 flex flex-col gap-3">
+                      {textBlocks.filter((b) => b.value).map((b) => (
+                        <div key={b.label}>
+                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                            {b.label}
+                          </dt>
+                          <dd className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-800">
+                            {b.value}
+                          </dd>
+                        </div>
+                      ))}
+                      {textBlocks.every((b) => !b.value) && (
+                        <p className="text-xs text-zinc-400">Hakuna maelezo ya ziada yaliyoandikwa.</p>
+                      )}
+                    </dl>
+                  </article>
+                );
+              })}
             </div>
           )}
 

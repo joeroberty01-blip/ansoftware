@@ -84,6 +84,8 @@ export async function deleteClient(id: string): Promise<void> {
 
 export interface ClientPaymentHistoryRow {
   id: string;
+  receipt_number: string;
+  balance_after: string;
   amount: string;
   method: string;
   reference: string | null;
@@ -96,10 +98,17 @@ export async function listPaymentsForClient(
   clientId: string
 ): Promise<ClientPaymentHistoryRow[]> {
   return query<ClientPaymentHistoryRow>(
-    `SELECT p.id, p.amount, p.method, p.reference, p.paid_at,
+    `SELECT p.id, p.receipt_number, p.amount, p.method, p.reference, p.paid_at,
+            (i.total_amount - pt.paid_to_date) AS balance_after,
             i.id AS invoice_id, i.document_number
      FROM payments p
      JOIN invoices i ON i.id = p.invoice_id
+     JOIN LATERAL (
+       SELECT COALESCE(SUM(p2.amount), 0) AS paid_to_date
+       FROM payments p2
+       WHERE p2.invoice_id = p.invoice_id
+         AND (p2.paid_at, p2.created_at, p2.id) <= (p.paid_at, p.created_at, p.id)
+     ) pt ON true
      WHERE i.client_id = $1
      ORDER BY p.paid_at DESC`,
     [clientId]

@@ -21,8 +21,9 @@ type Tab = "ADMIN" | "STAFF";
 const PROFESSIONS: { value: StaffSignupInput["profession"]; label: string }[] = [
   { value: "NURSE", label: "Nurse" },
   { value: "DOCTOR", label: "Doctor" },
-  { value: "CHW", label: "CHW" },
+  { value: "CHW", label: "Caregiver (CHW)" },
   { value: "ADMIN_STAFF", label: "Admin Staff" },
+  { value: "ACCOUNTANT", label: "Accountant" },
 ];
 
 export default function RegisterPage() {

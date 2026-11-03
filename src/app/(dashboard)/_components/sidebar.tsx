@@ -27,14 +27,16 @@ interface NavItem {
   href: string | ((role: UserRole) => string);
   icon: LucideIcon;
   hideForStaff?: boolean;
+  /** Clinical = patient care pages; billing = invoices/receipts. */
+  area?: "clinical" | "billing";
   badgeKey?: "pendingStaff" | "lowStock" | "outstanding" | "newBookings";
   group: "main" | "billing" | "other";
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
-  { label: "Patients", href: "/patients", icon: HeartPulse, group: "main" },
-  { label: "Home Visits", href: "/home-visits", icon: MapPinned, group: "main" },
+  { label: "Patients", href: "/patients", icon: HeartPulse, area: "clinical", group: "main" },
+  { label: "Home Visits", href: "/home-visits", icon: MapPinned, area: "clinical", group: "main" },
   {
     label: "Bookings",
     href: "/bookings",
@@ -68,7 +70,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Billing/Invoices",
     href: "/billing",
     icon: Receipt,
-    hideForStaff: true,
+    area: "billing",
     badgeKey: "outstanding",
     group: "billing",
   },
@@ -76,7 +78,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Receipts",
     href: "/receipts",
     icon: Banknote,
-    hideForStaff: true,
+    area: "billing",
     group: "billing",
   },
   {
@@ -97,6 +99,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Documents",
     href: "/documents",
     icon: FileText,
+    area: "clinical",
     group: "other",
   },
   {
@@ -116,6 +119,8 @@ const NAV_ITEMS: NavItem[] = [
 
 export function Sidebar({
   role,
+  canBilling = false,
+  canClinical = true,
   pendingStaffCount = 0,
   lowStockCount = 0,
   outstandingCount = 0,
@@ -123,6 +128,8 @@ export function Sidebar({
   onNavigate,
 }: {
   role: UserRole;
+  canBilling?: boolean;
+  canClinical?: boolean;
   pendingStaffCount?: number;
   lowStockCount?: number;
   outstandingCount?: number;
@@ -140,9 +147,12 @@ export function Sidebar({
     newBookings: newBookingsCount,
   };
 
-  const items = NAV_ITEMS.filter(
-    (item) => !(item.hideForStaff && role === "STAFF")
-  );
+  const items = NAV_ITEMS.filter((item) => {
+    if (item.hideForStaff && role === "STAFF") return false;
+    if (item.area === "billing" && !canBilling) return false;
+    if (item.area === "clinical" && !canClinical) return false;
+    return true;
+  });
 
   const groups: { key: NavItem["group"]; label: string }[] = [
     { key: "main", label: "Care" },

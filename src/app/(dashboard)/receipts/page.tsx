@@ -6,6 +6,8 @@ import { ListToolbar } from "../_components/list-toolbar";
 
 interface Payment {
   id: string;
+  receipt_number: string;
+  balance_after: string;
   invoice_id: string;
   amount: string;
   method: string;
@@ -32,9 +34,11 @@ interface ManualReceipt {
 
 const CSV_COLUMNS = [
   { key: "paid_at", label: "Tarehe" },
+  { key: "receipt_number", label: "Risiti Na." },
   { key: "document_number", label: "Hati" },
   { key: "client_name", label: "Client" },
   { key: "amount", label: "Kiasi" },
+  { key: "balance_after", label: "Salio" },
   { key: "method", label: "Njia" },
   { key: "reference", label: "Kumbukumbu" },
   { key: "received_by_name", label: "Aliyepokea" },
@@ -340,9 +344,11 @@ export default function ReceiptsPage() {
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Tarehe</th>
+                <th className="py-2 pr-4">Risiti Na.</th>
                 <th className="py-2 pr-4">Hati</th>
                 <th className="py-2 pr-4">Client</th>
                 <th className="py-2 pr-4 text-right">Kiasi</th>
+                <th className="py-2 pr-4 text-right">Salio</th>
                 <th className="py-2 pr-4">Njia</th>
                 <th className="py-2 pr-4">Aliyepokea</th>
                 <th className="py-2 pr-4 print:hidden"></th>
@@ -356,6 +362,7 @@ export default function ReceiptsPage() {
                   className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
                 >
                   <td className="py-2 pr-4">{p.paid_at.slice(0, 10)}</td>
+                  <td className="py-2 pr-4 font-medium">{p.receipt_number}</td>
                   <td className="py-2 pr-4">
                     <a
                       href={`/billing/${p.invoice_id}`}
@@ -369,18 +376,28 @@ export default function ReceiptsPage() {
                   <td className="py-2 pr-4 text-right font-medium">
                     {fmt(p.amount)}
                   </td>
+                  <td className="py-2 pr-4 text-right">{fmt(p.balance_after)}</td>
                   <td className="py-2 pr-4">{p.method}</td>
                   <td className="py-2 pr-4">{p.received_by_name}</td>
                   <td className="py-2 pr-4 text-right print:hidden">
-                    <a
-                      href={`/print/receipts/${p.invoice_id}/${p.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-xs font-medium text-zinc-900 underline"
-                    >
-                      Print
-                    </a>
+                    <span className="flex justify-end gap-3">
+                      <a
+                        href={`/print/receipts/${p.invoice_id}/${p.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs font-medium text-zinc-900 underline"
+                      >
+                        Print
+                      </a>
+                      <a
+                        href={`/api/invoices/${p.invoice_id}/payments/${p.id}/receipt?download=1`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs font-medium text-zinc-900 underline"
+                      >
+                        PDF
+                      </a>
+                    </span>
                   </td>
                 </tr>
               ))}

@@ -38,6 +38,7 @@ export async function createHomeVisit(input: {
   staffId: string | null;
   visitDate: string;
   visitSession: string | null;
+  visitType: string;
   status: string;
   location: string | null;
   checkInLat: number | null;
@@ -49,6 +50,7 @@ export async function createHomeVisit(input: {
   weight: string | null;
   heightCm: string | null;
   bloodGlucose: string | null;
+  spo2: number | null;
   foodIntake: string | null;
   treatmentNotes: string | null;
   notes: string | null;
@@ -60,8 +62,8 @@ export async function createHomeVisit(input: {
        (patient_id, staff_id, visit_date, visit_session, status, location,
         check_in_lat, check_in_lng, check_in_accuracy_m, check_in_at,
         blood_pressure, temperature,
-        pulse, weight, height_cm, blood_glucose, food_intake, treatment_notes, notes, created_by_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+        pulse, weight, height_cm, blood_glucose, spo2, food_intake, treatment_notes, notes, created_by_id, visit_type)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22::visit_type)
      RETURNING *`,
     [
       input.patientId,
@@ -80,10 +82,12 @@ export async function createHomeVisit(input: {
       input.weight,
       input.heightCm,
       input.bloodGlucose,
+      input.spo2,
       input.foodIntake,
       input.treatmentNotes,
       input.notes,
       input.createdById,
+      input.visitType,
     ]
   );
   if (!row) throw new Error("Imeshindwa kurekodi home visit");
@@ -160,8 +164,9 @@ export async function countAbnormalVitalsToday(): Promise<number> {
     temperature: string | null;
     pulse: number | null;
     blood_glucose: string | null;
+    spo2: number | null;
   }>(
-    `SELECT blood_pressure, temperature, pulse, blood_glucose
+    `SELECT blood_pressure, temperature, pulse, blood_glucose, spo2
      FROM home_visits
      WHERE status = 'COMPLETED' AND visit_date = CURRENT_DATE`
   );
@@ -272,6 +277,7 @@ export async function updateHomeVisit(
     weight?: string | null;
     heightCm?: string | null;
     bloodGlucose?: string | null;
+    spo2?: number | null;
     foodIntake?: string | null;
     treatmentNotes?: string | null;
     notes?: string | null;
@@ -287,6 +293,7 @@ export async function updateHomeVisit(
     weight: patch.weight,
     height_cm: patch.heightCm,
     blood_glucose: patch.bloodGlucose,
+    spo2: patch.spo2,
     food_intake: patch.foodIntake,
     treatment_notes: patch.treatmentNotes,
     notes: patch.notes,

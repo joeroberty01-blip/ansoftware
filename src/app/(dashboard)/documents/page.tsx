@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ListToolbar } from "../_components/list-toolbar";
+import { compressImageForUpload } from "@/lib/compress-image";
 
 const CSV_COLUMNS = [
   { key: "patient_name", label: "Mgonjwa" },
@@ -15,6 +16,7 @@ const CSV_COLUMNS = [
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   LAB_RESULT: "Lab Result",
+  ID_PHOTO: "Kitambulisho (ID)",
   CONSENT_FORM: "Consent Form",
   PRESCRIPTION: "Prescription",
   REFERRAL: "Referral",
@@ -28,6 +30,7 @@ interface DocumentRow {
   title: string;
   document_type: string;
   notes: string | null;
+  file_name: string | null;
   uploaded_by_name: string;
   created_at: string;
 }
@@ -48,6 +51,8 @@ export default function DocumentsPage() {
   const [title, setTitle] = useState("");
   const [docType, setDocType] = useState("LAB_RESULT");
   const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileKey, setFileKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -91,14 +96,14 @@ export default function DocumentsPage() {
     }
     setSubmitting(true);
     try {
+      const body = new FormData();
+      body.set("title", title);
+      body.set("documentType", docType);
+      if (notes) body.set("notes", notes);
+      if (file) body.set("file", await compressImageForUpload(file));
       const res = await fetch(`/api/patients/${patientId}/documents`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          documentType: docType,
-          notes: notes || undefined,
-        }),
+        body,
       });
       const json = await res.json();
       if (!res.ok) {
@@ -107,6 +112,8 @@ export default function DocumentsPage() {
       }
       setTitle("");
       setNotes("");
+      setFile(null);
+      setFileKey((k) => k + 1);
       setShowAdd(false);
       await load(search);
     } catch {
@@ -176,6 +183,7 @@ export default function DocumentsPage() {
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           >
             <option value="LAB_RESULT">Lab Result</option>
+            <option value="ID_PHOTO">Kitambulisho (ID)</option>
             <option value="CONSENT_FORM">Consent Form</option>
             <option value="PRESCRIPTION">Prescription</option>
             <option value="REFERRAL">Referral</option>
@@ -187,6 +195,13 @@ export default function DocumentsPage() {
             placeholder="Notes (optional)"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
+          <input
+            key={fileKey}
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="col-span-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm"
+          />
           {error && (
             <p className="col-span-full rounded bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
@@ -197,7 +212,7 @@ export default function DocumentsPage() {
             disabled={submitting}
             className="col-span-full self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {submitting ? "Saving..." : "Hifadhi Document"}
+            {submitting ? "Inapakia..." : "Hifadhi Document"}
           </button>
         </form>
       )}
@@ -218,6 +233,7 @@ export default function DocumentsPage() {
                   <th className="py-2 pr-4">Maelezo</th>
                   <th className="py-2 pr-4">Aliyepakia</th>
                   <th className="py-2 pr-4">Tarehe</th>
+                  <th className="py-2 pr-4">Faili</th>
                 </tr>
               </thead>
               <tbody>
@@ -238,6 +254,28 @@ export default function DocumentsPage() {
                     <td className="py-2 pr-4">{d.notes ?? "-"}</td>
                     <td className="py-2 pr-4">{d.uploaded_by_name}</td>
                     <td className="py-2 pr-4">{d.created_at.slice(0, 10)}</td>
+                    <td className="py-2 pr-4">
+                      {d.file_name ? (
+                        <span className="flex gap-3">
+                          <a
+                            href={`/api/patients/${d.patient_id}/documents/${d.id}/file`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-brand-blue underline"
+                          >
+                            Fungua
+                          </a>
+                          <a
+                            href={`/api/patients/${d.patient_id}/documents/${d.id}/file?download=1`}
+                            className="font-medium text-brand-blue underline"
+                          >
+                            Pakua
+                          </a>
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

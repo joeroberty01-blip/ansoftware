@@ -29,6 +29,7 @@ interface Staff {
   base_salary: string;
   allowances: string;
   leave_balance_days: number;
+  is_chief_co: boolean;
   user_status: string;
   highest_education: string | null;
   specialization: string | null;
@@ -48,7 +49,24 @@ interface Payroll {
   gross_pay: string;
   net_pay: string;
   status: string;
+  paid_at: string | null;
+  payment_method: string | null;
+  payment_reference: string | null;
+  payment_account: string | null;
+  paid_by_name: string | null;
 }
+
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "MPESA", label: "M-Pesa" },
+  { value: "AIRTEL_MONEY", label: "Airtel Money" },
+  { value: "MIXX_BY_YAS", label: "Mixx by Yas" },
+  { value: "BANK_TRANSFER", label: "Bank Transfer" },
+  { value: "CASH", label: "Cash" },
+];
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = Object.fromEntries(
+  PAYMENT_METHOD_OPTIONS.map((o) => [o.value, o.label])
+);
 
 interface LeaveRequest {
   id: string;
@@ -103,7 +121,7 @@ interface AssignedPatient {
 
 const DUTY_STATUSES = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 
-const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"];
+const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF", "ACCOUNTANT"];
 const EMPLOYMENT_STATUSES = ["ACTIVE", "INACTIVE", "TERMINATED"];
 
 function fmt(value: string) {
@@ -263,6 +281,7 @@ export function StaffDetailView({
     staff.license_expiry_date?.slice(0, 10) ?? ""
   );
   const [employmentStatus, setEmploymentStatus] = useState(staff.employment_status);
+  const [isChiefCo, setIsChiefCo] = useState(staff.is_chief_co);
   const [baseSalary, setBaseSalary] = useState(staff.base_salary);
   const [allowances, setAllowances] = useState(staff.allowances);
   const [highestEducation, setHighestEducation] = useState(staff.highest_education ?? "");
@@ -285,6 +304,7 @@ export function StaffDetailView({
           licenseNumber,
           licenseExpiryDate,
           employmentStatus,
+          isChiefCo,
           baseSalary,
           allowances,
           highestEducation,
@@ -304,6 +324,7 @@ export function StaffDetailView({
         license_number: json.staff.license_number,
         license_expiry_date: json.staff.license_expiry_date,
         employment_status: json.staff.employment_status,
+        is_chief_co: json.staff.is_chief_co,
         base_salary: json.staff.base_salary,
         allowances: json.staff.allowances,
         highest_education: json.staff.highest_education,
@@ -393,26 +414,41 @@ export function StaffDetailView({
   const [payrollError, setPayrollError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [payFormId, setPayFormId] = useState<string | null>(null);
+  const [payMethod, setPayMethod] = useState("MPESA");
+  const [payReference, setPayReference] = useState("");
+  const [payAccount, setPayAccount] = useState("");
 
-  const onPaySalary = async (payrollId: string) => {
-    if (
-      !window.confirm(
-        "Lipa mshahara huu sasa? Kiasi kitaongezwa kwenye Expenses moja kwa moja."
-      )
-    ) {
-      return;
-    }
+  const openPayForm = (payrollId: string) => {
+    setPayrollError(null);
+    setPayMethod("MPESA");
+    setPayReference("");
+    setPayAccount("");
+    setPayFormId(payrollId);
+  };
+
+  const onPaySalary = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payrollId = payFormId;
+    if (!payrollId) return;
     setPayrollError(null);
     setPayingId(payrollId);
     try {
       const res = await fetch(`/api/payroll/${payrollId}/pay`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod: payMethod,
+          paymentReference: payReference,
+          paymentAccount: payAccount,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
         setPayrollError(json.error ?? "Failed to pay salary.");
         return;
       }
+      setPayFormId(null);
       await loadPayrolls();
     } catch {
       setPayrollError("Network error.");
@@ -666,7 +702,13 @@ export function StaffDetailView({
               {staff.full_name}
             </h1>
             <p className="text-sm text-zinc-600">
-              {staff.profession} — Username: {staff.email}
+              {staff.profession}
+              {staff.is_chief_co && (
+                <span className="ml-2 rounded-full bg-brand-orange-light px-2 py-0.5 text-[11px] font-semibold text-brand-orange">
+                  Chief C.O
+                </span>
+              )}{" "}
+              — Username: {staff.email}
             </p>
             <p className="text-xs text-zinc-500">ID: {staff.staff_number}</p>
           </div>
@@ -823,6 +865,20 @@ export function StaffDetailView({
                 ))}
               </select>
             </div>
+            <label className="flex items-start gap-2 text-sm sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={isChiefCo}
+                onChange={(e) => setIsChiefCo(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="font-medium text-zinc-900">Chief C.O (Chief Clinical Officer)</span>
+                <span className="block text-xs text-zinc-500">
+                  Anaweza kurekodi ziara za Part-time na kuona wagonjwa wote.
+                </span>
+              </span>
+            </label>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Namba ya Leseni</label>
               <input
@@ -1198,7 +1254,7 @@ export function StaffDetailView({
               : "text-zinc-500"
           }`}
         >
-          Payroll History
+          Malipo / Payroll
         </button>
         <button
           onClick={() => setTab("leave")}
@@ -1296,6 +1352,66 @@ export function StaffDetailView({
               {payrollError}
             </p>
           )}
+          {payFormId && (
+            <form
+              onSubmit={onPaySalary}
+              className="mb-4 grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              <p className="col-span-full text-sm font-semibold text-zinc-900">
+                Thibitisha malipo ya{" "}
+                {(() => {
+                  const target = payrolls.find((x) => x.id === payFormId);
+                  return target
+                    ? `${MONTH_NAMES[target.month - 1]} ${target.year} (TZS ${fmt(target.net_pay)})`
+                    : "mshahara";
+                })()}
+                . Kiasi kitaongezwa kwenye Expenses moja kwa moja.
+              </p>
+              <select
+                value={payMethod}
+                onChange={(e) => setPayMethod(e.target.value)}
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              >
+                {PAYMENT_METHOD_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={payAccount}
+                onChange={(e) => setPayAccount(e.target.value)}
+                placeholder="Akaunti / namba aliyotumiwa"
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+              <input
+                value={payReference}
+                onChange={(e) => setPayReference(e.target.value)}
+                placeholder={
+                  payMethod === "CASH"
+                    ? "Reference (hiari)"
+                    : "Reference / namba ya muamala"
+                }
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={payingId === payFormId}
+                  className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
+                >
+                  {payingId === payFormId ? "Inalipa..." : "Thibitisha Malipo"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPayFormId(null)}
+                  className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-white"
+                >
+                  Ghairi
+                </button>
+              </div>
+            </form>
+          )}
           {loadingPayroll ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : payrolls.length === 0 ? (
@@ -1311,6 +1427,9 @@ export function StaffDetailView({
                   <th className="py-2 pr-4 text-right">PAYE</th>
                   <th className="py-2 pr-4 text-right">Net Pay</th>
                   <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Tarehe ya Malipo</th>
+                  <th className="py-2 pr-4">Njia / Akaunti</th>
+                  <th className="py-2 pr-4">Reference</th>
                   {viewerIsAdmin && <th className="py-2 pr-4"></th>}
                 </tr>
               </thead>
@@ -1337,15 +1456,36 @@ export function StaffDetailView({
                         {p.status}
                       </span>
                     </td>
+                    <td className="py-2 pr-4">
+                      {p.paid_at ? p.paid_at.slice(0, 10) : "-"}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {p.payment_method
+                        ? PAYMENT_METHOD_LABEL[p.payment_method] ?? p.payment_method
+                        : "-"}
+                      {p.payment_account && (
+                        <span className="block text-xs text-zinc-500">
+                          {p.payment_account}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {p.payment_reference ?? "-"}
+                      {p.paid_by_name && (
+                        <span className="block text-xs text-zinc-500">
+                          Imethibitishwa na {p.paid_by_name}
+                        </span>
+                      )}
+                    </td>
                     {viewerIsAdmin && (
                       <td className="py-2 pr-4 text-right">
                         {p.status === "PENDING" && (
                           <button
-                            onClick={() => onPaySalary(p.id)}
+                            onClick={() => openPayForm(p.id)}
                             disabled={payingId === p.id}
                             className="rounded bg-brand-blue px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                           >
-                            {payingId === p.id ? "Inalipa..." : "Pay Salary"}
+                            Pay Salary
                           </button>
                         )}
                       </td>

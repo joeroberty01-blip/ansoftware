@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { listPaymentsForClient } from "@/lib/repo/clients";
 
 export async function GET(
@@ -13,6 +14,8 @@ export async function GET(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
   const payments = await listPaymentsForClient(id);

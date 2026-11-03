@@ -1,4 +1,5 @@
-import Decimal from "decimal.js";
+import { getCurrentUser } from "@/lib/auth";
+import { userCanAccessBilling } from "@/lib/permissions";
 import { getPaymentWithContext } from "@/lib/repo/invoices";
 import { AutoPrint } from "../../../_components/auto-print";
 
@@ -12,6 +13,10 @@ function fmt(value: string) {
 export default async function ReceiptPrintPage(
   props: PageProps<"/print/receipts/[invoiceId]/[paymentId]">
 ) {
+  const viewer = await getCurrentUser();
+  if (!viewer || !(await userCanAccessBilling(viewer))) {
+    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+  }
   const { invoiceId, paymentId } = await props.params;
   const payment = await getPaymentWithContext(invoiceId, paymentId);
 
@@ -19,13 +24,9 @@ export default async function ReceiptPrintPage(
     return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
   }
 
-  const balance = new Decimal(payment.total_amount)
-    .minus(payment.amount_paid)
-    .toFixed(2);
   const paidAt = new Date(payment.paid_at)
-    .toISOString()
-    .slice(0, 16)
-    .replace("T", " ");
+    .toLocaleString("sv-SE", { timeZone: "Africa/Dar_es_Salaam" })
+    .slice(0, 16);
 
   return (
     <div className="mx-auto w-[80mm] p-3 font-mono text-[11px] text-zinc-900">
@@ -48,6 +49,10 @@ export default async function ReceiptPrintPage(
 
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
+      <div className="flex justify-between font-bold">
+        <span>Risiti Na.</span>
+        <span>{payment.receipt_number}</span>
+      </div>
       <div className="flex justify-between">
         <span>Hati</span>
         <span>{payment.document_number}</span>
@@ -90,11 +95,11 @@ export default async function ReceiptPrintPage(
       </div>
       <div className="flex justify-between">
         <span>Imelipwa Yote</span>
-        <span>{fmt(payment.amount_paid)}</span>
+        <span>{fmt(payment.paid_to_date)}</span>
       </div>
       <div className="flex justify-between font-bold">
         <span>Salio</span>
-        <span>{fmt(balance)}</span>
+        <span>{fmt(payment.balance_after)}</span>
       </div>
 
       <p className="mt-3 text-center text-[10px] text-zinc-600">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { updateHomeVisitSchema } from "@/lib/validation/home-visits";
 import {
   deleteHomeVisit,
@@ -74,6 +75,7 @@ export async function PATCH(
     heightCm: d.heightCm === undefined ? undefined : d.heightCm || null,
     bloodGlucose:
       d.bloodGlucose === undefined ? undefined : d.bloodGlucose || null,
+    spo2: d.spo2,
     foodIntake: d.foodIntake === undefined ? undefined : d.foodIntake || null,
     treatmentNotes:
       d.treatmentNotes === undefined ? undefined : d.treatmentNotes || null,
@@ -84,6 +86,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
   }
 
+  await logAudit({ userId: session.id, action: "HOME_VISIT_UPDATED", entity: "home_visit", entityId: id, meta: { patientId: visit.patient_id } });
   return NextResponse.json({ visit });
 }
 
@@ -109,5 +112,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
   }
 
+  await logAudit({ userId: session.id, action: "HOME_VISIT_DELETED", entity: "home_visit", entityId: id });
   return NextResponse.json({ ok: true });
 }

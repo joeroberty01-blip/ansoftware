@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAR_SLOTS } from "../mar";
 
 const optionalDate = z
   .string()
@@ -37,6 +38,7 @@ export const addMedicationSchema = z.object({
   startDate: optionalDate,
   endDate: optionalDate,
   notes: optionalText(500),
+  scheduleSlots: z.array(z.enum(MAR_SLOTS)).max(3).optional().default([]),
 });
 
 export type AddMedicationInput = z.infer<typeof addMedicationSchema>;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { createHomeVisitSchema } from "@/lib/validation/home-visits";
 import { createHomeVisit, listHomeVisits } from "@/lib/repo/home-visits";
 import { assertPatientAccess } from "@/lib/patient-access";
@@ -64,6 +65,13 @@ export async function POST(req: NextRequest) {
     // someone else.
     const ownStaff = await getStaffByUserId(session.id);
     staffId = ownStaff?.id ?? null;
+    // Part-time visits are recorded only by the appointed Chief C.O (or an Admin).
+    if (d.visitType === "PART_TIME" && !ownStaff?.is_chief_co) {
+      return NextResponse.json(
+        { error: "Ni Chief C.O pekee anayeweza kurekodi ziara za Part-time." },
+        { status: 403 }
+      );
+    }
   }
 
   const visit = await createHomeVisit({
@@ -71,6 +79,7 @@ export async function POST(req: NextRequest) {
     staffId,
     visitDate: d.visitDate,
     visitSession: d.visitSession ? d.visitSession : null,
+    visitType: d.visitType,
     status: d.status,
     location: d.location ? d.location : null,
     checkInLat: d.checkInLat ?? null,
@@ -82,11 +91,13 @@ export async function POST(req: NextRequest) {
     weight: d.weight ? d.weight : null,
     heightCm: d.heightCm ? d.heightCm : null,
     bloodGlucose: d.bloodGlucose ? d.bloodGlucose : null,
+    spo2: d.spo2 ?? null,
     foodIntake: d.foodIntake ? d.foodIntake : null,
     treatmentNotes: d.treatmentNotes ? d.treatmentNotes : null,
     notes: d.notes ? d.notes : null,
     createdById: session.id,
   });
 
+  await logAudit({ userId: session.id, action: "HOME_VISIT_CREATED", entity: "home_visit", entityId: visit.id, meta: { patientId: visit.patient_id } });
   return NextResponse.json({ visit }, { status: 201 });
 }

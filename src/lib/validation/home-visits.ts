@@ -12,6 +12,7 @@ const optionalDecimal = (message: string) =>
 
 export const HOME_VISIT_STATUSES = ["SCHEDULED", "COMPLETED", "CANCELLED"] as const;
 export const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
+export const VISIT_TYPES = ["FULL_TIME", "PART_TIME"] as const;
 
 const optionalLat = z.number().min(-90).max(90).optional();
 const optionalLng = z.number().min(-180).max(180).optional();
@@ -22,6 +23,7 @@ export const createHomeVisitSchema = z.object({
   staffId: z.string().optional().or(z.literal("")),
   visitDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi"),
   visitSession: z.enum(VISIT_SESSIONS).optional().or(z.literal("")),
+  visitType: z.enum(VISIT_TYPES).default("FULL_TIME"),
   status: z.enum(HOME_VISIT_STATUSES).default("SCHEDULED"),
   location: optionalText(300),
   checkInLat: optionalLat,
@@ -33,6 +35,7 @@ export const createHomeVisitSchema = z.object({
   weight: optionalDecimal("Uzito sio sahihi (mf. 68.5)"),
   heightCm: optionalDecimal("Urefu sio sahihi (mf. 170)"),
   bloodGlucose: optionalDecimal("Sukari sio sahihi (mf. 5.5)"),
+  spo2: z.number().int().min(50, "SpO₂ lazima iwe 50–100").max(100, "SpO₂ lazima iwe 50–100").optional(),
   foodIntake: optionalText(500),
   treatmentNotes: optionalText(2000),
   notes: optionalText(1000),
@@ -50,6 +53,7 @@ export const updateHomeVisitSchema = z.object({
   weight: optionalDecimal("Uzito sio sahihi (mf. 68.5)"),
   heightCm: optionalDecimal("Urefu sio sahihi (mf. 170)"),
   bloodGlucose: optionalDecimal("Sukari sio sahihi (mf. 5.5)"),
+  spo2: z.number().int().min(50, "SpO₂ lazima iwe 50–100").max(100, "SpO₂ lazima iwe 50–100").optional(),
   foodIntake: optionalText(500),
   treatmentNotes: optionalText(2000),
   notes: optionalText(1000),

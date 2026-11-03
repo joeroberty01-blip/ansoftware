@@ -180,6 +180,7 @@ export async function updateStaffProfile(
     specialization?: string | null;
     skills?: string | null;
     certifications?: string | null;
+    isChiefCo?: boolean;
   }
 ): Promise<StaffRow | null> {
   const fields: string[] = [];
@@ -198,6 +199,7 @@ export async function updateStaffProfile(
     specialization: patch.specialization,
     skills: patch.skills,
     certifications: patch.certifications,
+    is_chief_co: patch.isChiefCo,
   };
 
   for (const [column, value] of Object.entries(columnMap)) {
@@ -287,6 +289,7 @@ const DEPARTMENT_BY_PROFESSION: Record<string, string> = {
   DOCTOR: "Medical",
   CHW: "Support",
   ADMIN_STAFF: "Admin",
+  ACCOUNTANT: "Accountant",
 };
 
 export interface DepartmentCount {

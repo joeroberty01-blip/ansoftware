@@ -1,3 +1,5 @@
+import { getCurrentUser } from "@/lib/auth";
+import { userCanAccessBilling } from "@/lib/permissions";
 import Decimal from "decimal.js";
 import { getInvoiceDetail } from "@/lib/repo/invoices";
 import { BRAND, STATUS_LABELS } from "@/lib/invoice-brand";
@@ -22,6 +24,10 @@ const PAYABLE_TYPES = ["INVOICE", "TAX_INVOICE"];
 export default async function InvoiceThermalPrintPage(
   props: PageProps<"/print/invoices/[id]/thermal">
 ) {
+  const viewer = await getCurrentUser();
+  if (!viewer || !(await userCanAccessBilling(viewer))) {
+    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+  }
   const { id } = await props.params;
   const invoice = await getInvoiceDetail(id);
 

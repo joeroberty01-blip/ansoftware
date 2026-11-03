@@ -453,6 +453,10 @@ export interface PaymentWithContext extends PaymentRow {
   doc_type: DocType;
   total_amount: string;
   amount_paid: string;
+  /** Sum of this invoice's payments up to and including this one. */
+  paid_to_date: string;
+  /** Invoice total minus paid_to_date: the balance right after this payment. */
+  balance_after: string;
   client_name: string;
   received_by_name: string;
 }
@@ -463,11 +467,18 @@ export async function getPaymentWithContext(
 ): Promise<PaymentWithContext | null> {
   return queryOne<PaymentWithContext>(
     `SELECT p.*, i.document_number, i.doc_type, i.total_amount, i.amount_paid,
+            pt.paid_to_date, (i.total_amount - pt.paid_to_date) AS balance_after,
             c.name AS client_name, u.full_name AS received_by_name
      FROM payments p
      JOIN invoices i ON i.id = p.invoice_id
      JOIN clients c ON c.id = i.client_id
      JOIN users u ON u.id = p.received_by_id
+     JOIN LATERAL (
+       SELECT COALESCE(SUM(p2.amount), 0) AS paid_to_date
+       FROM payments p2
+       WHERE p2.invoice_id = p.invoice_id
+         AND (p2.paid_at, p2.created_at, p2.id) <= (p.paid_at, p.created_at, p.id)
+     ) pt ON true
      WHERE p.invoice_id = $1 AND p.id = $2`,
     [invoiceId, paymentId]
   );
@@ -476,11 +487,18 @@ export async function getPaymentWithContext(
 export async function listAllPayments(): Promise<PaymentWithContext[]> {
   return query<PaymentWithContext>(
     `SELECT p.*, i.document_number, i.doc_type, i.total_amount, i.amount_paid,
+            pt.paid_to_date, (i.total_amount - pt.paid_to_date) AS balance_after,
             c.name AS client_name, u.full_name AS received_by_name
      FROM payments p
      JOIN invoices i ON i.id = p.invoice_id
      JOIN clients c ON c.id = i.client_id
      JOIN users u ON u.id = p.received_by_id
+     JOIN LATERAL (
+       SELECT COALESCE(SUM(p2.amount), 0) AS paid_to_date
+       FROM payments p2
+       WHERE p2.invoice_id = p.invoice_id
+         AND (p2.paid_at, p2.created_at, p2.id) <= (p.paid_at, p.created_at, p.id)
+     ) pt ON true
      ORDER BY p.paid_at DESC`
   );
 }

@@ -235,11 +235,12 @@ export async function addMedication(input: {
   startDate: string | null;
   endDate: string | null;
   notes: string | null;
+  scheduleSlots: string[];
 }): Promise<PatientMedicationRow> {
   const row = await queryOne<PatientMedicationRow>(
     `INSERT INTO patient_medications
-       (patient_id, medication_name, dosage, frequency, start_date, end_date, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (patient_id, medication_name, dosage, frequency, start_date, end_date, notes, schedule_slots)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
       input.patientId,
@@ -249,6 +250,7 @@ export async function addMedication(input: {
       input.startDate,
       input.endDate,
       input.notes,
+      input.scheduleSlots,
     ]
   );
   if (!row) throw new Error("Imeshindwa kuongeza dawa");
@@ -270,15 +272,54 @@ export async function addDocument(input: {
   documentType: string;
   notes: string | null;
   uploadedById: string;
+  file?: { name: string; mimeType: string; data: Buffer };
 }): Promise<PatientDocumentRow> {
-  const row = await queryOne<PatientDocumentRow>(
-    `INSERT INTO patient_documents (patient_id, title, document_type, notes, uploaded_by_id)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING *`,
-    [input.patientId, input.title, input.documentType, input.notes, input.uploadedById]
+  return withTransaction(async (client) => {
+    const res = await client.query<PatientDocumentRow>(
+      `INSERT INTO patient_documents
+         (patient_id, title, document_type, notes, uploaded_by_id, file_name, mime_type, file_size)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        input.patientId,
+        input.title,
+        input.documentType,
+        input.notes,
+        input.uploadedById,
+        input.file?.name ?? null,
+        input.file?.mimeType ?? null,
+        input.file?.data.length ?? null,
+      ]
+    );
+    const row = res.rows[0];
+    if (!row) throw new Error("Imeshindwa kuongeza document");
+    if (input.file) {
+      await client.query(
+        `INSERT INTO patient_document_files (document_id, data) VALUES ($1, $2)`,
+        [row.id, input.file.data]
+      );
+    }
+    return row;
+  });
+}
+
+export async function getDocumentFile(
+  patientId: string,
+  documentId: string
+): Promise<{ name: string; mimeType: string; data: Buffer } | null> {
+  const row = await queryOne<{
+    file_name: string;
+    mime_type: string;
+    data: Buffer;
+  }>(
+    `SELECT d.file_name, d.mime_type, f.data
+     FROM patient_documents d
+     JOIN patient_document_files f ON f.document_id = d.id
+     WHERE d.id = $1 AND d.patient_id = $2`,
+    [documentId, patientId]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza document");
-  return row;
+  if (!row) return null;
+  return { name: row.file_name, mimeType: row.mime_type, data: row.data };
 }
 
 export async function listDocuments(

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { updatePatientSchema } from "@/lib/validation/patients";
 import { deletePatient, getPatientById, updatePatient } from "@/lib/repo/patients";
 import { assertPatientAccess } from "@/lib/patient-access";
@@ -86,6 +87,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
   }
 
+  await logAudit({ userId: session.id, action: "PATIENT_UPDATED", entity: "patient", entityId: id });
   return NextResponse.json({ patient });
 }
 
@@ -110,5 +112,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
   }
 
+  await logAudit({ userId: session.id, action: "PATIENT_DELETED", entity: "patient", entityId: id });
   return NextResponse.json({ ok: true });
 }

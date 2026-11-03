@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { getInvoiceDetail } from "@/lib/repo/invoices";
 import { InvoiceDocument } from "@/lib/pdf/invoice-document";
 import { invoiceQrText } from "@/lib/invoice-brand";
@@ -17,6 +18,8 @@ export async function GET(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
   const invoice = await getInvoiceDetail(id);

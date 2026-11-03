@@ -112,6 +112,7 @@ const PROFESSION_LABELS: Record<string, string> = {
   DOCTOR: "DOCTOR",
   CHW: "COMMUNITY HEALTH WORKER",
   ADMIN_STAFF: "ADMIN STAFF",
+  ACCOUNTANT: "ACCOUNTANT",
 };
 
 interface StaffIdCardData {

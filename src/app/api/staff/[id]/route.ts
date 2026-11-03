@@ -63,6 +63,7 @@ export async function PATCH(
         ? undefined
         : parsed.data.licenseExpiryDate || null,
     employmentStatus: parsed.data.employmentStatus,
+    isChiefCo: parsed.data.isChiefCo,
     baseSalary: parsed.data.baseSalary,
     allowances: parsed.data.allowances,
     startDate: parsed.data.startDate,

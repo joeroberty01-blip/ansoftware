@@ -6,7 +6,7 @@ const decimalString = (message: string) =>
     .regex(/^\d+(\.\d{1,2})?$/, message)
     .refine((v) => Number(v) >= 0, message);
 
-export const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"] as const;
+export const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF", "ACCOUNTANT"] as const;
 export const EMPLOYMENT_STATUSES = ["ACTIVE", "INACTIVE", "TERMINATED"] as const;
 
 export const createStaffSchema = z.object({
@@ -47,6 +47,7 @@ export const updateStaffSchema = z.object({
   specialization: z.string().trim().max(200).optional().or(z.literal("")),
   skills: z.string().trim().max(500).optional().or(z.literal("")),
   certifications: z.string().trim().max(500).optional().or(z.literal("")),
+  isChiefCo: z.boolean().optional(),
 });
 
 export type UpdateStaffInput = z.infer<typeof updateStaffSchema>;

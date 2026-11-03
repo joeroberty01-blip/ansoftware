@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { getStaffByUserId } from "@/lib/repo/staff";
+import { canAccessBilling } from "@/lib/permissions";
 import { listPendingStaff } from "@/lib/repo/users";
 import { listLowStockItems } from "@/lib/repo/inventory";
 import { countOutstandingInvoices } from "@/lib/repo/invoices";
@@ -16,6 +18,10 @@ export default async function DashboardLayout({
   if (!user) {
     redirect("/login");
   }
+
+  const staff = user.role === "ADMIN" ? null : await getStaffByUserId(user.id);
+  const canBilling = canAccessBilling(user.role, staff?.profession);
+  const canClinical = user.role === "ADMIN" || staff?.profession !== "ACCOUNTANT";
 
   let pendingStaffCount = 0;
   let lowStockCount = 0;
@@ -42,6 +48,8 @@ export default async function DashboardLayout({
     <DashboardShell
       fullName={user.fullName}
       role={user.role}
+      canBilling={canBilling}
+      canClinical={canClinical}
       pendingStaffCount={pendingStaffCount}
       lowStockCount={lowStockCount}
       outstandingCount={outstandingCount}

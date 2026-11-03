@@ -1,3 +1,5 @@
+import { getCurrentUser } from "@/lib/auth";
+import { userCanAccessBilling } from "@/lib/permissions";
 import Decimal from "decimal.js";
 import QRCode from "qrcode";
 import { getInvoiceDetail } from "@/lib/repo/invoices";
@@ -29,6 +31,10 @@ const PAYABLE_TYPES = ["INVOICE", "TAX_INVOICE"];
 export default async function InvoicePrintPage(
   props: PageProps<"/print/invoices/[id]">
 ) {
+  const viewer = await getCurrentUser();
+  if (!viewer || !(await userCanAccessBilling(viewer))) {
+    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+  }
   const { id } = await props.params;
   const invoice = await getInvoiceDetail(id);
 

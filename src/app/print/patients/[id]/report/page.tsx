@@ -17,7 +17,7 @@ export default async function PatientReportPrintPage(
     listHomeVisits({ patientId: id }),
   ]);
 
-  const recentVisits = visits.slice(0, 10);
+  const recentVisits = visits.slice(0, 30);
 
   return (
     <div className="mx-auto max-w-[210mm] p-8 text-zinc-900 print:p-0">
@@ -108,51 +108,59 @@ export default async function PatientReportPrintPage(
 
       <div>
         <h3 className="mb-2 text-sm font-semibold">
-          Historia ya Ziara za Nyumbani (Recent Home Visits)
+          Ripoti za Ziara za Nyumbani (Ziara {recentVisits.length} za Hivi Karibuni)
         </h3>
         {recentVisits.length === 0 ? (
           <p className="text-sm text-zinc-500">
             Hakuna ziara zilizorekodiwa bado.
           </p>
         ) : (
-          <table className="w-full border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b-2 border-zinc-800">
-                <th className="py-1.5 pr-2 font-semibold">Tarehe</th>
-                <th className="py-1.5 pr-2 font-semibold">Nurse</th>
-                <th className="py-1.5 pr-2 font-semibold">Location</th>
-                <th className="py-1.5 pr-2 font-semibold">BP</th>
-                <th className="py-1.5 pr-2 font-semibold">Temp</th>
-                <th className="py-1.5 pr-2 font-semibold">Pulse</th>
-                <th className="py-1.5 pr-2 font-semibold">Weight</th>
-                <th className="py-1.5 pr-2 font-semibold">Sukari</th>
-                <th className="py-1.5 pr-2 font-semibold">Chakula</th>
-                <th className="py-1.5 pr-2 font-semibold">Maelezo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentVisits.map((v) => (
-                <tr key={v.id} className="border-b border-zinc-200 align-top">
-                  <td className="py-1.5 pr-2">{v.visit_date.slice(0, 10)}</td>
-                  <td className="py-1.5 pr-2">{v.staff_name ?? "-"}</td>
-                  <td className="py-1.5 pr-2">{v.location ?? "-"}</td>
-                  <td className="py-1.5 pr-2">{v.blood_pressure ?? "-"}</td>
-                  <td className="py-1.5 pr-2">
-                    {v.temperature ? `${v.temperature} °C` : "-"}
-                  </td>
-                  <td className="py-1.5 pr-2">{v.pulse ?? "-"}</td>
-                  <td className="py-1.5 pr-2">
-                    {v.weight ? `${v.weight} kg` : "-"}
-                  </td>
-                  <td className="py-1.5 pr-2">
-                    {v.blood_glucose ? `${v.blood_glucose} mmol/L` : "-"}
-                  </td>
-                  <td className="py-1.5 pr-2">{v.food_intake ?? "-"}</td>
-                  <td className="py-1.5 pr-2">{v.treatment_notes ?? "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="flex flex-col gap-3">
+            {recentVisits.map((v) => {
+              const vitals = [
+                v.blood_pressure ? `BP ${v.blood_pressure} mmHg` : null,
+                v.temperature ? `Joto ${v.temperature} °C` : null,
+                v.pulse != null ? `Pulse ${v.pulse}` : null,
+                v.blood_glucose ? `Sukari ${v.blood_glucose} mmol/L` : null,
+                v.spo2 != null ? `SpO₂ ${v.spo2}%` : null,
+                v.weight ? `Uzito ${v.weight} kg` : null,
+              ].filter(Boolean);
+              const blocks = [
+                { label: "Chakula", value: v.food_intake },
+                { label: "Matibabu / Procedures", value: v.treatment_notes },
+                { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+              ].filter((b) => b.value);
+              return (
+                <div
+                  key={v.id}
+                  className="break-inside-avoid rounded border border-zinc-300 p-3 text-sm"
+                >
+                  <div className="flex flex-wrap justify-between gap-2 border-b border-zinc-200 pb-1.5">
+                    <span className="font-semibold">
+                      {v.visit_date.slice(0, 10)}
+                      {v.visit_session
+                        ? ` — ${{ MORNING: "Asubuhi", AFTERNOON: "Mchana", EVENING: "Jioni" }[v.visit_session]}`
+                        : ""}
+                    </span>
+                    <span className="text-zinc-600">
+                      {v.staff_name ?? "-"}
+                      {v.location ? ` · ${v.location}` : ""}
+                    </span>
+                  </div>
+                  <p className="mt-1.5">
+                    <span className="text-zinc-600">Vitals: </span>
+                    {vitals.length ? vitals.join("  ·  ") : "Hazikurekodiwa"}
+                  </p>
+                  {blocks.map((b) => (
+                    <p key={b.label} className="mt-1 whitespace-pre-wrap break-words">
+                      <span className="text-zinc-600">{b.label}: </span>
+                      {b.value}
+                    </p>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 

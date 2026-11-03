@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { convertToPayableDocument } from "@/lib/repo/invoices";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
@@ -26,6 +27,8 @@ export async function POST(
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const { id } = await ctx.params;
 

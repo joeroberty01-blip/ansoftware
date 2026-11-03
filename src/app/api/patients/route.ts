@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { createPatientSchema } from "@/lib/validation/patients";
 import { createPatient, listPatients } from "@/lib/repo/patients";
 import { getStaffByUserId } from "@/lib/repo/staff";
@@ -88,5 +89,6 @@ export async function POST(req: NextRequest) {
     createdById: session.id,
   });
 
+  await logAudit({ userId: session.id, action: "PATIENT_CREATED", entity: "patient", entityId: patient.id });
   return NextResponse.json({ patient }, { status: 201 });
 }

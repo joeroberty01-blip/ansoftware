@@ -1,4 +1,3 @@
-import Decimal from "decimal.js";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { PaymentWithContext } from "@/lib/repo/invoices";
 
@@ -39,11 +38,14 @@ function fmt(value: string) {
   }).format(Number(value));
 }
 
+function formatDarDateTime(iso: string | Date): string {
+  return new Date(iso)
+    .toLocaleString("sv-SE", { timeZone: "Africa/Dar_es_Salaam" })
+    .slice(0, 16);
+}
+
 export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
-  const balance = new Decimal(payment.total_amount)
-    .minus(payment.amount_paid)
-    .toFixed(2);
-  const paidAt = new Date(payment.paid_at);
+  const paidAt = formatDarDateTime(payment.paid_at);
 
   return (
     <Document>
@@ -55,6 +57,10 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
         <View style={styles.divider} />
 
         <View style={styles.row}>
+          <Text style={styles.label}>Risiti Na.</Text>
+          <Text style={styles.bold}>{payment.receipt_number}</Text>
+        </View>
+        <View style={styles.row}>
           <Text style={styles.label}>Hati</Text>
           <Text>{payment.document_number}</Text>
         </View>
@@ -64,7 +70,7 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Tarehe</Text>
-          <Text>{paidAt.toISOString().slice(0, 16).replace("T", " ")}</Text>
+          <Text>{paidAt}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Njia</Text>
@@ -94,11 +100,11 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Imelipwa Yote</Text>
-          <Text>{fmt(payment.amount_paid)}</Text>
+          <Text>{fmt(payment.paid_to_date)}</Text>
         </View>
         <View style={styles.row}>
           <Text style={[styles.label, styles.bold]}>Salio</Text>
-          <Text style={styles.bold}>{fmt(balance)}</Text>
+          <Text style={styles.bold}>{fmt(payment.balance_after)}</Text>
         </View>
 
         <Text style={styles.footer}>Asante kwa kutumia huduma zetu</Text>

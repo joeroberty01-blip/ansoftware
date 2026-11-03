@@ -3,7 +3,12 @@
 
 export type UserRole = "ADMIN" | "STAFF";
 export type UserStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
-export type Profession = "NURSE" | "DOCTOR" | "CHW" | "ADMIN_STAFF";
+export type Profession =
+  | "NURSE"
+  | "DOCTOR"
+  | "CHW"
+  | "ADMIN_STAFF"
+  | "ACCOUNTANT";
 export type EmploymentStatus = "ACTIVE" | "INACTIVE" | "TERMINATED";
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type PayrollStatus = "PENDING" | "PAID";
@@ -58,6 +63,7 @@ export interface StaffRow {
   base_salary: string; // NUMERIC -> string
   allowances: string;
   leave_balance_days: number;
+  is_chief_co: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +96,11 @@ export interface PayrollRow {
   net_pay: string;
   status: PayrollStatus;
   paid_at: string | null;
+  payment_method: PaymentMethod | null;
+  payment_reference: string | null;
+  payment_account: string | null;
+  paid_by_id: string | null;
+  paid_by_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -135,6 +146,7 @@ export interface InvoiceItemRow {
 
 export interface PaymentRow {
   id: string;
+  receipt_number: string;
   invoice_id: string;
   amount: string;
   method: PaymentMethod;
@@ -260,6 +272,7 @@ export interface PatientMedicationRow {
   start_date: string | null;
   end_date: string | null;
   notes: string | null;
+  schedule_slots: string[];
   created_at: string;
 }
 
@@ -269,12 +282,16 @@ export interface PatientDocumentRow {
   title: string;
   document_type: string;
   notes: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  file_size: number | null;
   uploaded_by_id: string;
   created_at: string;
 }
 
 export type HomeVisitStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 export type VisitSession = "MORNING" | "AFTERNOON" | "EVENING";
+export type VisitType = "FULL_TIME" | "PART_TIME";
 
 export type DutyStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
 
@@ -296,6 +313,7 @@ export interface HomeVisitRow {
   staff_id: string | null;
   visit_date: string;
   visit_session: VisitSession | null;
+  visit_type: VisitType;
   status: HomeVisitStatus;
   location: string | null;
   check_in_lat: string | null;
@@ -309,6 +327,7 @@ export interface HomeVisitRow {
   weight: string | null;
   height_cm: string | null;
   blood_glucose: string | null;
+  spo2: number | null;
   food_intake: string | null;
   treatment_notes: string | null;
   notes: string | null;

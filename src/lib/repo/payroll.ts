@@ -1,7 +1,7 @@
 import { query, withTransaction } from "../db";
 import { calculatePayroll } from "../payroll/calculate";
 import { logAudit } from "../audit";
-import type { PayrollRow } from "../types";
+import type { PayrollRow, PaymentMethod } from "../types";
 
 export async function createPayrollForStaff(input: {
   staffId: string;
@@ -74,7 +74,12 @@ export async function createPayrollForStaff(input: {
  */
 export async function paySalary(
   payrollId: string,
-  paidById: string
+  paidById: string,
+  payment: {
+    method: PaymentMethod;
+    reference: string;
+    account: string;
+  }
 ): Promise<PayrollRow> {
   return withTransaction(async (client) => {
     const res = await client.query(
@@ -91,10 +96,19 @@ export async function paySalary(
     if (payroll.status === "PAID") throw new Error("ALREADY_PAID");
 
     const updatedRes = await client.query<PayrollRow>(
-      `UPDATE payrolls SET status = 'PAID', paid_at = now(), updated_at = now()
+      `UPDATE payrolls
+       SET status = 'PAID', paid_at = now(), updated_at = now(),
+           payment_method = $2, payment_reference = $3, payment_account = $4,
+           paid_by_id = $5
        WHERE id = $1
        RETURNING *`,
-      [payrollId]
+      [
+        payrollId,
+        payment.method,
+        payment.reference || null,
+        payment.account || null,
+        paidById,
+      ]
     );
 
     const monthLabel = `${payroll.month}/${payroll.year}`;
@@ -120,6 +134,8 @@ export async function paySalary(
           staffId: payroll.staff_id,
           month: payroll.month,
           year: payroll.year,
+          method: payment.method,
+          reference: payment.reference || null,
           expenseId: expenseRes.rows[0].id,
         },
       },
@@ -134,14 +150,17 @@ export async function listPayrollHistory(
   staffId: string,
   year?: number
 ): Promise<PayrollRow[]> {
+  const select = `SELECT p.*, u.full_name AS paid_by_name
+     FROM payrolls p
+     LEFT JOIN users u ON u.id = p.paid_by_id`;
   if (year) {
     return query<PayrollRow>(
-      `SELECT * FROM payrolls WHERE staff_id = $1 AND year = $2 ORDER BY month DESC`,
+      `${select} WHERE p.staff_id = $1 AND p.year = $2 ORDER BY p.month DESC`,
       [staffId, year]
     );
   }
   return query<PayrollRow>(
-    `SELECT * FROM payrolls WHERE staff_id = $1 ORDER BY year DESC, month DESC`,
+    `${select} WHERE p.staff_id = $1 ORDER BY p.year DESC, p.month DESC`,
     [staffId]
   );
 }

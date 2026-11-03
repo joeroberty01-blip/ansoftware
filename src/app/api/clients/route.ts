@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertBillingAccess } from "@/lib/permissions";
 import { createClientSchema } from "@/lib/validation/clients";
 import { createClient, listClients } from "@/lib/repo/clients";
 
@@ -12,6 +13,8 @@ export async function GET() {
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const clients = await listClients();
   return NextResponse.json({ clients });
@@ -25,6 +28,8 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   }
+  const noBilling = await assertBillingAccess(session);
+  if (noBilling) return noBilling;
 
   const body = await req.json();
   const parsed = createClientSchema.safeParse(body);

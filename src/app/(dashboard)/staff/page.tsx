@@ -49,13 +49,14 @@ interface StaffOverview {
   payroll: { currentTotal: string; previousTotal: string };
 }
 
-const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"];
+const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF", "ACCOUNTANT"];
 
 const DEPARTMENT_BY_PROFESSION: Record<string, string> = {
   NURSE: "Nursing",
   DOCTOR: "Medical",
   CHW: "Support",
   ADMIN_STAFF: "Admin",
+  ACCOUNTANT: "Accountant",
 };
 
 const STATUS_META: Record<string, { label: string; dot: string; text: string }> = {

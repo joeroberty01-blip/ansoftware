@@ -27,6 +27,8 @@ const CREATE_LINKS = [
 export function DashboardShell({
   fullName,
   role,
+  canBilling,
+  canClinical,
   pendingStaffCount,
   lowStockCount,
   outstandingCount,
@@ -36,6 +38,8 @@ export function DashboardShell({
 }: {
   fullName: string;
   role: UserRole;
+  canBilling: boolean;
+  canClinical: boolean;
   pendingStaffCount: number;
   lowStockCount: number;
   outstandingCount: number;
@@ -107,6 +111,8 @@ export function DashboardShell({
 
         <Sidebar
           role={role}
+          canBilling={canBilling}
+          canClinical={canClinical}
           pendingStaffCount={pendingStaffCount}
           lowStockCount={lowStockCount}
           outstandingCount={outstandingCount}

@@ -34,10 +34,12 @@ export function NewHomeVisitForm({
   isAdmin,
   ownStaffId,
   ownStaffName,
+  canRecordPartTime,
 }: {
   isAdmin: boolean;
   ownStaffId: string | null;
   ownStaffName: string | null;
+  canRecordPartTime: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,6 +56,7 @@ export function NewHomeVisitForm({
   const [visitSession, setVisitSession] = useState<
     (typeof VISIT_SESSIONS)[number]
   >(defaultSessionForNow());
+  const [visitType, setVisitType] = useState<"FULL_TIME" | "PART_TIME">("FULL_TIME");
   const [status, setStatus] = useState("COMPLETED");
   const [location, setLocation] = useState("");
   const [bloodPressure, setBloodPressure] = useState("");
@@ -61,6 +64,7 @@ export function NewHomeVisitForm({
   const [pulse, setPulse] = useState("");
   const [weight, setWeight] = useState("");
   const [bloodGlucose, setBloodGlucose] = useState("");
+  const [spo2, setSpo2] = useState("");
   const [foodIntake, setFoodIntake] = useState("");
   const [treatmentNotes, setTreatmentNotes] = useState("");
   const [notes, setNotes] = useState("");
@@ -112,6 +116,7 @@ export function NewHomeVisitForm({
           staffId: staffId || undefined,
           visitDate,
           visitSession,
+          visitType,
           status,
           location: location || undefined,
           checkInLat: geo.checkIn?.lat,
@@ -122,6 +127,7 @@ export function NewHomeVisitForm({
           pulse: pulse ? Number(pulse) : undefined,
           weight: weight || undefined,
           bloodGlucose: bloodGlucose || undefined,
+          spo2: spo2 ? Number(spo2) : undefined,
           foodIntake: foodIntake || undefined,
           treatmentNotes: treatmentNotes || undefined,
           notes: notes || undefined,
@@ -247,6 +253,24 @@ export function NewHomeVisitForm({
             </select>
           </div>
 
+          {canRecordPartTime && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-600">
+                Aina ya Ziara
+              </label>
+              <select
+                value={visitType}
+                onChange={(e) =>
+                  setVisitType(e.target.value as "FULL_TIME" | "PART_TIME")
+                }
+                className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+              >
+                <option value="FULL_TIME">Full-time</option>
+                <option value="PART_TIME">Part-time</option>
+              </select>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">Status</label>
             <select
@@ -315,6 +339,18 @@ export function NewHomeVisitForm({
               onChange={(e) => setBloodGlucose(e.target.value)}
               inputMode="decimal"
               placeholder="e.g. 5.5"
+              className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-600">
+              SpO₂ / Oxygen (%)
+            </label>
+            <input
+              value={spo2}
+              onChange={(e) => setSpo2(e.target.value)}
+              inputMode="numeric"
+              placeholder="e.g. 97"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>

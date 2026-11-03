@@ -43,6 +43,13 @@ export function pulseStatus(pulse: number | string | null | undefined): VitalSta
   return v >= 60 && v <= 100 ? "normal" : "warning";
 }
 
+export function spo2Status(spo2: number | string | null | undefined): VitalStatus {
+  if (spo2 === null || spo2 === undefined || spo2 === "") return null;
+  const v = Number(spo2);
+  if (Number.isNaN(v)) return null;
+  return v >= 95 ? "normal" : "warning";
+}
+
 export function bmiStatus(
   weight: string | null | undefined,
   heightCm: string | null | undefined
@@ -60,6 +67,7 @@ export interface VitalsSet {
   temperature?: string | number | null;
   pulse?: number | string | null;
   blood_glucose?: string | null;
+  spo2?: number | string | null;
 }
 
 /** True if any recorded vital in the set is outside its normal range. */
@@ -68,7 +76,8 @@ export function hasVitalsAlert(v: VitalsSet): boolean {
     bpStatus(v.blood_pressure) === "warning" ||
     temperatureStatus(v.temperature) === "warning" ||
     pulseStatus(v.pulse) === "warning" ||
-    glucoseStatus(v.blood_glucose) === "warning"
+    glucoseStatus(v.blood_glucose) === "warning" ||
+    spo2Status(v.spo2) === "warning"
   );
 }
 
@@ -86,6 +95,9 @@ export function vitalsAlertReasons(v: VitalsSet): string[] {
   }
   if (glucoseStatus(v.blood_glucose) === "warning") {
     reasons.push(`Sukari ${v.blood_glucose} mmol/L iko nje ya kawaida`);
+  }
+  if (spo2Status(v.spo2) === "warning") {
+    reasons.push(`Oksijeni (SpO₂) ${v.spo2}% iko chini ya kawaida`);
   }
   return reasons;
 }

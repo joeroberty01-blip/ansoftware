@@ -13,7 +13,7 @@ export const staffSignupSchema = z.object({
   email: z.string().email("Barua pepe sio sahihi"),
   phone: z.string().min(9, "Namba ya simu sio sahihi"),
   password: z.string().min(8, "Password iwe angalau herufi 8"),
-  profession: z.enum(["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF"]),
+  profession: z.enum(["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF", "ACCOUNTANT"]),
 });
 
 export const loginSchema = z.object({
