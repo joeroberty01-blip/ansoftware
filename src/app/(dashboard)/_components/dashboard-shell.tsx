@@ -123,7 +123,7 @@ export function DashboardShell({
         <div className="border-t border-zinc-200 p-3">
           <a
             href="mailto:support@afyanyumbani.com"
-            className="flex items-center justify-center gap-2 rounded-lg bg-brand-blue px-3 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
+            className="flex items-center justify-center gap-2 rounded-lg bg-brand-blue-light px-3 py-2 text-sm font-semibold text-brand-blue transition-colors hover:bg-[#dbe7fa]"
           >
             Need Help? Contact Support
           </a>
@@ -131,7 +131,7 @@ export function DashboardShell({
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm print:hidden">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200/80 bg-white/85 px-4 py-3 backdrop-blur print:hidden">
           <button
             type="button"
             className="text-zinc-700 sm:hidden"

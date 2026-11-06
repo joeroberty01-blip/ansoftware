@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentStatusBadge } from "../../../_components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -318,7 +319,9 @@ export default function ClientBillingDetailPage() {
                   <td className="py-2 pr-4 text-right">
                     {fmt(inv.total_amount)}
                   </td>
-                  <td className="py-2 pr-4">{inv.payment_status}</td>
+                  <td className="py-2 pr-4">
+                      <PaymentStatusBadge status={inv.payment_status} />
+                    </td>
                 </tr>
               ))}
             </tbody>

@@ -167,7 +167,7 @@ export function Sidebar({
         if (groupItems.length === 0) return null;
         return (
           <div key={group.key} className="flex flex-col gap-1">
-            <p className="px-3 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase">
+            <p className="px-3 pb-0.5 text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
               {group.label}
             </p>
             {groupItems.map((item) => {
@@ -188,8 +188,8 @@ export function Sidebar({
                   onClick={onNavigate}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-brand-blue text-white shadow-sm"
-                      : "text-zinc-700 hover:bg-zinc-100"
+                      ? "bg-brand-blue-light text-brand-blue"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -198,7 +198,7 @@ export function Sidebar({
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         isActive
-                          ? "bg-white/20 text-white"
+                          ? "bg-brand-blue text-white"
                           : "bg-brand-orange-light text-brand-orange"
                       }`}
                     >

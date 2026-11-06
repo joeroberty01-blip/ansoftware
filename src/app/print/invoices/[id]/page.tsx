@@ -7,6 +7,7 @@ import {
   BRAND,
   STATUS_COLORS,
   STATUS_LABELS,
+  STATUS_TINTS,
   formatInvoiceDate,
   invoiceQrText,
 } from "@/lib/invoice-brand";
@@ -21,12 +22,14 @@ function fmt(value: string) {
 
 const DOC_TITLES: Record<string, string> = {
   QUOTATION: "QUOTATION",
-  PROFORMA: "PROFORMA INVOICE",
+  PROFORMA: "PROFORMA",
   INVOICE: "INVOICE",
   TAX_INVOICE: "TAX INVOICE",
 };
 
 const PAYABLE_TYPES = ["INVOICE", "TAX_INVOICE"];
+
+const labelClass = "text-[9px] font-bold tracking-[0.08em] text-slate-500";
 
 export default async function InvoicePrintPage(
   props: PageProps<"/print/invoices/[id]">
@@ -49,103 +52,124 @@ export default async function InvoicePrintPage(
   const hasTax = Number(invoice.tax_amount) > 0;
   const statusLabel = STATUS_LABELS[invoice.payment_status] ?? invoice.payment_status;
   const statusColor = STATUS_COLORS[invoice.payment_status] ?? BRAND.gray;
+  const statusTint = STATUS_TINTS[invoice.payment_status] ?? "#EEF0F4";
   const qrDataUri = await QRCode.toDataURL(invoiceQrText(invoice), {
     margin: 1,
     width: 200,
   });
 
   return (
-    <div className="mx-auto max-w-[210mm] text-zinc-900 print:p-0">
+    <div className="mx-auto max-w-[210mm] bg-white text-slate-900 print:p-0">
       <AutoPrint />
-      <style>{`@page { size: A4; margin: 0; }`}</style>
+      <style>{`@page { size: A4; margin: 0; } body { background: #fff; }`}</style>
 
-      <div
-        className="flex items-center justify-between px-8 py-6"
-        style={{ backgroundColor: BRAND.navy }}
-      >
+      <div className="flex h-[7px]">
+        <div className="flex-1" style={{ backgroundColor: BRAND.blue }} />
+        <div className="w-24" style={{ backgroundColor: BRAND.orange }} />
+      </div>
+
+      <div className="flex items-start justify-between px-10 pt-7 pb-2">
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo-afyanyumbani.png"
+            src="/logo-afyanyumbani-mark.png"
             alt={BRAND.name}
-            className="h-12 w-12 rounded-md object-cover"
+            className="h-12 w-12 object-contain"
           />
           <div>
-            <p className="text-xl font-bold text-white">{BRAND.name}</p>
-            <p className="mt-0.5 text-[9px] tracking-wide text-blue-200">
+            <p className="text-lg font-bold" style={{ color: BRAND.blue }}>
+              {BRAND.name}
+            </p>
+            <p className="mt-0.5 text-[8px] tracking-[0.1em] text-slate-500">
               {BRAND.tagline}
             </p>
-            <p className="mt-1 text-[9px] text-blue-200">
+            <p className="mt-1 text-[9px] text-slate-500">
               {BRAND.website} &nbsp;&nbsp; {BRAND.social}
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-end">
-          <span
-            className="mb-1.5 rounded-full px-3 py-1 text-[10px] font-bold text-white"
-            style={{ backgroundColor: BRAND.orange }}
+        <div className="text-right">
+          <p
+            className="text-[26px] leading-none font-bold tracking-[0.06em]"
+            style={{ color: BRAND.blue }}
           >
             {DOC_TITLES[invoice.doc_type] ?? invoice.doc_type}
-          </span>
-          <p className="text-lg font-bold text-white">{invoice.document_number}</p>
-          <p className="mt-0.5 text-[9px] text-blue-200">
-            {formatInvoiceDate(invoice.issue_date)}
           </p>
+          <p className="mt-1.5 text-sm font-bold">{invoice.document_number}</p>
         </div>
       </div>
-      <div className="h-1" style={{ backgroundColor: BRAND.orange }} />
 
-      <div className="p-8">
-        <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="px-10 pt-4 pb-10">
+        <div
+          className="mb-5 grid grid-cols-3 gap-4 rounded-lg px-4 py-3"
+          style={{ backgroundColor: BRAND.light }}
+        >
           <div>
-            <p className="text-[9px] font-bold tracking-wide text-zinc-500">
-              BILLED TO
+            <p className={labelClass}>ISSUE DATE</p>
+            <p className="mt-1 text-[13px] font-bold">
+              {formatInvoiceDate(invoice.issue_date)}
             </p>
-            <p className="mt-1 text-sm font-bold">{invoice.client_name}</p>
           </div>
           <div>
-            <p className="text-[9px] font-bold tracking-wide text-zinc-500">
-              DUE DATE
-            </p>
-            <p className="mt-1 text-sm font-bold">
+            <p className={labelClass}>DUE DATE</p>
+            <p className="mt-1 text-[13px] font-bold">
               {invoice.due_date ? formatInvoiceDate(invoice.due_date) : "On Receipt"}
             </p>
           </div>
           <div>
-            <p className="text-[9px] font-bold tracking-wide text-zinc-500">
-              STATUS
-            </p>
-            <p
-              className="mt-1 flex items-center gap-1.5 text-sm font-bold"
-              style={{ color: statusColor }}
+            <p className={labelClass}>STATUS</p>
+            <span
+              className="mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide"
+              style={{ color: statusColor, backgroundColor: statusTint }}
             >
               <span
                 className="h-1.5 w-1.5 rounded-full"
                 style={{ backgroundColor: statusColor }}
               />
               {statusLabel}
-            </p>
+            </span>
           </div>
         </div>
 
-        <table className="mb-6 w-full border-collapse text-left text-xs">
+        <div className="mb-5">
+          <p className={labelClass}>BILLED TO</p>
+          <p className="mt-1 text-base font-bold">{invoice.client_name}</p>
+          {invoice.client_phone && (
+            <p className="text-[11px] text-slate-500">{invoice.client_phone}</p>
+          )}
+          {invoice.client_email && (
+            <p className="text-[11px] text-slate-500">{invoice.client_email}</p>
+          )}
+        </div>
+
+        <table className="w-full border-collapse text-left text-xs">
           <thead>
-            <tr className="border-b border-zinc-200 text-[9px] font-bold tracking-wide text-zinc-500">
-              <th className="w-8 py-2">#</th>
-              <th className="py-2">DESCRIPTION</th>
-              <th className="py-2 text-right">QTY</th>
-              <th className="py-2 text-right">UNIT PRICE</th>
-              <th className="py-2 text-right">TOTAL</th>
+            <tr
+              className="text-[9px] font-bold tracking-[0.08em] text-white"
+              style={{ backgroundColor: BRAND.blue }}
+            >
+              <th className="w-8 rounded-tl-md px-3 py-2">#</th>
+              <th className="px-3 py-2">DESCRIPTION</th>
+              <th className="px-3 py-2 text-right">QTY</th>
+              <th className="px-3 py-2 text-right">UNIT PRICE</th>
+              <th className="rounded-tr-md px-3 py-2 text-right">TOTAL</th>
             </tr>
           </thead>
           <tbody>
             {invoice.items.map((item, i) => (
-              <tr key={item.id} className="border-b border-zinc-100">
-                <td className="py-2.5">{i + 1}</td>
-                <td className="py-2.5 font-bold">{item.description}</td>
-                <td className="py-2.5 text-right">{item.quantity}</td>
-                <td className="py-2.5 text-right">TZS {fmt(item.unit_price)}</td>
-                <td className="py-2.5 text-right font-bold" style={{ color: BRAND.orange }}>
+              <tr
+                key={item.id}
+                className="break-inside-avoid"
+                style={{
+                  backgroundColor: i % 2 === 1 ? "#F8FAFD" : undefined,
+                  borderBottom: `1px solid ${BRAND.line}`,
+                }}
+              >
+                <td className="px-3 py-2.5 text-slate-500">{i + 1}</td>
+                <td className="px-3 py-2.5 font-bold">{item.description}</td>
+                <td className="px-3 py-2.5 text-right">{item.quantity}</td>
+                <td className="px-3 py-2.5 text-right">TZS {fmt(item.unit_price)}</td>
+                <td className="px-3 py-2.5 text-right font-bold">
                   TZS {fmt(item.total)}
                 </td>
               </tr>
@@ -153,93 +177,105 @@ export default async function InvoicePrintPage(
           </tbody>
         </table>
 
-        <div className="mb-5 grid grid-cols-2 gap-4">
-          {isPayable && (
-            <div className="rounded-lg p-4" style={{ backgroundColor: BRAND.cream }}>
-              <p className="mb-2 text-[9px] font-bold tracking-wide text-zinc-500">
-                PAYMENT METHOD
-              </p>
-              <div className="flex items-center gap-2">
-                <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold text-white"
-                  style={{ backgroundColor: BRAND.orange }}
-                >
-                  T
-                </span>
-                <div>
-                  <p className="text-[8px] text-zinc-500">TIGO PESA LIPA NAMBA</p>
-                  <p className="text-base font-bold leading-tight">
-                    {BRAND.tigoPesaNumber}
-                  </p>
-                  <p className="text-[9px] font-bold">{BRAND.tigoPesaAccountName}</p>
+        <div className="mt-5 flex items-start gap-5 break-inside-avoid">
+          <div className="flex-1">
+            {isPayable && (
+              <div
+                className="rounded-md p-3"
+                style={{
+                  backgroundColor: "#FFF8F1",
+                  borderLeft: `3px solid ${BRAND.orange}`,
+                }}
+              >
+                <p className={`${labelClass} mb-1.5`}>PAYMENT METHOD</p>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+                    style={{ backgroundColor: BRAND.orange }}
+                  >
+                    T
+                  </span>
+                  <div>
+                    <p className="text-[8px] text-slate-500">TIGO PESA LIPA NAMBA</p>
+                    <p className="text-base leading-tight font-bold">
+                      {BRAND.tigoPesaNumber}
+                    </p>
+                    <p className="text-[9px] font-bold">{BRAND.tigoPesaAccountName}</p>
+                  </div>
                 </div>
+                <p className="mt-2 text-[9px] leading-snug text-slate-500">
+                  Send exact amount and use the invoice number as reference.
+                  <br />
+                  WhatsApp confirmation: {BRAND.whatsapp}
+                </p>
               </div>
-              <p className="mt-2 text-[8px] leading-snug text-zinc-500">
-                Send exact amount and use invoice number as reference.
-                <br />
-                WhatsApp confirmation: {BRAND.whatsapp}
-              </p>
-            </div>
-          )}
-          <div
-            className={`rounded-lg p-4 ${isPayable ? "" : "col-start-2"}`}
-            style={{ backgroundColor: BRAND.cream }}
-          >
-            <div className="flex justify-between text-xs">
-              <span className="text-zinc-500">Subtotal</span>
+            )}
+            {invoice.notes && (
+              <div className="mt-3">
+                <p className={`${labelClass} mb-1`}>NOTES</p>
+                <p className="text-[11px] leading-relaxed text-slate-700">
+                  {invoice.notes}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="w-[230px]">
+            <div className="flex justify-between py-1 text-xs">
+              <span className="text-slate-500">Subtotal</span>
               <span className="font-bold">TZS {fmt(invoice.subtotal)}</span>
             </div>
-            <div className="mt-1 flex justify-between text-xs">
-              <span className="text-zinc-500">VAT</span>
+            <div className="flex justify-between py-1 text-xs">
+              <span className="text-slate-500">VAT</span>
               <span className="font-bold">
                 {hasTax ? `TZS ${fmt(invoice.tax_amount)}` : "N/A"}
               </span>
             </div>
-            <div className="my-2 border-t border-zinc-300" />
-            <div className="flex justify-between text-sm font-bold">
-              <span>TOTAL DUE</span>
-              <span style={{ color: BRAND.orange }}>TZS {fmt(invoice.total_amount)}</span>
+            <div
+              className="mt-1.5 flex items-center justify-between rounded-lg px-3 py-2.5 text-white"
+              style={{ backgroundColor: BRAND.blue }}
+            >
+              <span className="text-[11px] font-bold tracking-[0.08em]">TOTAL DUE</span>
+              <span className="text-base font-bold">TZS {fmt(invoice.total_amount)}</span>
             </div>
             {isPayable && Number(invoice.amount_paid) > 0 && (
-              <>
-                <div className="my-2 border-t border-zinc-300" />
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Imelipwa</span>
+              <div className="mt-2">
+                <div className="flex justify-between py-1 text-xs">
+                  <span className="text-slate-500">Imelipwa</span>
                   <span className="font-bold">TZS {fmt(invoice.amount_paid)}</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Salio</span>
+                <div
+                  className="flex justify-between py-1 pt-1.5 text-xs"
+                  style={{ borderTop: `1px solid ${BRAND.line}` }}
+                >
+                  <span className="font-bold">Salio</span>
                   <span className="font-bold">TZS {fmt(balance)}</span>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
 
-        {invoice.notes && (
-          <div className="mb-6 rounded-lg p-3" style={{ backgroundColor: BRAND.cream }}>
-            <span className="text-xs font-bold" style={{ color: BRAND.orange }}>
-              Notes:{" "}
-            </span>
-            <span className="text-xs">{invoice.notes}</span>
-          </div>
-        )}
-
-        <div className="flex items-start justify-between border-t border-zinc-200 pt-4">
+        <div
+          className="mt-8 flex items-end justify-between pt-4 break-inside-avoid"
+          style={{ borderTop: `1px solid ${BRAND.line}` }}
+        >
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrDataUri} alt="QR" className="h-14 w-14" />
-            <p className="mt-1 w-28 text-[7px] leading-tight text-zinc-500">
-              Scan to Verify — this QR contains invoice details, amount & Tigo
-              Pesa payment reference.
+            <p className="mt-1 w-32 text-[8px] leading-tight text-slate-500">
+              Scan to verify: invoice details, amount and Tigo Pesa reference.
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-bold">{BRAND.name}</p>
-            <p className="text-[8px] text-zinc-500">{BRAND.address}</p>
-            <p className="text-[8px] text-zinc-500">Tigo Pesa: {BRAND.tigoPesaNumber}</p>
-            <p className="text-[8px] text-zinc-500">WhatsApp: {BRAND.whatsapp}</p>
-            <p className="text-[8px] text-zinc-500">
+            <p className="text-xs font-bold" style={{ color: BRAND.blue }}>
+              Thank you for choosing {BRAND.name}
+            </p>
+            <p className="mt-0.5 text-[9px] text-slate-500">{BRAND.address}</p>
+            <p className="text-[9px] text-slate-500">
+              Tigo Pesa: {BRAND.tigoPesaNumber} &nbsp; WhatsApp: {BRAND.whatsapp}
+            </p>
+            <p className="text-[9px] text-slate-500">
               Generated: {formatInvoiceDate(new Date().toISOString())}
             </p>
           </div>

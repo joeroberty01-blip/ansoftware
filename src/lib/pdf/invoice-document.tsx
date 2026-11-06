@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import Decimal from "decimal.js";
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
@@ -6,155 +7,161 @@ import {
   BRAND,
   STATUS_COLORS,
   STATUS_LABELS,
+  STATUS_TINTS,
   formatInvoiceDate,
 } from "@/lib/invoice-brand";
 
-const LOGO_PATH = path.join(process.cwd(), "public", "logo-afyanyumbani.png");
+const LOGO_PATH = path.join(process.cwd(), "public", "logo-afyanyumbani-mark.png");
+
+// Hand react-pdf the raw bytes: a bare file path silently fails to load in
+// some runtimes, which left the logo slot blank.
+let logoData: Buffer | null = null;
+function logoSource() {
+  if (!logoData) logoData = readFileSync(LOGO_PATH);
+  return { data: logoData, format: "png" as const };
+}
+
+const INK = "#0F172A";
+const MUTED = "#64718A";
 
 const styles = StyleSheet.create({
-  page: { fontSize: 9.5, fontFamily: "Helvetica", color: "#1a1a1a" },
+  page: { fontSize: 9.5, fontFamily: "Helvetica", color: INK, paddingBottom: 40 },
+
+  topBar: { flexDirection: "row", height: 7 },
+  topBarBlue: { flex: 1, backgroundColor: BRAND.blue },
+  topBarOrange: { width: 90, backgroundColor: BRAND.orange },
 
   header: {
-    backgroundColor: BRAND.navy,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 32,
-    paddingVertical: 20,
+    alignItems: "flex-start",
+    paddingHorizontal: 40,
+    paddingTop: 28,
+    paddingBottom: 6,
   },
-  headerLeft: { flexDirection: "row", alignItems: "center" },
-  logo: { width: 46, height: 46, borderRadius: 6, marginRight: 12 },
-  companyName: { fontSize: 18, fontWeight: 700, color: "#ffffff" },
-  companyTagline: { fontSize: 7.5, color: "#B9C4DE", marginTop: 2, letterSpacing: 0.5 },
-  companyMeta: { fontSize: 7.5, color: "#B9C4DE", marginTop: 3 },
-  headerRight: { alignItems: "flex-end" },
-  docTypePill: {
-    backgroundColor: BRAND.orange,
-    borderRadius: 10,
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    marginBottom: 6,
+  brand: { flexDirection: "row", alignItems: "center" },
+  logo: { width: 52, height: 52, objectFit: "contain", marginRight: 12 },
+  companyName: { fontSize: 17, fontWeight: 700, color: BRAND.blue },
+  companyTagline: { fontSize: 7, color: MUTED, marginTop: 2, letterSpacing: 0.8 },
+  companyMeta: { fontSize: 7.5, color: MUTED, marginTop: 3 },
+  titleBlock: { alignItems: "flex-end" },
+  docTitle: { fontSize: 24, fontWeight: 700, color: BRAND.blue, letterSpacing: 1.5 },
+  docNumber: { fontSize: 10.5, fontWeight: 700, color: INK, marginTop: 3 },
+
+  body: { paddingHorizontal: 40, paddingTop: 14 },
+
+  metaCard: {
+    flexDirection: "row",
+    backgroundColor: BRAND.light,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 18,
   },
-  docTypePillText: { fontSize: 7.5, fontWeight: 700, color: "#ffffff" },
-  docNumber: { fontSize: 15, fontWeight: 700, color: "#ffffff" },
-  docDate: { fontSize: 7.5, color: "#B9C4DE", marginTop: 2 },
-  accentBar: { height: 4, backgroundColor: BRAND.orange },
-
-  body: { padding: 32 },
-
-  metaRow: { flexDirection: "row", marginBottom: 20 },
   metaCol: { flex: 1 },
-  metaLabel: {
-    fontSize: 7,
-    fontWeight: 700,
-    color: BRAND.gray,
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  metaValue: { fontSize: 10.5, fontWeight: 700 },
+  metaLabel: { fontSize: 6.5, fontWeight: 700, color: MUTED, letterSpacing: 0.8, marginBottom: 4 },
+  metaValue: { fontSize: 10, fontWeight: 700 },
   statusPill: {
+    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
+    borderRadius: 10,
+    paddingVertical: 2.5,
+    paddingHorizontal: 8,
   },
   statusDot: { width: 5, height: 5, borderRadius: 2.5, marginRight: 4 },
-  statusText: { fontSize: 9, fontWeight: 700 },
+  statusText: { fontSize: 7.5, fontWeight: 700, letterSpacing: 0.4 },
 
-  table: { marginBottom: 20 },
+  billed: { marginBottom: 18 },
+  billedName: { fontSize: 12, fontWeight: 700, marginBottom: 2 },
+  billedLine: { fontSize: 8.5, color: MUTED, marginTop: 1 },
+
   tableHeaderRow: {
     flexDirection: "row",
-    borderBottom: 1,
-    borderBottomColor: "#E5E1D8",
-    paddingBottom: 6,
-    marginBottom: 6,
+    backgroundColor: BRAND.blue,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
   },
-  tableHeaderText: {
-    fontSize: 7,
-    fontWeight: 700,
-    color: BRAND.gray,
-    letterSpacing: 0.5,
-  },
+  tableHeaderText: { fontSize: 7, fontWeight: 700, color: "#ffffff", letterSpacing: 0.8 },
   tableRow: {
     flexDirection: "row",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     borderBottom: 1,
-    borderBottomColor: "#F1EEE6",
-    paddingVertical: 7,
+    borderBottomColor: BRAND.line,
   },
-  colIndex: { width: 20 },
-  colDesc: { flex: 3, fontWeight: 700 },
-  colQty: { flex: 1, textAlign: "right" },
-  colPrice: { flex: 1.4, textAlign: "right" },
-  colTotal: { flex: 1.4, textAlign: "right", fontWeight: 700, color: BRAND.orange },
+  tableRowAlt: { backgroundColor: "#F8FAFD" },
+  colIndex: { width: 22, color: MUTED },
+  colDesc: { flex: 3.2, fontWeight: 700 },
+  colQty: { flex: 0.9, textAlign: "right" },
+  colPrice: { flex: 1.5, textAlign: "right" },
+  colTotal: { flex: 1.5, textAlign: "right", fontWeight: 700 },
 
-  boxRow: { flexDirection: "row", marginBottom: 16 },
-  box: {
-    flex: 1,
-    backgroundColor: BRAND.cream,
-    borderRadius: 8,
-    padding: 14,
+  lower: { flexDirection: "row", marginTop: 18, alignItems: "flex-start" },
+  lowerLeft: { flex: 1, paddingRight: 20 },
+  lowerRight: { width: 220 },
+
+  payCard: {
+    borderLeft: 3,
+    borderLeftColor: BRAND.orange,
+    backgroundColor: "#FFF8F1",
+    borderRadius: 6,
+    padding: 12,
   },
-  boxSpacer: { width: 14 },
-  boxLabel: {
-    fontSize: 7,
-    fontWeight: 700,
-    color: BRAND.gray,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  paymentRow: { flexDirection: "row", alignItems: "center" },
-  paymentIcon: {
+  payLabel: { fontSize: 6.5, fontWeight: 700, color: MUTED, letterSpacing: 0.8, marginBottom: 6 },
+  payRow: { flexDirection: "row", alignItems: "center" },
+  payIcon: {
     width: 22,
     height: 22,
-    borderRadius: 4,
+    borderRadius: 5,
     backgroundColor: BRAND.orange,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
   },
-  paymentIconText: { fontSize: 9, fontWeight: 700, color: "#ffffff" },
-  paymentSmall: { fontSize: 6.5, color: BRAND.gray },
-  paymentNumber: { fontSize: 12, fontWeight: 700, marginTop: 1 },
-  paymentAccount: { fontSize: 7.5, fontWeight: 700, marginTop: 1 },
-  paymentNote: { fontSize: 6.5, color: BRAND.gray, marginTop: 8, lineHeight: 1.4 },
+  payIconText: { fontSize: 9, fontWeight: 700, color: "#ffffff" },
+  paySmall: { fontSize: 6.5, color: MUTED },
+  payNumber: { fontSize: 13, fontWeight: 700, marginTop: 1 },
+  payAccount: { fontSize: 7.5, fontWeight: 700, marginTop: 1 },
+  payNote: { fontSize: 7, color: MUTED, marginTop: 8, lineHeight: 1.5 },
 
-  totalsRow: {
+  notes: { marginTop: 12 },
+  notesLabel: { fontSize: 6.5, fontWeight: 700, color: MUTED, letterSpacing: 0.8, marginBottom: 3 },
+  notesText: { fontSize: 8.5, color: "#334155", lineHeight: 1.5 },
+
+  totalsRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3.5 },
+  totalsLabel: { fontSize: 9, color: MUTED },
+  totalsValue: { fontSize: 9, fontWeight: 700 },
+  grandBar: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    alignItems: "center",
+    backgroundColor: BRAND.blue,
+    borderRadius: 7,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    marginTop: 6,
   },
-  totalsLabel: { fontSize: 8.5, color: BRAND.gray },
-  totalsValue: { fontSize: 8.5, fontWeight: 700 },
-  totalsDivider: {
-    borderTop: 1,
-    borderTopColor: "#E5E1D8",
-    marginVertical: 6,
-  },
-  grandLabel: { fontSize: 10.5, fontWeight: 700 },
-  grandValue: { fontSize: 12, fontWeight: 700, color: BRAND.orange },
-
-  notesBox: {
-    backgroundColor: BRAND.cream,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20,
-  },
-  notesLabel: { fontSize: 8, fontWeight: 700, color: BRAND.orange, marginBottom: 2 },
-  notesText: { fontSize: 8, color: "#333333" },
+  grandLabel: { fontSize: 9, fontWeight: 700, color: "#ffffff", letterSpacing: 0.8 },
+  grandValue: { fontSize: 13, fontWeight: 700, color: "#ffffff" },
+  divider: { borderTop: 1, borderTopColor: BRAND.line, marginVertical: 5 },
 
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginTop: 10,
-    paddingTop: 16,
+    alignItems: "flex-end",
+    marginTop: 30,
+    paddingTop: 14,
     borderTop: 1,
-    borderTopColor: "#E5E1D8",
+    borderTopColor: BRAND.line,
   },
-  qrImg: { width: 56, height: 56 },
-  qrCaption: { fontSize: 6, color: BRAND.gray, marginTop: 4, width: 110, lineHeight: 1.4 },
+  qrImg: { width: 54, height: 54 },
+  qrCaption: { fontSize: 6, color: MUTED, marginTop: 4, width: 120, lineHeight: 1.4 },
   footerRight: { alignItems: "flex-end" },
-  footerCompany: { fontSize: 8, fontWeight: 700 },
-  footerLine: { fontSize: 6.5, color: BRAND.gray, marginTop: 1 },
+  thanks: { fontSize: 10, fontWeight: 700, color: BRAND.blue, marginBottom: 3 },
+  footerLine: { fontSize: 7, color: MUTED, marginTop: 1 },
 });
 
 function fmt(value: string) {
@@ -166,7 +173,7 @@ function fmt(value: string) {
 
 const DOC_TITLES: Record<InvoiceDetail["doc_type"], string> = {
   QUOTATION: "QUOTATION",
-  PROFORMA: "PROFORMA INVOICE",
+  PROFORMA: "PROFORMA",
   INVOICE: "INVOICE",
   TAX_INVOICE: "TAX INVOICE",
 };
@@ -186,14 +193,20 @@ export function InvoiceDocument({
     .toFixed(2);
   const statusLabel = STATUS_LABELS[invoice.payment_status] ?? invoice.payment_status;
   const statusColor = STATUS_COLORS[invoice.payment_status] ?? BRAND.gray;
+  const statusTint = STATUS_TINTS[invoice.payment_status] ?? "#EEF0F4";
   const hasTax = Number(invoice.tax_amount) > 0;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <View style={styles.topBar}>
+          <View style={styles.topBarBlue} />
+          <View style={styles.topBarOrange} />
+        </View>
+
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Image src={LOGO_PATH} style={styles.logo} />
+          <View style={styles.brand}>
+            <Image src={logoSource()} style={styles.logo} />
             <View>
               <Text style={styles.companyName}>{BRAND.name}</Text>
               <Text style={styles.companyTagline}>{BRAND.tagline}</Text>
@@ -202,21 +215,17 @@ export function InvoiceDocument({
               </Text>
             </View>
           </View>
-          <View style={styles.headerRight}>
-            <View style={styles.docTypePill}>
-              <Text style={styles.docTypePillText}>{DOC_TITLES[invoice.doc_type]}</Text>
-            </View>
+          <View style={styles.titleBlock}>
+            <Text style={styles.docTitle}>{DOC_TITLES[invoice.doc_type]}</Text>
             <Text style={styles.docNumber}>{invoice.document_number}</Text>
-            <Text style={styles.docDate}>{formatInvoiceDate(invoice.issue_date)}</Text>
           </View>
         </View>
-        <View style={styles.accentBar} />
 
         <View style={styles.body}>
-          <View style={styles.metaRow}>
+          <View style={styles.metaCard}>
             <View style={styles.metaCol}>
-              <Text style={styles.metaLabel}>BILLED TO</Text>
-              <Text style={styles.metaValue}>{invoice.client_name}</Text>
+              <Text style={styles.metaLabel}>ISSUE DATE</Text>
+              <Text style={styles.metaValue}>{formatInvoiceDate(invoice.issue_date)}</Text>
             </View>
             <View style={styles.metaCol}>
               <Text style={styles.metaLabel}>DUE DATE</Text>
@@ -226,7 +235,7 @@ export function InvoiceDocument({
             </View>
             <View style={styles.metaCol}>
               <Text style={styles.metaLabel}>STATUS</Text>
-              <View style={styles.statusPill}>
+              <View style={[styles.statusPill, { backgroundColor: statusTint }]}>
                 <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
                 <Text style={[styles.statusText, { color: statusColor }]}>
                   {statusLabel}
@@ -235,16 +244,31 @@ export function InvoiceDocument({
             </View>
           </View>
 
-          <View style={styles.table}>
+          <View style={styles.billed}>
+            <Text style={styles.metaLabel}>BILLED TO</Text>
+            <Text style={styles.billedName}>{invoice.client_name}</Text>
+            {invoice.client_phone ? (
+              <Text style={styles.billedLine}>{invoice.client_phone}</Text>
+            ) : null}
+            {invoice.client_email ? (
+              <Text style={styles.billedLine}>{invoice.client_email}</Text>
+            ) : null}
+          </View>
+
+          <View>
             <View style={styles.tableHeaderRow}>
-              <Text style={[styles.tableHeaderText, styles.colIndex]}>#</Text>
-              <Text style={[styles.tableHeaderText, styles.colDesc]}>DESCRIPTION</Text>
-              <Text style={[styles.tableHeaderText, styles.colQty]}>QTY</Text>
-              <Text style={[styles.tableHeaderText, styles.colPrice]}>UNIT PRICE</Text>
-              <Text style={[styles.tableHeaderText, styles.colTotal]}>TOTAL</Text>
+              <Text style={[styles.tableHeaderText, styles.colIndex, { color: "#ffffff" }]}>#</Text>
+              <Text style={[styles.tableHeaderText, styles.colDesc, { color: "#ffffff" }]}>DESCRIPTION</Text>
+              <Text style={[styles.tableHeaderText, styles.colQty, { color: "#ffffff" }]}>QTY</Text>
+              <Text style={[styles.tableHeaderText, styles.colPrice, { color: "#ffffff" }]}>UNIT PRICE</Text>
+              <Text style={[styles.tableHeaderText, styles.colTotal, { color: "#ffffff" }]}>TOTAL</Text>
             </View>
             {invoice.items.map((item, i) => (
-              <View style={styles.tableRow} key={item.id}>
+              <View
+                style={i % 2 === 1 ? [styles.tableRow, styles.tableRowAlt] : styles.tableRow}
+                key={item.id}
+                wrap={false}
+              >
                 <Text style={styles.colIndex}>{i + 1}</Text>
                 <Text style={styles.colDesc}>{item.description}</Text>
                 <Text style={styles.colQty}>{item.quantity}</Text>
@@ -254,32 +278,36 @@ export function InvoiceDocument({
             ))}
           </View>
 
-          <View style={styles.boxRow}>
-            {isPayable && (
-              <>
-                <View style={styles.box}>
-                  <Text style={styles.boxLabel}>PAYMENT METHOD</Text>
-                  <View style={styles.paymentRow}>
-                    <View style={styles.paymentIcon}>
-                      <Text style={styles.paymentIconText}>T</Text>
+          <View style={styles.lower} wrap={false}>
+            <View style={styles.lowerLeft}>
+              {isPayable && (
+                <View style={styles.payCard}>
+                  <Text style={styles.payLabel}>PAYMENT METHOD</Text>
+                  <View style={styles.payRow}>
+                    <View style={styles.payIcon}>
+                      <Text style={styles.payIconText}>T</Text>
                     </View>
                     <View>
-                      <Text style={styles.paymentSmall}>TIGO PESA LIPA NAMBA</Text>
-                      <Text style={styles.paymentNumber}>{BRAND.tigoPesaNumber}</Text>
-                      <Text style={styles.paymentAccount}>
-                        {BRAND.tigoPesaAccountName}
-                      </Text>
+                      <Text style={styles.paySmall}>TIGO PESA LIPA NAMBA</Text>
+                      <Text style={styles.payNumber}>{BRAND.tigoPesaNumber}</Text>
+                      <Text style={styles.payAccount}>{BRAND.tigoPesaAccountName}</Text>
                     </View>
                   </View>
-                  <Text style={styles.paymentNote}>
-                    Send exact amount and use invoice number as reference.
+                  <Text style={styles.payNote}>
+                    Send exact amount and use the invoice number as reference.
                     {"\n"}WhatsApp confirmation: {BRAND.whatsapp}
                   </Text>
                 </View>
-                <View style={styles.boxSpacer} />
-              </>
-            )}
-            <View style={styles.box}>
+              )}
+              {invoice.notes && (
+                <View style={styles.notes}>
+                  <Text style={styles.notesLabel}>NOTES</Text>
+                  <Text style={styles.notesText}>{invoice.notes}</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.lowerRight}>
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Subtotal</Text>
                 <Text style={styles.totalsValue}>TZS {fmt(invoice.subtotal)}</Text>
@@ -290,47 +318,37 @@ export function InvoiceDocument({
                   {hasTax ? `TZS ${fmt(invoice.tax_amount)}` : "N/A"}
                 </Text>
               </View>
-              <View style={styles.totalsDivider} />
-              <View style={styles.totalsRow}>
+              <View style={styles.grandBar}>
                 <Text style={styles.grandLabel}>TOTAL DUE</Text>
                 <Text style={styles.grandValue}>TZS {fmt(invoice.total_amount)}</Text>
               </View>
               {isPayable && Number(invoice.amount_paid) > 0 && (
-                <>
-                  <View style={styles.totalsDivider} />
+                <View style={{ marginTop: 6 }}>
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>Imelipwa</Text>
                     <Text style={styles.totalsValue}>TZS {fmt(invoice.amount_paid)}</Text>
                   </View>
+                  <View style={styles.divider} />
                   <View style={styles.totalsRow}>
-                    <Text style={styles.totalsLabel}>Salio</Text>
+                    <Text style={[styles.totalsLabel, { color: INK, fontWeight: 700 }]}>Salio</Text>
                     <Text style={styles.totalsValue}>TZS {fmt(balance)}</Text>
                   </View>
-                </>
+                </View>
               )}
             </View>
           </View>
 
-          {invoice.notes && (
-            <View style={styles.notesBox}>
-              <Text style={styles.notesLabel}>Notes:</Text>
-              <Text style={styles.notesText}>{invoice.notes}</Text>
-            </View>
-          )}
-
-          <View style={styles.footer}>
+          <View style={styles.footer} wrap={false}>
             <View>
               {qrDataUri && <Image src={qrDataUri} style={styles.qrImg} />}
               <Text style={styles.qrCaption}>
-                Scan to Verify — this QR contains invoice details, amount &
-                Tigo Pesa payment reference.
+                Scan to verify: invoice details, amount and Tigo Pesa reference.
               </Text>
             </View>
             <View style={styles.footerRight}>
-              <Text style={styles.footerCompany}>{BRAND.name}</Text>
+              <Text style={styles.thanks}>Thank you for choosing {BRAND.name}</Text>
               <Text style={styles.footerLine}>{BRAND.address}</Text>
-              <Text style={styles.footerLine}>Tigo Pesa: {BRAND.tigoPesaNumber}</Text>
-              <Text style={styles.footerLine}>WhatsApp: {BRAND.whatsapp}</Text>
+              <Text style={styles.footerLine}>Tigo Pesa: {BRAND.tigoPesaNumber}   WhatsApp: {BRAND.whatsapp}</Text>
               <Text style={styles.footerLine}>
                 Generated: {formatInvoiceDate(new Date().toISOString())}
               </Text>

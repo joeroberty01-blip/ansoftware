@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentStatusBadge } from "../../_components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
@@ -260,7 +261,7 @@ export default function BillingDetailPage() {
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <div>
             <p className="text-xs text-zinc-500">Status</p>
-            <p className="font-medium">{invoice.payment_status}</p>
+            <PaymentStatusBadge status={invoice.payment_status} />
           </div>
           <div>
             <p className="text-xs text-zinc-500">Jumla</p>

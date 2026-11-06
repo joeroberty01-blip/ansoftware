@@ -4,6 +4,9 @@
 
 export const BRAND = {
   navy: "#0D2A5C",
+  blue: "#1456C0",
+  light: "#F1F5FC",
+  line: "#E3E8F1",
   orange: "#F58220",
   cream: "#FBF7F2",
   gray: "#6B7280",
@@ -31,6 +34,14 @@ export const STATUS_COLORS: Record<string, string> = {
   PAID: "#16A34A",
   OVERDUE: "#DC2626",
   CANCELLED: "#6B7280",
+};
+
+export const STATUS_TINTS: Record<string, string> = {
+  PENDING: "#FEF1E5",
+  PARTIAL: "#FEF1E5",
+  PAID: "#E3F5EA",
+  OVERDUE: "#FDE8E8",
+  CANCELLED: "#EEF0F4",
 };
 
 export function formatInvoiceDate(value: string): string {
