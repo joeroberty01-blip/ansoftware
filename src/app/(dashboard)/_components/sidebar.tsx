@@ -21,7 +21,7 @@ import {
 } from "@/components/icons";
 import type { UserRole } from "@/lib/types";
 
-interface NavItem {
+export interface NavItem {
   label: string;
   labelForStaff?: string;
   href: string | ((role: UserRole) => string);
@@ -33,7 +33,7 @@ interface NavItem {
   group: "main" | "billing" | "other";
 }
 
-const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
   { label: "Patients", href: "/patients", icon: HeartPulse, area: "clinical", group: "main" },
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, area: "clinical", group: "main" },

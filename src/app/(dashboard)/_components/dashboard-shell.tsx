@@ -13,6 +13,7 @@ import {
   LogOut,
 } from "@/components/icons";
 import { Sidebar } from "./sidebar";
+import { TopNav } from "./top-nav";
 import type { UserRole } from "@/lib/types";
 
 const CREATE_LINKS = [
@@ -71,7 +72,7 @@ export function DashboardShell({
         <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-zinc-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 print:hidden">
           <button
             type="button"
-            className="text-zinc-700 sm:hidden"
+            className="text-zinc-700 lg:hidden"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open menu"
           >
@@ -80,7 +81,7 @@ export function DashboardShell({
 
           <Link
             href="/dashboard"
-            className="flex shrink-0 items-center gap-2.5 sm:w-52"
+            className="flex shrink-0 items-center gap-2.5"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -88,7 +89,7 @@ export function DashboardShell({
               alt=""
               className="h-9 w-9 object-contain"
             />
-            <span className="hidden leading-tight sm:block">
+            <span className="hidden leading-tight sm:block lg:hidden xl:block">
               <span className="font-display block text-[15px] font-bold">
                 <span className="text-zinc-900">Afya</span>{" "}
                 <span className="text-brand-orange">Nyumbani</span>
@@ -99,9 +100,21 @@ export function DashboardShell({
             </span>
           </Link>
 
+          <TopNav
+            role={role}
+            canBilling={canBilling}
+            canClinical={canClinical}
+            badges={{
+              pendingStaff: pendingStaffCount,
+              lowStock: lowStockCount,
+              outstanding: outstandingCount,
+              newBookings: newBookingsCount,
+            }}
+          />
+
           <form
             onSubmit={onSearchSubmit}
-            className="hidden max-w-xl flex-1 items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 sm:flex"
+            className="ml-auto hidden w-64 items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 xl:flex"
           >
             <Search className="h-4 w-4 text-zinc-400" />
             <input
@@ -112,7 +125,7 @@ export function DashboardShell({
             />
           </form>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3 xl:ml-0">
             <button
               type="button"
               className="relative rounded-full p-2 text-zinc-500 hover:bg-zinc-100"
@@ -206,13 +219,13 @@ export function DashboardShell({
       <div className="flex flex-1">
         {sidebarOpen && (
           <div
-            className="fixed inset-0 top-16 z-40 bg-black/30 sm:hidden"
+            className="fixed inset-0 top-16 z-40 bg-black/30 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         <aside
-          className={`fixed top-16 bottom-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 sm:sticky sm:z-auto sm:h-[calc(100vh-4rem)] sm:w-60 sm:shrink-0 sm:translate-x-0 print:hidden ${
+          className={`fixed top-16 bottom-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 lg:hidden print:hidden ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -237,8 +250,8 @@ export function DashboardShell({
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 bg-zinc-50 print:bg-white">
-          <div className="mx-auto flex w-full max-w-[1440px] flex-col">
+        <main className="min-w-0 flex-1 print:bg-white">
+          <div className="mx-auto flex w-full max-w-[1500px] flex-col">
             {children}
           </div>
         </main>

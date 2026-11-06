@@ -92,44 +92,58 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-2xl">
-            {greeting}, {fullName.split(" ")[0]} 👋
-          </h1>
-          <p className="text-sm text-zinc-500">
-            {new Date().toLocaleDateString("en-TZ", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-            {" — "}Here&apos;s what&apos;s happening across Afya Nyumbani today.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border border-zinc-200 bg-white p-1">
-            {(["today", "week", "month"] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap sm:text-sm ${
-                  period === p
-                    ? "bg-brand-blue text-white"
-                    : "text-zinc-600 hover:bg-zinc-50"
-                }`}
+      <div className="relative overflow-hidden rounded-3xl bg-brand-blue p-6 text-white shadow-lg sm:p-8">
+        <div className="pointer-events-none absolute -top-16 -right-10 h-56 w-56 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-20 right-40 h-44 w-44 rounded-full bg-brand-orange/25" />
+        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+          <div className="max-w-xl">
+            <p className="text-sm font-medium text-blue-100">
+              {new Date().toLocaleDateString("en-TZ", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {greeting}, {fullName.split(" ")[0]} 👋
+            </h1>
+            <p className="mt-2 text-sm text-blue-100">
+              Here&apos;s what&apos;s happening across Afya Nyumbani.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <div className="flex rounded-full bg-white/15 p-1">
+                {(["today", "week", "month"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPeriod(p)}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap sm:text-sm ${
+                      period === p
+                        ? "bg-white text-brand-blue"
+                        : "text-blue-50 hover:bg-white/10"
+                    }`}
+                  >
+                    {PERIOD_LABELS[p]}
+                  </button>
+                ))}
+              </div>
+              <Link
+                href="/home-visits/new"
+                className="rounded-full bg-brand-orange px-4 py-2 text-xs font-semibold whitespace-nowrap text-white hover:bg-brand-orange-dark sm:text-sm"
               >
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
+                + New Home Visit
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/home-visits/new"
-            className="rounded-lg bg-brand-orange px-3 py-2 text-xs font-medium whitespace-nowrap text-white hover:bg-brand-orange-dark sm:text-sm"
-          >
-            + New Home Visit
-          </Link>
+
+          {data && (
+            <div className="grid grid-cols-3 gap-3 xl:w-[520px]">
+              <HeroTile label="Total Patients" value={String(data.patientsCount)} sub={`+${data.newPatientsThisMonth} this month`} />
+              <HeroTile label="Today's Visits" value={String(data.todayHomeVisitsCount)} sub={`${data.todayHomeVisitsCompleted} completed`} />
+              <HeroTile label="Outstanding" value={`TZS ${fmtCompact(data.outstandingAmount)}`} sub={`${data.outstandingCount} unpaid`} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -137,26 +151,13 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
         <p className="text-sm text-zinc-500">Loading...</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              icon={Users}
-              color="blue"
-              label="Total Patients"
-              value={String(data.patientsCount)}
-              sub={`+${data.newPatientsThisMonth} this month`}
-            />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             <StatCard
               icon={UserCheck}
               color="green"
               label="Active Patients"
               value={String(data.activePatientsCount)}
               sub="seen in last 30 days"
-            />
-            <StatCard
-              icon={MapPinned}
-              color="orange"
-              label="Today's Visits"
-              value={String(data.todayHomeVisitsCount)}
             />
             <StatCard
               icon={ClipboardCheck}
@@ -182,13 +183,6 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
               label={`Revenue (${PERIOD_LABELS[period]})`}
               value={`TZS ${fmtCompact(data.income)}`}
               changePct={data.incomeChangePct}
-            />
-            <StatCard
-              icon={FileWarning}
-              color="orange"
-              label="Outstanding"
-              value={`TZS ${fmtCompact(data.outstandingAmount)}`}
-              sub={`${data.outstandingCount} unpaid`}
             />
           </div>
 
@@ -385,6 +379,28 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
   );
 }
 
+function HeroTile({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-white/15 p-4 backdrop-blur-sm">
+      <p className="text-[11px] font-semibold tracking-wide text-blue-100 uppercase">
+        {label}
+      </p>
+      <p className="font-display mt-1 text-2xl leading-tight font-bold text-white">
+        {value}
+      </p>
+      {sub && <p className="mt-0.5 text-xs text-blue-100">{sub}</p>}
+    </div>
+  );
+}
+
 const STAT_COLOR_MAP: Record<string, { bg: string; text: string }> = {
   blue: { bg: "bg-brand-blue-light", text: "text-brand-blue" },
   orange: { bg: "bg-brand-orange-light", text: "text-brand-orange" },
@@ -420,7 +436,7 @@ function StatCard({
         <p className="truncate text-xs font-semibold tracking-wide text-zinc-500 uppercase">
           {label}
         </p>
-        <p className="font-display text-2xl leading-tight font-bold text-zinc-900 sm:text-[26px]">
+        <p className="font-display text-2xl leading-tight font-bold whitespace-nowrap text-zinc-900 sm:text-[26px]">
           {value}
         </p>
         {sub && <p className="truncate text-xs text-zinc-400">{sub}</p>}

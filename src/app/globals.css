@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f3f7fd;
   --foreground: #171717;
   color-scheme: light;
 }
@@ -149,4 +149,110 @@ tbody tr:hover {
 
 thead th {
   white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* App-wide arrangement: every page inherits these                    */
+/* ------------------------------------------------------------------ */
+
+/* Cards: no outline, deeper soft shadow, larger corners. Matches the
+   white bordered panels used on every page. */
+[class*="rounded-xl"][class*="border-zinc-200"][class*="bg-white"],
+[class*="rounded-2xl"][class*="border-zinc-200"][class*="bg-white"] {
+  border-color: transparent;
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 28px rgba(13, 78, 166, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Page titles get an accent bar so every screen has the same strong head */
+main h1 {
+  font-size: 1.85rem;
+  line-height: 1.15;
+}
+
+main h1::after {
+  content: "";
+  display: block;
+  width: 2.75rem;
+  height: 4px;
+  margin-top: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-brand-orange);
+}
+
+/* Solid action buttons become pills */
+button[class*="bg-brand-blue"]:not([class*="bg-brand-blue-light"]),
+a[class*="bg-brand-blue"]:not([class*="bg-brand-blue-light"]),
+button[class*="bg-brand-orange"]:not([class*="bg-brand-orange-light"]),
+a[class*="bg-brand-orange"]:not([class*="bg-brand-orange-light"]) {
+  border-radius: 9999px;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(13, 78, 166, 0.22);
+}
+
+/* Outline buttons: pill too, so primary/secondary read as one family */
+button[class*="rounded-lg"][class*="border-zinc-300"],
+a[class*="rounded-lg"][class*="border-zinc-300"] {
+  border-radius: 9999px;
+}
+
+/* Tables: each row is its own soft tile instead of ruled lines */
+table {
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+thead th {
+  border-bottom: 0 !important;
+  background: transparent;
+  padding-bottom: 4px;
+}
+
+tbody tr {
+  background: #f6f9fe;
+  border: 0 !important;
+}
+
+tbody tr:hover {
+  background: #e8f0fb;
+}
+
+tbody td {
+  border: 0 !important;
+}
+
+tbody td:first-child,
+thead th:first-child {
+  padding-left: 0.9rem;
+  border-top-left-radius: 0.85rem;
+  border-bottom-left-radius: 0.85rem;
+}
+
+tbody td:last-child,
+thead th:last-child {
+  padding-right: 0.9rem;
+  border-top-right-radius: 0.85rem;
+  border-bottom-right-radius: 0.85rem;
+}
+
+tbody tr td {
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+  main h1::after {
+    display: none;
+  }
+  table {
+    border-spacing: 0;
+  }
+  tbody tr {
+    background: transparent;
+  }
 }
