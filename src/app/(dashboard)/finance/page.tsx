@@ -15,7 +15,7 @@ import {
   RotateCcw,
   Paperclip,
   Search,
-} from "lucide-react";
+} from "@/components/icons";
 
 interface Expense {
   id: string;

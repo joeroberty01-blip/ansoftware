@@ -15,7 +15,7 @@ import {
   Trophy,
   Activity,
   type LucideIcon,
-} from "lucide-react";
+} from "@/components/icons";
 
 type Period = "today" | "week" | "month";
 
@@ -137,7 +137,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
         <p className="text-sm text-zinc-500">Loading...</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               icon={Users}
               color="blue"
@@ -410,31 +410,35 @@ function StatCard({
 }) {
   const c = STAT_COLOR_MAP[color] ?? STAT_COLOR_MAP.blue;
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-3 sm:p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <span
-          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${c.bg} ${c.text}`}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        {changePct !== undefined && changePct !== null && (
-          <span
-            className={`flex items-center gap-0.5 text-xs font-semibold ${
-              changePct >= 0 ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {changePct >= 0 ? (
-              <TrendingUp className="h-3 w-3" />
-            ) : (
-              <TrendingDown className="h-3 w-3" />
-            )}
-            {Math.abs(changePct)}%
-          </span>
-        )}
+    <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
+      <span
+        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${c.bg} ${c.text}`}
+      >
+        <Icon className="h-7 w-7" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          {label}
+        </p>
+        <p className="font-display text-2xl leading-tight font-bold text-zinc-900 sm:text-[26px]">
+          {value}
+        </p>
+        {sub && <p className="truncate text-xs text-zinc-400">{sub}</p>}
       </div>
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className="text-lg font-semibold text-zinc-900 sm:text-xl">{value}</p>
-      {sub && <p className="text-xs text-zinc-400">{sub}</p>}
+      {changePct !== undefined && changePct !== null && (
+        <span
+          className={`flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1 text-xs font-bold ${
+            changePct >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+          }`}
+        >
+          {changePct >= 0 ? (
+            <TrendingUp className="h-3.5 w-3.5" />
+          ) : (
+            <TrendingDown className="h-3.5 w-3.5" />
+          )}
+          {Math.abs(changePct)}%
+        </span>
+      )}
     </div>
   );
 }

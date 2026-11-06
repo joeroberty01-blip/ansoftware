@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { User, Mail, Phone, Lock, ShieldCheck, ArrowRight } from "lucide-react";
+import { User, Mail, Phone, Lock, ShieldCheck, ArrowRight } from "@/components/icons";
 import {
   adminSignupSchema,
   staffSignupSchema,

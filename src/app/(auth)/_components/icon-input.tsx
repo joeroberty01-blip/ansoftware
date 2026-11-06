@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useState } from "react";
-import { Eye, EyeOff, type LucideIcon } from "lucide-react";
+import { Eye, EyeOff, type LucideIcon } from "@/components/icons";
 
 interface IconInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {

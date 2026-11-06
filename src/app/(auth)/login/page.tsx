@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "@/components/icons";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth";
 import { AuthShell } from "../_components/auth-shell";
 import { BrandMark } from "../_components/brand-mark";

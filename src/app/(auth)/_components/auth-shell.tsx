@@ -1,4 +1,4 @@
-import { Users, Users2, BarChart3, ShieldCheck } from "lucide-react";
+import { Users, Users2, BarChart3, ShieldCheck } from "@/components/icons";
 import { BrandMark } from "./brand-mark";
 
 const FEATURES = [
@@ -21,7 +21,7 @@ const FEATURES = [
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-1">
+    <div className="flex min-h-screen flex-1 lg:flex-row-reverse">
       <div className="relative hidden w-[46%] shrink-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0b2a63] via-brand-blue-dark to-[#071230] p-10 text-white lg:flex xl:p-12">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-orange/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
@@ -38,7 +38,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col items-start gap-4">
             <BrandMark size="lg" />
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">
+              <h1 className="font-display text-2xl font-extrabold tracking-tight">
                 <span className="text-white">AFYA</span>{" "}
                 <span className="text-brand-orange">NYUMBANI</span>
               </h1>

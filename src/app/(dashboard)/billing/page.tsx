@@ -4,7 +4,7 @@ import { PaymentStatusBadge } from "../_components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 import { ListToolbar } from "../_components/list-toolbar";
 
 const CREATE_DOC_TYPE_LINKS = [

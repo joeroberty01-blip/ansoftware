@@ -8,7 +8,7 @@ import {
   Globe,
   MessageSquareWarning,
   Settings as SettingsIcon,
-} from "lucide-react";
+} from "@/components/icons";
 
 type Platform = "FACEBOOK" | "INSTAGRAM" | "WHATSAPP" | "TIKTOK" | "X" | "OTHER";
 

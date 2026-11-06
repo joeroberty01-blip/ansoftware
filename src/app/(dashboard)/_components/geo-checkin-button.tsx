@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Loader2, CheckCircle2 } from "lucide-react";
+import { MapPin, Loader2, CheckCircle2 } from "@/components/icons";
 import type { GeoCheckIn } from "@/lib/use-geo-checkin";
 
 export function GeoCheckInButton({

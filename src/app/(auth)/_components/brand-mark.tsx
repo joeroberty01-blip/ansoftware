@@ -1,4 +1,4 @@
-import { Home, Plus } from "lucide-react";
+import { Home, Plus } from "@/components/icons";
 
 const SIZE_MAP = {
   sm: { box: "h-10 w-10", icon: "h-5 w-5", badge: "h-4 w-4" },

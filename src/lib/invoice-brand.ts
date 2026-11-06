@@ -4,9 +4,9 @@
 
 export const BRAND = {
   navy: "#0D2A5C",
-  blue: "#1456C0",
-  light: "#F1F5FC",
-  line: "#E3E8F1",
+  blue: "#0D2A5C",
+  light: "#FBF7F2",
+  line: "#E5E1D8",
   orange: "#F58220",
   cream: "#FBF7F2",
   gray: "#6B7280",

@@ -16,7 +16,7 @@ import {
   ClipboardList,
   X,
   ArrowUpDown,
-} from "lucide-react";
+} from "@/components/icons";
 import { ListToolbar } from "../_components/list-toolbar";
 import { downloadCsv } from "@/lib/csv-export";
 import { relativeDays } from "@/lib/date-utils";

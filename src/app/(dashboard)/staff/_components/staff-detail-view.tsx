@@ -11,7 +11,7 @@ import {
   CalendarPlus,
   ClipboardList,
   CalendarDays,
-} from "lucide-react";
+} from "@/components/icons";
 import { relativeDays } from "@/lib/date-utils";
 
 interface Staff {

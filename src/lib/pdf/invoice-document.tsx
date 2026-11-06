@@ -21,8 +21,8 @@ function logoSource() {
   return { data: logoData, format: "png" as const };
 }
 
-const INK = "#0F172A";
-const MUTED = "#64718A";
+const INK = "#1a1a1a";
+const MUTED = "#6B7280";
 
 const styles = StyleSheet.create({
   page: { fontSize: 9.5, fontFamily: "Helvetica", color: INK, paddingBottom: 40 },
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     borderBottom: 1,
     borderBottomColor: BRAND.line,
   },
-  tableRowAlt: { backgroundColor: "#F8FAFD" },
+  tableRowAlt: { backgroundColor: "#FBF7F2" },
   colIndex: { width: 22, color: MUTED },
   colDesc: { flex: 3.2, fontWeight: 700 },
   colQty: { flex: 0.9, textAlign: "right" },
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   payCard: {
     borderLeft: 3,
     borderLeftColor: BRAND.orange,
-    backgroundColor: "#FFF8F1",
+    backgroundColor: "#FBF7F2",
     borderRadius: 6,
     padding: 12,
   },

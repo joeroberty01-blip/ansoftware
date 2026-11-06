@@ -1,7 +1,7 @@
 const STYLES: Record<string, { label: string; className: string }> = {
-  PENDING: { label: "Pending", className: "bg-amber-50 text-amber-700 ring-amber-200" },
-  PARTIAL: { label: "Partial", className: "bg-sky-50 text-sky-700 ring-sky-200" },
-  PAID: { label: "Paid", className: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
+  PENDING: { label: "Pending", className: "bg-brand-orange-light text-brand-orange-dark ring-brand-orange/25" },
+  PARTIAL: { label: "Partial", className: "bg-brand-blue-light text-brand-blue ring-brand-blue/20" },
+  PAID: { label: "Paid", className: "bg-green-50 text-green-700 ring-green-200" },
   OVERDUE: { label: "Overdue", className: "bg-red-50 text-red-700 ring-red-200" },
   CANCELLED: { label: "Cancelled", className: "bg-zinc-100 text-zinc-500 ring-zinc-200" },
 };

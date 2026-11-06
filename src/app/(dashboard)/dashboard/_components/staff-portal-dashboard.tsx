@@ -9,7 +9,7 @@ import {
   Wallet,
   Plus,
   Package,
-} from "lucide-react";
+} from "@/components/icons";
 
 interface VisitItem {
   id: string;

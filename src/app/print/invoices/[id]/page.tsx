@@ -161,7 +161,7 @@ export default async function InvoicePrintPage(
                 key={item.id}
                 className="break-inside-avoid"
                 style={{
-                  backgroundColor: i % 2 === 1 ? "#F8FAFD" : undefined,
+                  backgroundColor: i % 2 === 1 ? "#FBF7F2" : undefined,
                   borderBottom: `1px solid ${BRAND.line}`,
                 }}
               >
@@ -183,7 +183,7 @@ export default async function InvoicePrintPage(
               <div
                 className="rounded-md p-3"
                 style={{
-                  backgroundColor: "#FFF8F1",
+                  backgroundColor: "#FBF7F2",
                   borderLeft: `3px solid ${BRAND.orange}`,
                 }}
               >

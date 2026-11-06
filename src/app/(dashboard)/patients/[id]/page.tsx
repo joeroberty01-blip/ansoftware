@@ -50,7 +50,7 @@ import {
   ArrowLeft,
   TrendingUp,
   type LucideIcon,
-} from "lucide-react";
+} from "@/components/icons";
 
 const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 const VISIT_SESSION_LABELS: Record<(typeof VISIT_SESSIONS)[number], string> = {

@@ -11,8 +11,7 @@ import {
   Plus,
   ChevronDown,
   LogOut,
-  Stethoscope,
-} from "lucide-react";
+} from "@/components/icons";
 import { Sidebar } from "./sidebar";
 import type { UserRole } from "@/lib/types";
 
@@ -68,30 +67,29 @@ export function DashboardShell({
   };
 
   return (
-    <div className="flex flex-1">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 sm:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="flex min-h-screen flex-1 flex-col">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-zinc-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 print:hidden">
+          <button
+            type="button"
+            className="text-zinc-700 sm:hidden"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
 
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0 print:hidden ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2"
-            onClick={() => setSidebarOpen(false)}
+            className="flex shrink-0 items-center gap-2.5 sm:w-52"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-blue to-brand-orange text-white shadow-sm">
-              <Stethoscope className="h-4 w-4" />
-            </span>
-            <span className="leading-tight">
-              <span className="block text-sm font-bold">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-afyanyumbani-mark.png"
+              alt=""
+              className="h-9 w-9 object-contain"
+            />
+            <span className="hidden leading-tight sm:block">
+              <span className="font-display block text-[15px] font-bold">
                 <span className="text-zinc-900">Afya</span>{" "}
                 <span className="text-brand-orange">Nyumbani</span>
               </span>
@@ -100,49 +98,10 @@ export function DashboardShell({
               </span>
             </span>
           </Link>
-          <button
-            type="button"
-            className="sm:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-5 w-5 text-zinc-500" />
-          </button>
-        </div>
-
-        <Sidebar
-          role={role}
-          canBilling={canBilling}
-          canClinical={canClinical}
-          pendingStaffCount={pendingStaffCount}
-          lowStockCount={lowStockCount}
-          outstandingCount={outstandingCount}
-          newBookingsCount={newBookingsCount}
-          onNavigate={() => setSidebarOpen(false)}
-        />
-
-        <div className="border-t border-zinc-200 p-3">
-          <a
-            href="mailto:support@afyanyumbani.com"
-            className="flex items-center justify-center gap-2 rounded-lg bg-brand-blue-light px-3 py-2 text-sm font-semibold text-brand-blue transition-colors hover:bg-[#dbe7fa]"
-          >
-            Need Help? Contact Support
-          </a>
-        </div>
-      </aside>
-
-      <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200/80 bg-white/85 px-4 py-3 backdrop-blur print:hidden">
-          <button
-            type="button"
-            className="text-zinc-700 sm:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-5 w-5" />
-          </button>
 
           <form
             onSubmit={onSearchSubmit}
-            className="hidden max-w-md flex-1 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 sm:flex"
+            className="hidden max-w-xl flex-1 items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 sm:flex"
           >
             <Search className="h-4 w-4 text-zinc-400" />
             <input
@@ -244,8 +203,44 @@ export function DashboardShell({
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col bg-zinc-50 print:bg-white">
-          {children}
+      <div className="flex flex-1">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 top-16 z-40 bg-black/30 sm:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <aside
+          className={`fixed top-16 bottom-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 sm:sticky sm:z-auto sm:h-[calc(100vh-4rem)] sm:w-60 sm:shrink-0 sm:translate-x-0 print:hidden ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <Sidebar
+            role={role}
+            canBilling={canBilling}
+            canClinical={canClinical}
+            pendingStaffCount={pendingStaffCount}
+            lowStockCount={lowStockCount}
+            outstandingCount={outstandingCount}
+            newBookingsCount={newBookingsCount}
+            onNavigate={() => setSidebarOpen(false)}
+          />
+
+          <div className="border-t border-zinc-200 p-3">
+            <a
+              href="mailto:support@afyanyumbani.com"
+              className="flex items-center justify-center gap-2 rounded-lg bg-brand-blue px-3 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark"
+            >
+              Need Help? Contact Support
+            </a>
+          </div>
+        </aside>
+
+        <main className="min-w-0 flex-1 bg-zinc-50 print:bg-white">
+          <div className="mx-auto flex w-full max-w-[1440px] flex-col">
+            {children}
+          </div>
         </main>
       </div>
     </div>

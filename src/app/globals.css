@@ -1,39 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f6fb;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #171717;
   color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-manrope);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-sora);
   --font-mono: var(--font-geist-mono);
 }
 
 @theme {
   /* Afya Nyumbani brand palette */
-  --color-brand-blue: #1456c0;
-  --color-brand-blue-dark: #0f449c;
-  --color-brand-blue-light: #eaf1fc;
+  --color-brand-blue: #0d4ea6;
+  --color-brand-blue-dark: #0a3d80;
+  --color-brand-blue-light: #e8f0fb;
   --color-brand-orange: #f58220;
   --color-brand-orange-dark: #d96f10;
   --color-brand-orange-light: #fef1e5;
-
-  /* Cool, crisp neutrals (replaces Tailwind's warm-ish zinc everywhere the
-     app already uses zinc-*). */
-  --color-zinc-50: #f6f8fc;
-  --color-zinc-100: #eef2f8;
-  --color-zinc-200: #e3e8f1;
-  --color-zinc-300: #cdd5e2;
-  --color-zinc-400: #94a0b4;
-  --color-zinc-500: #64718a;
-  --color-zinc-600: #4a566d;
-  --color-zinc-700: #333f55;
-  --color-zinc-800: #1e293b;
-  --color-zinc-900: #0f172a;
 
   /* Softer, layered shadows and rounder corners */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -53,7 +41,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -62,8 +50,10 @@ body {
 
 h1,
 h2,
-h3 {
-  letter-spacing: -0.015em;
+h3,
+.font-display {
+  font-family: var(--font-sora), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 ::selection {
@@ -101,7 +91,7 @@ input,
 textarea,
 select {
   background-color: #ffffff;
-  color: #0f172a;
+  color: #171717;
 }
 
 input,
@@ -135,7 +125,7 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--color-brand-blue);
-  box-shadow: 0 0 0 3px rgba(20, 86, 192, 0.14);
+  box-shadow: 0 0 0 3px rgba(13, 78, 166, 0.14);
 }
 
 /* Checkboxes / radios follow the brand colour */

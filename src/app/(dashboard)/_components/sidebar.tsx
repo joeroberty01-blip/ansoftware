@@ -18,7 +18,7 @@ import {
   Settings,
   CalendarClock,
   type LucideIcon,
-} from "lucide-react";
+} from "@/components/icons";
 import type { UserRole } from "@/lib/types";
 
 interface NavItem {
@@ -188,8 +188,8 @@ export function Sidebar({
                   onClick={onNavigate}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-brand-blue-light text-brand-blue"
-                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                      ? "bg-brand-blue text-white shadow-sm"
+                      : "text-zinc-700 hover:bg-zinc-100"
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -198,7 +198,7 @@ export function Sidebar({
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         isActive
-                          ? "bg-brand-blue text-white"
+                          ? "bg-white/20 text-white"
                           : "bg-brand-orange-light text-brand-orange"
                       }`}
                     >
