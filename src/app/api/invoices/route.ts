@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
         : null,
       dueDate: parsed.data.dueDate ? parsed.data.dueDate : null,
       notes: parsed.data.notes ? parsed.data.notes : null,
+      applyVat: parsed.data.applyVat,
       items: parsed.data.items,
       createdById: session.id,
     });

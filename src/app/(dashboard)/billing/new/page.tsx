@@ -1,5 +1,6 @@
 "use client";
 
+import { VAT_RATE_PERCENT } from "@/lib/vat";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -72,6 +73,7 @@ export default function NewBillingPage() {
   const [newClientAddress, setNewClientAddress] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [applyVat, setApplyVat] = useState(false);
   const [items, setItems] = useState<ItemRow[]>([emptyItem(), emptyItem()]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -86,6 +88,7 @@ export default function NewBillingPage() {
     setItems((prev) => prev.filter((_, i) => i !== index));
 
   const subtotalPreview = items.reduce((sum, it) => sum + lineTotal(it), 0);
+  const vatPreview = applyVat ? (subtotalPreview * VAT_RATE_PERCENT) / 100 : 0;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +115,7 @@ export default function NewBillingPage() {
           },
           dueDate: dueDate || undefined,
           notes: notes || undefined,
+          applyVat,
           items: items
             .filter((it) => it.description.trim())
             .map((it) => ({
@@ -361,11 +365,34 @@ export default function NewBillingPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 rounded-lg bg-brand-blue-light/40 px-4 py-2.5">
-            <span className="text-sm text-zinc-600">Jumla (makadirio)</span>
-            <span className="text-base font-bold text-zinc-900">
-              TZS {fmt(subtotalPreview)}
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <input
+              type="checkbox"
+              checked={applyVat}
+              onChange={(e) => setApplyVat(e.target.checked)}
+              className="h-4 w-4"
+            />
+            Ongeza VAT ({VAT_RATE_PERCENT}%)
+            <span className="text-zinc-400">
+              {applyVat ? "— VAT iko ON" : "— VAT iko OFF"}
             </span>
+          </label>
+
+          <div className="flex flex-col items-end gap-1 rounded-lg bg-brand-blue-light/40 px-4 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-zinc-600">
+              <span>Subtotal</span>
+              <span>TZS {fmt(subtotalPreview)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-600">
+              <span>VAT ({VAT_RATE_PERCENT}%)</span>
+              <span>{applyVat ? `TZS ${fmt(vatPreview)}` : "N/A"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-zinc-600">Jumla (makadirio)</span>
+              <span className="text-base font-bold text-zinc-900">
+                TZS {fmt(subtotalPreview + vatPreview)}
+              </span>
+            </div>
           </div>
         </div>
 

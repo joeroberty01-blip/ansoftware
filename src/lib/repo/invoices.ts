@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { VAT_RATE_PERCENT } from "../vat";
 import { query, queryOne, withTransaction } from "../db";
 import { logAudit } from "../audit";
 import type { InvoiceItemRow, InvoiceRow, PaymentRow } from "../types";
@@ -57,6 +58,7 @@ interface CreateInvoiceInput {
   } | null;
   dueDate: string | null;
   notes: string | null;
+  applyVat: boolean;
   items: CreateInvoiceItemInput[];
   createdById: string;
 }
@@ -97,7 +99,9 @@ export async function createInvoiceWithItems(
   const subtotal = itemTotals
     .reduce((acc, t) => acc.plus(t), new Decimal(0))
     .toFixed(2);
-  const taxAmount = "0.00";
+  const taxAmount = input.applyVat
+    ? new Decimal(subtotal).times(VAT_RATE_PERCENT).dividedBy(100).toFixed(2)
+    : "0.00";
   const totalAmount = new Decimal(subtotal).plus(taxAmount).toFixed(2);
 
   return withTransaction(async (client) => {

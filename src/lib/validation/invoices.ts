@@ -47,6 +47,7 @@ export const createInvoiceSchema = z
       .optional()
       .or(z.literal("")),
     notes: z.string().trim().max(1000).optional().or(z.literal("")),
+    applyVat: z.boolean().optional().default(false),
     items: z.array(invoiceItemSchema).min(1, "Ongeza angalau kipengele kimoja"),
   })
   .refine((data) => Boolean(data.clientId) || Boolean(data.newClient), {
