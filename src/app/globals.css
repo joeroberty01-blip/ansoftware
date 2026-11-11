@@ -256,3 +256,47 @@ tbody tr td {
     background: transparent;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Phones: tables become stacked cards, so nothing scrolls sideways.  */
+/* Labels come from each column's <th>, copied by TableLabels.        */
+/* ------------------------------------------------------------------ */
+@media screen and (max-width: 767.98px) {
+  table[data-rt] { display: block; width: 100%; min-width: 0 !important; }
+  table[data-rt] thead { display: none; }
+  table[data-rt] tbody, table[data-rt] tfoot { display: block; }
+  table[data-rt] tr {
+    display: block;
+    margin-bottom: 0.625rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #e4e4e7;
+    border-radius: 0.75rem;
+    background: #fff;
+  }
+  table[data-rt] td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.3rem 0 !important;
+    border: 0 !important;
+    text-align: right;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  table[data-rt] td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 45%;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #71717a;
+  }
+  table[data-rt] td:not([data-label])::before,
+  table[data-rt] td[data-label=""]::before { display: none; }
+  table[data-rt] td:not([data-label]),
+  table[data-rt] td[data-label=""] { justify-content: flex-end; }
+  div[class*="overflow-x-auto"]:has(> table[data-rt]) { overflow-x: visible; }
+}

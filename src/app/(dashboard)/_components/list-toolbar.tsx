@@ -12,7 +12,7 @@ export function ListToolbar({
   rows: object[];
 }) {
   return (
-    <div className="flex gap-2 print:hidden">
+    <div className="flex flex-wrap gap-2 print:hidden">
       <button
         type="button"
         onClick={() => downloadCsv(filename, columns, rows)}

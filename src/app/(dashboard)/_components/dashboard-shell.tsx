@@ -14,6 +14,7 @@ import {
 } from "@/components/icons";
 import { Sidebar } from "./sidebar";
 import { TopNav } from "./top-nav";
+import { TableLabels } from "./table-labels";
 import type { UserRole } from "@/lib/types";
 
 const CREATE_LINKS = [
@@ -252,6 +253,7 @@ export function DashboardShell({
 
         <main className="min-w-0 flex-1 print:bg-white">
           <div className="mx-auto flex w-full max-w-[1500px] flex-col">
+            <TableLabels />
             {children}
           </div>
         </main>
