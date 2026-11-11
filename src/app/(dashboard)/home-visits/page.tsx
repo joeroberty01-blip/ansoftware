@@ -106,10 +106,10 @@ export default function HomeVisitsListPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Home Visits</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <ListToolbar
             filename="home-visits"
             columns={CSV_COLUMNS}
@@ -128,7 +128,7 @@ export default function HomeVisitsListPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="w-full max-w-xs rounded border border-zinc-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-base sm:max-w-xs sm:py-1.5 sm:text-sm"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -146,13 +146,78 @@ export default function HomeVisitsListPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm sm:p-5">
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : visits.length === 0 ? (
           <p className="text-sm text-zinc-500">Hakuna home visits bado.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* On a phone the table would need sideways scrolling to reach
+              Location, BP and Status. A card per visit shows all of it at
+              once; the table returns from md up and on paper. */}
+          <ul className="flex flex-col gap-2 md:hidden print:hidden">
+            {visits.map((v) => (
+              <li key={v.id}>
+                <Link
+                  href={`/home-visits/${v.id}`}
+                  className="block rounded-lg border border-zinc-200 p-3 active:bg-zinc-50"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-zinc-900">{v.patient_name}</p>
+                      <p className="text-sm text-zinc-500">
+                        {v.visit_date.slice(0, 10)} ·{" "}
+                        {v.visit_session ? VISIT_SESSION_LABELS[v.visit_session] ?? v.visit_session : "-"} ·{" "}
+                        {v.visit_type === "PART_TIME" ? "Part-time" : "Full-time"}
+                      </p>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+                      {v.status}
+                      {hasVitalsAlert(v) && (
+                        <span title="Vitals nje ya kawaida" className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                      )}
+                    </span>
+                  </div>
+                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                    <div className="min-w-0">
+                      <dt className="text-xs text-zinc-500">Staff</dt>
+                      <dd className="truncate text-zinc-800">{v.staff_name ?? "-"}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-xs text-zinc-500">BP</dt>
+                      <dd className="text-zinc-800">{v.blood_pressure ?? "-"}</dd>
+                    </div>
+                    <div className="col-span-2 min-w-0">
+                      <dt className="text-xs text-zinc-500">Location</dt>
+                      <dd className="truncate text-zinc-800">{v.location ?? "-"}</dd>
+                    </div>
+                  </dl>
+                </Link>
+                <div className="mt-1 flex items-center justify-end gap-4 px-1">
+                  {v.check_in_lat && v.check_in_lng && (
+                    <a
+                      href={`https://www.google.com/maps?q=${v.check_in_lat},${v.check_in_lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 text-sm font-medium text-brand-blue"
+                    >
+                      📍 Ramani
+                    </a>
+                  )}
+                  <button
+                    onClick={() => onDelete(v)}
+                    disabled={deletingId === v.id}
+                    className="py-2 text-sm font-medium text-red-700 disabled:opacity-50"
+                  >
+                    Futa
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden overflow-x-auto md:block print:block">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -239,6 +304,7 @@ export default function HomeVisitsListPage() {
             </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>
