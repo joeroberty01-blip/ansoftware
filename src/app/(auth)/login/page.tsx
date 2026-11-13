@@ -86,6 +86,15 @@ export default function LoginPage() {
             {...register("password")}
           />
 
+          <div className="-mt-2 text-right">
+            <Link
+              href="/forgot-password"
+              className="text-sm font-semibold text-brand-blue hover:text-brand-blue-dark"
+            >
+              Umesahau password?
+            </Link>
+          </div>
+
           {serverError && (
             <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
               {serverError}
