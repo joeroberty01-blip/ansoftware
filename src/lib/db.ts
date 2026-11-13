@@ -17,12 +17,40 @@ declare global {
   var __afyaPgPool: Pool | undefined;
 }
 
-export const pool: Pool =
-  global.__afyaPgPool ??
-  new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10,
+/**
+ * Neon's copy-paste connection string ends with
+ * `?sslmode=require&channel_binding=require`. node-postgres can fail to
+ * connect when `channel_binding=require` is present, which surfaces as a
+ * 500 on every DB-backed route (e.g. sign in). Strip it; SSL stays on.
+ */
+function buildConnectionString(): string {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) {
+    throw new Error(
+      "DATABASE_URL is not set. Add it in Vercel → Settings → Environment Variables and redeploy."
+    );
+  }
+  try {
+    const url = new URL(raw);
+    url.searchParams.delete("channel_binding");
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
+
+function createPool(): Pool {
+  return new Pool({
+    connectionString: buildConnectionString(),
+    // Serverless functions each hold their own pool; keep it small so we
+    // don't exhaust Neon connections.
+    max: process.env.VERCEL ? 5 : 10,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 30_000,
   });
+}
+
+export const pool: Pool = global.__afyaPgPool ?? createPool();
 
 if (process.env.NODE_ENV !== "production") {
   global.__afyaPgPool = pool;
