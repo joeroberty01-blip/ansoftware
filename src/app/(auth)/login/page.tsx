@@ -15,6 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [role, setRole] = useState<"ADMIN" | "STAFF">("ADMIN");
 
   const {
     register,
@@ -31,9 +32,9 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, role }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setServerError(json.error ?? "Imeshindwa kuingia. Jaribu tena.");
         return;
@@ -65,6 +66,29 @@ export default function LoginPage() {
           className="mt-6 flex flex-col gap-4"
           noValidate
         >
+          <div
+            role="tablist"
+            aria-label="Ingia kama"
+            className="grid grid-cols-2 gap-1 rounded-xl bg-zinc-100 p-1"
+          >
+            {(["ADMIN", "STAFF"] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                role="tab"
+                aria-selected={role === r}
+                onClick={() => setRole(r)}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                  role === r
+                    ? "bg-white text-brand-blue shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-700"
+                }`}
+              >
+                {r === "ADMIN" ? "Sign in as Admin" : "Sign in as Staff"}
+              </button>
+            ))}
+          </div>
+
           <IconInput
             id="email"
             icon={Mail}

@@ -19,6 +19,8 @@ export const staffSignupSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email("Barua pepe sio sahihi"),
   password: z.string().min(1, "Password inahitajika"),
+  // Which sign-in tab the user used. Optional so API clients keep working.
+  role: z.enum(["ADMIN", "STAFF"]).optional(),
 });
 
 export const forgotPasswordSchema = z
