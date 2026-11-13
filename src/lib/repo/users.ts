@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 import { query, queryOne } from "../db";
 import type { UserRow } from "../types";
 
@@ -88,6 +89,24 @@ export async function updateUserPassword(
     userId,
     passwordHash,
   ]);
+}
+
+export async function updateUserPasswordByEmail(
+  email: string,
+  passwordHash: string,
+  client?: Pick<PoolClient, "query">
+): Promise<{ id: string } | null> {
+  const sql = `UPDATE users SET password_hash = $1, updated_at = now()
+               WHERE email = $2
+               RETURNING id`;
+  const params = [passwordHash, email.toLowerCase().trim()];
+
+  if (client) {
+    const result = await client.query<{ id: string }>(sql, params);
+    return result.rows[0] ?? null;
+  }
+
+  return queryOne<{ id: string }>(sql, params);
 }
 
 export async function updateUserStatus(

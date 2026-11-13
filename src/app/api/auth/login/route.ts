@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loginSchema } from "@/lib/validation/auth";
-import { findUserByEmail } from "@/lib/repo/users";
 import { setSessionCookie, verifyPassword } from "@/lib/auth";
+import { findUserByEmail } from "@/lib/repo/users";
+import { loginSchema } from "@/lib/validation/auth";
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -18,9 +18,8 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { email, password, role } = parsed.data;
-
   try {
+    const { email, password, role } = parsed.data;
     const user = await findUserByEmail(email);
     if (!user) {
       return NextResponse.json(

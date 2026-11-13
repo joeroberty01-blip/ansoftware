@@ -25,12 +25,12 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z
   .object({
-    email: z.string().email("Barua pepe sio sahihi"),
+    email: z.string().trim().email("Barua pepe sio sahihi"),
     code: z.string().min(1, "Recovery code inahitajika"),
     newPassword: z.string().min(8, "Password iwe angalau herufi 8"),
     confirmPassword: z.string().min(1, "Rudia password mpya"),
   })
-  .refine((d) => d.newPassword === d.confirmPassword, {
+  .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Password hazifanani",
     path: ["confirmPassword"],
   });

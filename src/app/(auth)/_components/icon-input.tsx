@@ -35,8 +35,9 @@ export const IconInput = forwardRef<HTMLInputElement, IconInputProps>(
           {isPassword && (
             <button
               type="button"
+              aria-label={show ? "Hide password" : "Show password"}
+              aria-pressed={show}
               onClick={() => setShow((v) => !v)}
-              tabIndex={-1}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
             >
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
