@@ -13,16 +13,27 @@ import { Pool, types, type PoolClient, type QueryResultRow } from "pg";
 // so keep the raw "YYYY-MM-DD" string instead of letting pg convert it.
 types.setTypeParser(types.builtins.DATE, (value) => value);
 declare global {
-  // eslint-disable-next-line no-var
   var __afyaPgPool: Pool | undefined;
 }
 
-export const pool: Pool =
-  global.__afyaPgPool ??
-  new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10,
+function createPool(): Pool {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required to connect to PostgreSQL.");
+  }
+
+  const connectionUrl = new URL(databaseUrl);
+  connectionUrl.searchParams.delete("channel_binding");
+
+  return new Pool({
+    connectionString: connectionUrl.toString(),
+    max: process.env.VERCEL ? 5 : 10,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 30_000,
   });
+}
+
+export const pool: Pool = global.__afyaPgPool ?? createPool();
 
 if (process.env.NODE_ENV !== "production") {
   global.__afyaPgPool = pool;

@@ -2,15 +2,14 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { logAudit } from "@/lib/audit";
 import { hashPassword } from "@/lib/auth";
-import { withTransaction } from "@/lib/db";
-import { updateUserPasswordByEmail } from "@/lib/repo/users";
+import { findUserByEmail, updateUserPassword } from "@/lib/repo/users";
 import { forgotPasswordSchema } from "@/lib/validation/auth";
 
 export const runtime = "nodejs";
 
 const MAX_ATTEMPTS = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const INVALID_CREDENTIALS_MESSAGE = "Invalid email or recovery code";
+const INVALID_CREDENTIALS_MESSAGE = "Barua pepe au recovery code sio sahihi.";
 
 // In-memory limits are best-effort only; serverless instances do not share state.
 const recoveryAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -40,12 +39,9 @@ function consumeRecoveryAttempt(request: Request, email: string): boolean {
 }
 
 function matchesRecoveryCode(candidate: string, expected: string): boolean {
-  const candidateBytes = Buffer.from(candidate, "utf8");
-  const expectedBytes = Buffer.from(expected, "utf8");
-  return (
-    candidateBytes.length === expectedBytes.length &&
-    timingSafeEqual(candidateBytes, expectedBytes)
-  );
+  const candidateDigest = createHash("sha256").update(candidate).digest();
+  const expectedDigest = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(candidateDigest, expectedDigest);
 }
 
 export async function POST(request: Request) {
@@ -82,34 +78,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const passwordHash = await hashPassword(parsed.data.newPassword);
-    const updatedUser = await withTransaction(async (client) => {
-      const user = await updateUserPasswordByEmail(email, passwordHash, client);
-      if (!user) return null;
-
-      await logAudit(
-        {
-          userId: user.id,
-          action: "PASSWORD_RECOVERED",
-          entity: "user",
-          entityId: user.id,
-          meta: { method: "admin_signup_secret", selfService: true },
-        },
-        client
-      );
-
-      return user;
-    });
-
-    if (!updatedUser) {
+    const user = await findUserByEmail(email);
+    if (!user) {
       return NextResponse.json(
         { error: INVALID_CREDENTIALS_MESSAGE },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ ok: true });
-  } catch {
+    const passwordHash = await hashPassword(parsed.data.newPassword);
+    await updateUserPassword(user.id, passwordHash);
+
+    try {
+      await logAudit({
+        userId: user.id,
+        action: "PASSWORD_RECOVERED",
+        entity: "user",
+        entityId: user.id,
+        meta: { method: "admin_signup_secret", selfService: true },
+      });
+    } catch (error) {
+      console.error("[auth/forgot-password] Audit log write failed:", error);
+    }
+
+    return NextResponse.json({
+      message: "Password imebadilishwa. Sasa unaweza kuingia.",
+    });
+  } catch (error) {
+    console.error("[auth/forgot-password] Password reset failed:", error);
     return NextResponse.json(
       { error: "Unable to reset your password right now. Please try again." },
       { status: 500 }

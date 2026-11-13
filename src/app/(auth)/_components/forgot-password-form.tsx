@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,14 +15,14 @@ import { IconInput } from "./icon-input";
 
 type ForgotPasswordResponse = {
   error?: string;
-  ok?: boolean;
+  message?: string;
 };
 
 export function ForgotPasswordForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -32,11 +33,11 @@ export function ForgotPasswordForm() {
   });
 
   useEffect(() => {
-    if (!completed) return;
+    if (!successMessage) return;
 
-    const timer = window.setTimeout(() => router.replace("/login"), 2000);
+    const timer = window.setTimeout(() => router.push("/login"), 2000);
     return () => window.clearTimeout(timer);
-  }, [completed, router]);
+  }, [successMessage, router]);
 
   const onSubmit = async (data: ForgotPasswordInput) => {
     setServerError(null);
@@ -59,7 +60,9 @@ export function ForgotPasswordForm() {
         return;
       }
 
-      setCompleted(true);
+      setSuccessMessage(
+        result?.message ?? "Password imebadilishwa. Sasa unaweza kuingia."
+      );
     } catch {
       setServerError("Network error. Please try again.");
     } finally {
@@ -79,13 +82,13 @@ export function ForgotPasswordForm() {
         </div>
       </div>
 
-      {completed ? (
+      {successMessage ? (
         <div
           className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-800"
           role="status"
           aria-live="polite"
         >
-          <p className="font-semibold">Your password has been updated.</p>
+          <p className="font-semibold">{successMessage}</p>
           <p className="mt-1">You will be redirected to sign in shortly.</p>
         </div>
       ) : (
@@ -154,6 +157,15 @@ export function ForgotPasswordForm() {
           </button>
         </form>
       )}
+
+      <p className="mt-6 text-center text-sm text-zinc-500">
+        <Link
+          href="/login"
+          className="font-semibold text-brand-blue hover:text-brand-blue-dark"
+        >
+          Rudi kwenye login
+        </Link>
+      </p>
     </div>
   );
 }
