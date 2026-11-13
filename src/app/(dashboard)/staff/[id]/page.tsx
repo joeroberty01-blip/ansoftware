@@ -1,9 +1,11 @@
+import { requireAdminPage } from "@/lib/require-admin-page";
 import { getStaffById } from "@/lib/repo/staff";
 import { StaffDetailView } from "../_components/staff-detail-view";
 
 export default async function StaffProfilePage(
   props: PageProps<"/staff/[id]">
 ) {
+  await requireAdminPage();
   const { id } = await props.params;
   const staff = await getStaffById(id);
 
