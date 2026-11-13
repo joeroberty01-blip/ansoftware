@@ -21,6 +21,19 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password inahitajika"),
 });
 
+export const forgotPasswordSchema = z
+  .object({
+    email: z.string().email("Barua pepe sio sahihi"),
+    code: z.string().min(1, "Recovery code inahitajika"),
+    newPassword: z.string().min(8, "Password iwe angalau herufi 8"),
+    confirmPassword: z.string().min(1, "Rudia password mpya"),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: "Password hazifanani",
+    path: ["confirmPassword"],
+  });
+
 export type AdminSignupInput = z.infer<typeof adminSignupSchema>;
 export type StaffSignupInput = z.infer<typeof staffSignupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
