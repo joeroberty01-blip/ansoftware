@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { email, password } = parsed.data;
+  const { email, password, role } = parsed.data;
 
   try {
     const user = await findUserByEmail(email);
@@ -46,6 +46,19 @@ export async function POST(req: NextRequest) {
     if (user.status === "REJECTED" || user.status === "SUSPENDED") {
       return NextResponse.json(
         { error: "Akaunti yako haijaruhusiwa kuingia. Wasiliana na Admin." },
+        { status: 403 }
+      );
+    }
+
+    // Admin/Staff tab must match the account's real role.
+    if (role && user.role !== role) {
+      return NextResponse.json(
+        {
+          error:
+            role === "ADMIN"
+              ? "Akaunti hii si ya Admin. Chagua 'Staff' kuingia."
+              : "Akaunti hii ni ya Admin. Chagua 'Admin' kuingia.",
+        },
         { status: 403 }
       );
     }
