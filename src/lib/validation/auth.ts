@@ -23,13 +23,13 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z
   .object({
-    email: z.string().trim().email("Email is invalid."),
-    code: z.string().min(1, "Recovery code is required."),
-    newPassword: z.string().min(8, "Password must be at least 8 characters."),
-    confirmPassword: z.string().min(1, "Confirm your new password."),
+    email: z.string().trim().email("Barua pepe sio sahihi"),
+    code: z.string().min(1, "Recovery code inahitajika"),
+    newPassword: z.string().min(8, "Password iwe angalau herufi 8"),
+    confirmPassword: z.string().min(1, "Rudia password mpya"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match.",
+    message: "Password hazifanani",
     path: ["confirmPassword"],
   });
 

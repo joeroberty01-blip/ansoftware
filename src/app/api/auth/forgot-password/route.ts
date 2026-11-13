@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { logAudit } from "@/lib/audit";
 import { hashPassword } from "@/lib/auth";
 import { findUserByEmail, updateUserPassword } from "@/lib/repo/users";
@@ -10,11 +10,9 @@ export const runtime = "nodejs";
 const MAX_ATTEMPTS = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const INVALID_CREDENTIALS_MESSAGE = "Barua pepe au recovery code sio sahihi.";
-
-// In-memory limits are best-effort only; serverless instances do not share state.
 const recoveryAttempts = new Map<string, { count: number; resetAt: number }>();
 
-function consumeRecoveryAttempt(request: Request, email: string): boolean {
+function consumeRecoveryAttempt(request: NextRequest, email: string): boolean {
   const now = Date.now();
   for (const [key, value] of recoveryAttempts) {
     if (value.resetAt <= now) recoveryAttempts.delete(key);
@@ -38,76 +36,78 @@ function consumeRecoveryAttempt(request: Request, email: string): boolean {
   return true;
 }
 
-function matchesRecoveryCode(candidate: string, expected: string): boolean {
+function safeEqual(candidate: string, expected: string): boolean {
   const candidateDigest = createHash("sha256").update(candidate).digest();
   const expectedDigest = createHash("sha256").update(expected).digest();
   return timingSafeEqual(candidateDigest, expectedDigest);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const secret = process.env.ADMIN_SIGNUP_SECRET;
+  if (!secret) {
+    return NextResponse.json(
+      { error: "Huduma hii haijawashwa. Wasiliana na Admin." },
+      { status: 503 }
+    );
+  }
+
+  let body: unknown;
   try {
-    const recoverySecret = process.env.ADMIN_SIGNUP_SECRET;
-    if (!recoverySecret) {
-      return NextResponse.json(
-        { error: "Password recovery is temporarily unavailable." },
-        { status: 503 }
-      );
-    }
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Data sio sahihi" }, { status: 400 });
+  }
 
-    const body = await request.json().catch(() => null);
-    const parsed = forgotPasswordSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid request." },
-        { status: 400 }
-      );
-    }
+  const parsed = forgotPasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { status: 400 }
+    );
+  }
 
-    const email = parsed.data.email.toLowerCase().trim();
-    if (!consumeRecoveryAttempt(request, email)) {
-      return NextResponse.json(
-        { error: "Too many attempts. Please try again later." },
-        { status: 429 }
-      );
-    }
+  const { email, code, newPassword } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!consumeRecoveryAttempt(request, normalizedEmail)) {
+    return NextResponse.json(
+      { error: "Majaribio mengi sana. Jaribu tena baada ya dakika 15." },
+      { status: 429 }
+    );
+  }
 
-    if (!matchesRecoveryCode(parsed.data.code, recoverySecret)) {
-      return NextResponse.json(
-        { error: INVALID_CREDENTIALS_MESSAGE },
-        { status: 400 }
-      );
-    }
+  try {
+    const codeIsValid = safeEqual(code, secret);
+    const user = await findUserByEmail(normalizedEmail);
 
-    const user = await findUserByEmail(email);
-    if (!user) {
+    if (!user || !codeIsValid) {
       return NextResponse.json(
         { error: INVALID_CREDENTIALS_MESSAGE },
         { status: 400 }
       );
     }
 
-    const passwordHash = await hashPassword(parsed.data.newPassword);
+    const passwordHash = await hashPassword(newPassword);
     await updateUserPassword(user.id, passwordHash);
 
     try {
       await logAudit({
         userId: user.id,
-        action: "PASSWORD_RECOVERED",
+        action: "PASSWORD_RESET",
         entity: "user",
         entityId: user.id,
-        meta: { method: "admin_signup_secret", selfService: true },
+        meta: { method: "recovery_code" },
       });
-    } catch (error) {
-      console.error("[auth/forgot-password] Audit log write failed:", error);
+    } catch (auditError) {
+      console.error("[forgot-password] audit log failed:", auditError);
     }
 
     return NextResponse.json({
       message: "Password imebadilishwa. Sasa unaweza kuingia.",
     });
   } catch (error) {
-    console.error("[auth/forgot-password] Password reset failed:", error);
+    console.error("[forgot-password] unexpected error:", error);
     return NextResponse.json(
-      { error: "Unable to reset your password right now. Please try again." },
+      { error: "Hitilafu ya seva. Jaribu tena baadaye." },
       { status: 500 }
     );
   }

@@ -13,20 +13,37 @@ import { Pool, types, type PoolClient, type QueryResultRow } from "pg";
 // so keep the raw "YYYY-MM-DD" string instead of letting pg convert it.
 types.setTypeParser(types.builtins.DATE, (value) => value);
 declare global {
+  // eslint-disable-next-line no-var
   var __afyaPgPool: Pool | undefined;
 }
 
-function createPool(): Pool {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required to connect to PostgreSQL.");
+/**
+ * Neon's copy-paste connection string ends with
+ * `?sslmode=require&channel_binding=require`. node-postgres can fail to
+ * connect when `channel_binding=require` is present, which surfaces as a
+ * 500 on every DB-backed route (e.g. sign in). Strip it; SSL stays on.
+ */
+function buildConnectionString(): string {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) {
+    throw new Error(
+      "DATABASE_URL is not set. Add it in Vercel → Settings → Environment Variables and redeploy."
+    );
   }
+  try {
+    const url = new URL(raw);
+    url.searchParams.delete("channel_binding");
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
 
-  const connectionUrl = new URL(databaseUrl);
-  connectionUrl.searchParams.delete("channel_binding");
-
+function createPool(): Pool {
   return new Pool({
-    connectionString: connectionUrl.toString(),
+    connectionString: buildConnectionString(),
+    // Serverless functions each hold their own pool; keep it small so we
+    // don't exhaust Neon connections.
     max: process.env.VERCEL ? 5 : 10,
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 30_000,

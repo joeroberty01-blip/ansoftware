@@ -86,12 +86,12 @@ export default function LoginPage() {
             {...register("password")}
           />
 
-          <div className="-mt-2 flex justify-end text-sm">
+          <div className="-mt-2 text-right">
             <Link
               href="/forgot-password"
-              className="font-semibold text-brand-blue hover:text-brand-blue-dark"
+              className="text-sm font-semibold text-brand-blue hover:text-brand-blue-dark"
             >
-              Forgot password?
+              Umesahau password?
             </Link>
           </div>
 

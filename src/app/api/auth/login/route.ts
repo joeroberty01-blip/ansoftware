@@ -62,10 +62,11 @@ export async function POST(req: NextRequest) {
       message: "Umeingia kikamilifu.",
       user: { id: user.id, role: user.role, fullName: user.full_name },
     });
-  } catch (error) {
-    console.error("[auth/login] Unexpected login error:", error);
+  } catch (err) {
+    // Shows the real cause in Vercel → Logs instead of an empty 500.
+    console.error("[login] unexpected error:", err);
     return NextResponse.json(
-      { error: "Imeshindwa kuingia. Jaribu tena." },
+      { error: "Hitilafu ya seva. Jaribu tena baadaye." },
       { status: 500 }
     );
   }

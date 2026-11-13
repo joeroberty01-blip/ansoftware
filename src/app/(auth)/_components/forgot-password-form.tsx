@@ -112,7 +112,7 @@ export function ForgotPasswordForm() {
             id="code"
             icon={ShieldCheck}
             label="Recovery code"
-            type="text"
+            type="password"
             autoComplete="off"
             error={errors.code?.message}
             {...register("code")}
