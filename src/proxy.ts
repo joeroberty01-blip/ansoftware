@@ -35,6 +35,7 @@ const PROTECTED_PREFIXES = [
   "/api/marketing",
   "/settings",
   "/api/settings",
+  "/api/push",
 ];
 
 const ADMIN_ONLY_PREFIXES = [
@@ -145,5 +146,6 @@ export const config = {
     "/api/marketing/:path*",
     "/settings/:path*",
     "/api/settings/:path*",
+    "/api/push/:path*",
   ],
 };

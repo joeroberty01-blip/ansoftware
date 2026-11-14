@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { PushSetupCard } from "../../_components/push-setup-card";
 import {
   Users,
   MapPinned,
@@ -16,6 +17,7 @@ interface VisitItem {
   patient_id: string;
   patient_name: string;
   status: string;
+  visit_session?: string | null;
   location: string | null;
   visit_date: string;
 }
@@ -58,7 +60,15 @@ interface Overview {
   dutiesToday: DutyItem[];
   inventoryUsage: InventoryUsageItem[];
   recentExpenses: ExpenseItem[];
+  missedVisits: VisitItem[];
+  missedVisitsCount: number;
 }
+
+const SESSION_LABELS: Record<string, string> = {
+  MORNING: "Asubuhi",
+  AFTERNOON: "Mchana",
+  EVENING: "Jioni",
+};
 
 const EXPENSE_CATEGORIES = [
   { value: "USAFIRI", label: "Usafiri (Transport)" },
@@ -210,6 +220,54 @@ export function StaffPortalDashboard() {
           </Link>
         </div>
       </div>
+
+      <PushSetupCard />
+
+      {data.missedVisitsCount > 0 && (
+        <section
+          id="missed-visits"
+          role="alert"
+          className="rounded-2xl border border-red-200 bg-red-50 p-4 sm:p-5"
+        >
+          <div className="flex items-start gap-3">
+            <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold text-red-800">
+                {data.missedVisitsCount === 1
+                  ? "Una ziara 1 uliyokosa"
+                  : `Una ziara ${data.missedVisitsCount} ulizokosa`}
+              </h2>
+              <p className="mt-0.5 text-sm text-red-700">
+                Tarehe ya ziara hizi imepita na bado hazijarekodiwa. Fungua kila moja:
+                kama ulifanya ziara, andika ripoti na uiweke Completed; kama haikufanyika,
+                andika sababu au mjulishe Admin.
+              </p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {data.missedVisits.map((v) => (
+                  <li key={v.id}>
+                    <Link
+                      href={`/home-visits/${v.id}`}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm shadow-sm hover:bg-red-100/40"
+                    >
+                      <span className="font-medium text-zinc-900">{v.patient_name}</span>
+                      <span className="text-zinc-600">
+                        {String(v.visit_date).slice(0, 10)}
+                        {v.visit_session ? ` · ${SESSION_LABELS[v.visit_session] ?? v.visit_session}` : ""}
+                        <span className="ml-2 font-semibold text-red-700">Fungua →</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {data.missedVisitsCount > data.missedVisits.length && (
+                <Link href="/home-visits" className="mt-2 inline-block text-sm font-semibold text-red-700">
+                  Ona zote ({data.missedVisitsCount}) →
+                </Link>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {showExpenseForm && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">

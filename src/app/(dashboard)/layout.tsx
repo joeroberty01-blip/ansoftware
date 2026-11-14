@@ -7,6 +7,7 @@ import { listPendingStaff } from "@/lib/repo/users";
 import { listLowStockItems } from "@/lib/repo/inventory";
 import { countOutstandingInvoices } from "@/lib/repo/invoices";
 import { countNewBookings } from "@/lib/repo/bookings";
+import { countMissedVisitsForStaff } from "@/lib/repo/home-visits";
 import { DashboardShell } from "./_components/dashboard-shell";
 
 export default async function DashboardLayout({
@@ -51,8 +52,18 @@ export default async function DashboardLayout({
     newBookingsCount = newBookings;
   }
 
+  // Staff: the bell counts this nurse's own missed visits.
+  let missedVisitsCount = 0;
+  if (user.role !== "ADMIN" && staff) {
+    try {
+      missedVisitsCount = await countMissedVisitsForStaff(staff.id);
+    } catch (err) {
+      console.error("[dashboard-layout] countMissedVisitsForStaff failed:", err);
+    }
+  }
+
   const notificationCount =
-    pendingStaffCount + lowStockCount + outstandingCount + newBookingsCount;
+    pendingStaffCount + lowStockCount + outstandingCount + newBookingsCount + missedVisitsCount;
 
   return (
     <DashboardShell

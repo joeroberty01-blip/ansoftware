@@ -157,6 +157,38 @@ export async function countMissedVisits(): Promise<number> {
   return parseInt(row?.count ?? "0", 10);
 }
 
+/**
+ * One nurse's missed visits: still SCHEDULED, date already passed. Same rule
+ * as countMissedVisits, so the nurse's alert and the admin's count agree.
+ */
+export async function listMissedVisitsForStaff(
+  staffId: string,
+  limit = 20
+): Promise<HomeVisitWithNames[]> {
+  return query<HomeVisitWithNames>(
+    `SELECT ${SELECT_WITH_NAMES}
+     FROM home_visits hv
+     JOIN patients p ON p.id = hv.patient_id
+     LEFT JOIN staff s ON s.id = hv.staff_id
+     LEFT JOIN users u ON u.id = s.user_id
+     WHERE hv.staff_id = $1
+       AND hv.status = 'SCHEDULED'
+       AND hv.visit_date < CURRENT_DATE
+     ORDER BY hv.visit_date DESC
+     LIMIT $2`,
+    [staffId, limit]
+  );
+}
+
+export async function countMissedVisitsForStaff(staffId: string): Promise<number> {
+  const row = await queryOne<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM home_visits
+     WHERE staff_id = $1 AND status = 'SCHEDULED' AND visit_date < CURRENT_DATE`,
+    [staffId]
+  );
+  return parseInt(row?.count ?? "0", 10);
+}
+
 /** Completed visits today whose recorded vitals fall outside the normal range. */
 export async function countAbnormalVitalsToday(): Promise<number> {
   const rows = await query<{

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { PushSetupCard } from "../../_components/push-setup-card";
 import {
   Users,
   ClipboardCheck,
@@ -92,6 +93,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
+      <PushSetupCard compact />
       <div className="relative overflow-hidden rounded-3xl bg-brand-blue p-6 text-white shadow-lg sm:p-8">
         <div className="pointer-events-none absolute -top-16 -right-10 h-56 w-56 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-20 right-40 h-44 w-44 rounded-full bg-brand-orange/25" />

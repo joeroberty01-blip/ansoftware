@@ -22,6 +22,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Afya Nyumbani ERP",
   description: "Afya Nyumbani Home Care Services — management system",
+  applicationName: "Afya Nyumbani ERP",
+  // Installed to the home screen, iOS needs these for a full-screen app
+  // and for web push notifications (iOS 16.4+).
+  appleWebApp: { capable: true, title: "Afya ERP", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 // Explicitly declares this app as light-only. Without this, some mobile
@@ -33,6 +38,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   colorScheme: "light",
+  themeColor: "#0d4ea6",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

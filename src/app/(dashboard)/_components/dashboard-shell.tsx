@@ -127,10 +127,21 @@ export function DashboardShell({
           </form>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3 xl:ml-0">
-            <button
-              type="button"
+            <Link
+              href={role === "ADMIN" ? "/dashboard" : "/dashboard#missed-visits"}
               className="relative rounded-full p-2 text-zinc-500 hover:bg-zinc-100"
-              aria-label="Notifications"
+              aria-label={
+                notificationCount > 0
+                  ? `Arifa: ${notificationCount} zinahitaji kushughulikiwa`
+                  : "Arifa"
+              }
+              title={
+                role === "ADMIN"
+                  ? "Arifa"
+                  : notificationCount > 0
+                    ? "Una ziara ulizokosa"
+                    : "Hakuna arifa"
+              }
             >
               <Bell className="h-5 w-5" />
               {notificationCount > 0 && (
@@ -138,7 +149,7 @@ export function DashboardShell({
                   {notificationCount > 9 ? "9+" : notificationCount}
                 </span>
               )}
-            </button>
+            </Link>
 
             <div className="relative">
               <button

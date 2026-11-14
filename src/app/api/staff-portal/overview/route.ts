@@ -6,6 +6,8 @@ import {
   listUpcomingVisitsForStaff,
   listVisitsNeedingReportForStaff,
   getVisitsTodayComparisonForStaff,
+  listMissedVisitsForStaff,
+  countMissedVisitsForStaff,
 } from "@/lib/repo/home-visits";
 import { listDutiesDueTodayForStaff } from "@/lib/repo/duties";
 import { getInventoryUsageForUser } from "@/lib/repo/inventory";
@@ -49,6 +51,8 @@ export async function GET() {
     expenseSummaryThisMonth,
     expenseSummaryLastMonth,
     visitsComparison,
+    missedVisits,
+    missedVisitsCount,
   ] = await Promise.all([
     listHomeVisits({ staffId: staff.id, visitDate: today }),
     listUpcomingVisitsForStaff(staff.id, 5),
@@ -59,6 +63,8 @@ export async function GET() {
     getExpenseSummaryForUser(session.id, thisMonth.from, thisMonth.to),
     getExpenseSummaryForUser(session.id, lastMonth.from, lastMonth.to),
     getVisitsTodayComparisonForStaff(staff.id),
+    listMissedVisitsForStaff(staff.id),
+    countMissedVisitsForStaff(staff.id),
   ]);
 
   const patientsToday = new Set(todaysVisits.map((v) => v.patient_id)).size;
@@ -84,5 +90,7 @@ export async function GET() {
     dutiesToday,
     inventoryUsage,
     recentExpenses,
+    missedVisits,
+    missedVisitsCount,
   });
 }
