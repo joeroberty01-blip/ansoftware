@@ -29,11 +29,21 @@ export default async function DashboardLayout({
   let newBookingsCount = 0;
 
   if (user.role === "ADMIN") {
+    // Badge counts are extras: one failing query must not take the whole
+    // ERP down, so each falls back to 0 and logs the real error.
+    const safe = async <T,>(label: string, run: () => Promise<T>, fallback: T) => {
+      try {
+        return await run();
+      } catch (err) {
+        console.error(`[dashboard-layout] ${label} failed:`, err);
+        return fallback;
+      }
+    };
     const [pendingStaff, lowStock, outstanding, newBookings] = await Promise.all([
-      listPendingStaff(),
-      listLowStockItems(),
-      countOutstandingInvoices(),
-      countNewBookings(),
+      safe("listPendingStaff", listPendingStaff, []),
+      safe("listLowStockItems", listLowStockItems, []),
+      safe("countOutstandingInvoices", countOutstandingInvoices, 0),
+      safe("countNewBookings", countNewBookings, 0),
     ]);
     pendingStaffCount = pendingStaff.length;
     lowStockCount = lowStock.length;
