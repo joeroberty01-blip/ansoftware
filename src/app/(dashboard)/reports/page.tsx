@@ -87,14 +87,26 @@ export default function ReportsPage() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     fetch(`/api/reports/overview?days=${days}`)
-      .then((r) => r.json())
-      .then((json) => setData(json.overview ?? null))
+      .then(async (r) => {
+        const json = await r.json().catch(() => ({}));
+        if (!r.ok || !json.overview) {
+          throw new Error(json.error ?? "Ripoti hazikupakia.");
+        }
+        setData(json.overview);
+      })
+      .catch((err: Error) => {
+        setData(null);
+        setError(err.message || "Ripoti hazikupakia.");
+      })
       .finally(() => setLoading(false));
-  }, [days]);
+  }, [days, attempt]);
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -128,7 +140,18 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {loading || !data ? (
+      {error && !loading ? (
+        <div className="flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setAttempt((n) => n + 1)}
+            className="rounded-lg border border-red-300 bg-white px-4 py-2 font-semibold text-red-700 hover:bg-red-100"
+          >
+            Jaribu tena
+          </button>
+        </div>
+      ) : loading || !data ? (
         <p className="text-sm text-zinc-500">Loading...</p>
       ) : (
         <>
