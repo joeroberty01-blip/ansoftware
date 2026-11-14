@@ -45,7 +45,9 @@ function createPool(): Pool {
     // Serverless functions each hold their own pool; keep it small so we
     // don't exhaust Neon connections.
     max: process.env.VERCEL ? 5 : 10,
-    connectionTimeoutMillis: 10_000,
+    // Neon suspends idle databases; waking one can take over 10s, which
+    // used to fail the first sign-in or page after a quiet period.
+    connectionTimeoutMillis: 25_000,
     idleTimeoutMillis: 30_000,
   });
 }
