@@ -1,52 +1,30 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { logAudit } from "@/lib/audit";
-import { hashPassword } from "@/lib/auth";
-import { findUserByEmail, updateUserPassword } from "@/lib/repo/users";
-import { forgotPasswordSchema } from "@/lib/validation/auth";
+import { mailConfigured, sendMail } from "@/lib/mail";
+import { allowFromIp, clientIp, hashResetCode, newResetCode } from "@/lib/password-reset";
+import {
+  RESET_CODE_TTL_MINUTES,
+  createResetCode,
+  deleteResetCode,
+  recentResetCodeStats,
+} from "@/lib/repo/password-reset";
+import { findUserByEmail } from "@/lib/repo/users";
+import { forgotPasswordRequestSchema } from "@/lib/validation/auth";
 
 export const runtime = "nodejs";
 
-const MAX_ATTEMPTS = 5;
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const INVALID_CREDENTIALS_MESSAGE = "Barua pepe au recovery code sio sahihi.";
-const recoveryAttempts = new Map<string, { count: number; resetAt: number }>();
+// Same answer whether or not the email exists, so it can't be used to probe accounts.
+const SENT_MESSAGE =
+  "Kama email hii imesajiliwa, tumetuma code ya tarakimu 6. Angalia inbox (na Spam).";
 
-function consumeRecoveryAttempt(request: NextRequest, email: string): boolean {
-  const now = Date.now();
-  for (const [key, value] of recoveryAttempts) {
-    if (value.resetAt <= now) recoveryAttempts.delete(key);
-  }
-
-  const forwardedIp = request.headers
-    .get("x-forwarded-for")
-    ?.split(",")[0]
-    ?.trim();
-  const ip = request.headers.get("x-real-ip")?.trim() || forwardedIp || "unknown";
-  const key = createHash("sha256").update(`${ip}\0${email}`).digest("hex");
-  const current = recoveryAttempts.get(key);
-
-  if (!current || current.resetAt <= now) {
-    recoveryAttempts.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (current.count >= MAX_ATTEMPTS) return false;
-  current.count += 1;
-  return true;
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function safeEqual(candidate: string, expected: string): boolean {
-  const candidateDigest = createHash("sha256").update(candidate).digest();
-  const expectedDigest = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(candidateDigest, expectedDigest);
-}
-
+/** Step 1 of "Umesahau password?": email a one-time code. */
 export async function POST(request: NextRequest) {
-  const secret = process.env.ADMIN_SIGNUP_SECRET;
-  if (!secret) {
+  if (!mailConfigured() && process.env.NODE_ENV === "production") {
     return NextResponse.json(
-      { error: "Huduma hii haijawashwa. Wasiliana na Admin." },
+      { error: "Huduma ya kutuma email haijawekwa bado. Wasiliana na Admin." },
       { status: 503 }
     );
   }
@@ -57,8 +35,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Data sio sahihi" }, { status: 400 });
   }
-
-  const parsed = forgotPasswordSchema.safeParse(body);
+  const parsed = forgotPasswordRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
@@ -66,44 +43,69 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { email, code, newPassword } = parsed.data;
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!consumeRecoveryAttempt(request, normalizedEmail)) {
+  if (!allowFromIp(request, "forgot-request", 10, 15 * 60 * 1000)) {
     return NextResponse.json(
-      { error: "Majaribio mengi sana. Jaribu tena baada ya dakika 15." },
+      { error: "Maombi mengi sana. Jaribu tena baada ya dakika 15." },
       { status: 429 }
     );
   }
 
+  const email = parsed.data.email.toLowerCase();
   try {
-    const codeIsValid = safeEqual(code, secret);
-    const user = await findUserByEmail(normalizedEmail);
+    const user = await findUserByEmail(email);
+    if (!user || user.status === "REJECTED" || user.status === "SUSPENDED") {
+      return NextResponse.json({ message: SENT_MESSAGE });
+    }
 
-    if (!user || !codeIsValid) {
+    // At most one code a minute and five an hour per account.
+    const stats = await recentResetCodeStats(user.id);
+    if (
+      stats.lastHour >= 5 ||
+      (stats.secondsSinceLast !== null && stats.secondsSinceLast < 60)
+    ) {
+      return NextResponse.json({ message: SENT_MESSAGE });
+    }
+
+    const code = newResetCode();
+    const codeId = await createResetCode({
+      userId: user.id,
+      codeHash: hashResetCode(user.id, code),
+      requestIp: clientIp(request),
+    });
+
+    try {
+      await sendMail({
+        to: user.email,
+        subject: `Afya Nyumbani ERP: code yako ni ${code}`,
+        text: [
+          `Habari ${user.full_name},`,
+          "",
+          `Code yako ya kubadilisha password ni: ${code}`,
+          "",
+          `Itumie ndani ya dakika ${RESET_CODE_TTL_MINUTES}. Usimpe mtu yeyote code hii.`,
+          "Kama hukuomba kubadilisha password, puuza ujumbe huu; password yako haitabadilika.",
+          "",
+          "Afya Nyumbani",
+        ].join("\n"),
+        html: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#18181b">
+<p>Habari ${escapeHtml(user.full_name)},</p>
+<p>Code yako ya kubadilisha password ni:</p>
+<p style="font-size:28px;font-weight:700;letter-spacing:6px;color:#0d4ea6">${code}</p>
+<p>Itumie ndani ya dakika ${RESET_CODE_TTL_MINUTES}. Usimpe mtu yeyote code hii.</p>
+<p style="color:#71717a">Kama hukuomba kubadilisha password, puuza ujumbe huu; password yako haitabadilika.</p>
+<p>Afya Nyumbani</p>
+</div>`,
+      });
+    } catch (mailError) {
+      await deleteResetCode(codeId).catch(() => undefined);
+      console.error("[forgot-password] email failed:", mailError);
       return NextResponse.json(
-        { error: INVALID_CREDENTIALS_MESSAGE },
-        { status: 400 }
+        { error: "Imeshindikana kutuma email kwa sasa. Jaribu tena baadaye." },
+        { status: 502 }
       );
     }
 
-    const passwordHash = await hashPassword(newPassword);
-    await updateUserPassword(user.id, passwordHash);
-
-    try {
-      await logAudit({
-        userId: user.id,
-        action: "PASSWORD_RESET",
-        entity: "user",
-        entityId: user.id,
-        meta: { method: "recovery_code" },
-      });
-    } catch (auditError) {
-      console.error("[forgot-password] audit log failed:", auditError);
-    }
-
-    return NextResponse.json({
-      message: "Password imebadilishwa. Sasa unaweza kuingia.",
-    });
+    return NextResponse.json({ message: SENT_MESSAGE });
   } catch (error) {
     console.error("[forgot-password] unexpected error:", error);
     return NextResponse.json(

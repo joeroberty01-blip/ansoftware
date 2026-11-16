@@ -23,10 +23,17 @@ export const loginSchema = z.object({
   role: z.enum(["ADMIN", "STAFF"]).optional(),
 });
 
-export const forgotPasswordSchema = z
+export const forgotPasswordRequestSchema = z.object({
+  email: z.string().trim().email("Barua pepe sio sahihi"),
+});
+
+export const resetPasswordSchema = z
   .object({
     email: z.string().trim().email("Barua pepe sio sahihi"),
-    code: z.string().min(1, "Recovery code inahitajika"),
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, "Weka code ya tarakimu 6 uliyotumiwa kwa email"),
     newPassword: z.string().min(8, "Password iwe angalau herufi 8"),
     confirmPassword: z.string().min(1, "Rudia password mpya"),
   })
@@ -38,4 +45,5 @@ export const forgotPasswordSchema = z
 export type AdminSignupInput = z.infer<typeof adminSignupSchema>;
 export type StaffSignupInput = z.infer<typeof staffSignupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
-export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ForgotPasswordRequestInput = z.infer<typeof forgotPasswordRequestSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

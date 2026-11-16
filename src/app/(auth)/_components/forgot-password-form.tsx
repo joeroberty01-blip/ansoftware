@@ -7,77 +7,121 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Lock, Mail, ShieldCheck } from "@/components/icons";
 import {
-  forgotPasswordSchema,
-  type ForgotPasswordInput,
+  forgotPasswordRequestSchema,
+  resetPasswordSchema,
+  type ForgotPasswordRequestInput,
+  type ResetPasswordInput,
 } from "@/lib/validation/auth";
 import { BrandMark } from "./brand-mark";
 import { IconInput } from "./icon-input";
 
-type ForgotPasswordResponse = {
+type ApiResponse = {
   error?: string;
   message?: string;
 };
 
+const RESEND_WAIT_SECONDS = 60;
+
+async function post(url: string, data: unknown) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = (await response.json().catch(() => null)) as ApiResponse | null;
+  return { ok: response.ok, result };
+}
+
+/**
+ * "Umesahau password?" in two steps:
+ *  1. enter email -> a 6-digit code is emailed
+ *  2. enter the code and a new password
+ */
 export function ForgotPasswordForm() {
   const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ForgotPasswordInput>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const requestForm = useForm<ForgotPasswordRequestInput>({
+    resolver: zodResolver(forgotPasswordRequestSchema),
+  });
+  const resetForm = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
   });
 
   useEffect(() => {
     if (!successMessage) return;
-
     const timer = window.setTimeout(() => router.push("/login"), 2000);
     return () => window.clearTimeout(timer);
   }, [successMessage, router]);
 
-  const onSubmit = async (data: ForgotPasswordInput) => {
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = window.setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendIn]);
+
+  const sendCode = async (address: string) => {
     setServerError(null);
+    setNotice(null);
     setSubmitting(true);
-
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = (await response.json().catch(() => null)) as
-        | ForgotPasswordResponse
-        | null;
-
-      if (!response.ok) {
-        setServerError(
-          result?.error ?? "Unable to reset your password. Please try again."
-        );
+      const { ok, result } = await post("/api/auth/forgot-password", { email: address });
+      if (!ok) {
+        setServerError(result?.error ?? "Imeshindikana kutuma code. Jaribu tena.");
         return;
       }
-
-      setSuccessMessage(
-        result?.message ?? "Password imebadilishwa. Sasa unaweza kuingia."
-      );
+      setEmail(address);
+      resetForm.setValue("email", address);
+      setNotice(result?.message ?? "Tumetuma code kwa email yako.");
+      setResendIn(RESEND_WAIT_SECONDS);
     } catch {
-      setServerError("Network error. Please try again.");
+      setServerError("Hakuna mtandao. Jaribu tena.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const onReset = async (data: ResetPasswordInput) => {
+    setServerError(null);
+    setSubmitting(true);
+    try {
+      const { ok, result } = await post("/api/auth/reset-password", data);
+      if (!ok) {
+        setServerError(result?.error ?? "Imeshindikana kubadilisha password.");
+        return;
+      }
+      setSuccessMessage(result?.message ?? "Password imebadilishwa. Sasa unaweza kuingia.");
+    } catch {
+      setServerError("Hakuna mtandao. Jaribu tena.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const buttonClass =
+    "mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/25 transition-opacity hover:opacity-95 disabled:opacity-50";
+
+  const errorBox = serverError && (
+    <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+      {serverError}
+    </p>
+  );
+
   return (
-    <div className="w-full max-w-md rounded-2xl border border-zinc-100 bg-white p-8 shadow-xl shadow-zinc-200/50">
+    <div className="w-full max-w-md rounded-2xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/50 sm:p-8">
       <div className="flex flex-col items-center gap-3 text-center">
         <BrandMark size="md" />
         <div>
-          <h1 className="text-xl font-bold text-zinc-900">Forgot password?</h1>
+          <h1 className="text-xl font-bold text-zinc-900">Umesahau password?</h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Enter your email, recovery code, and a new password.
+            {email
+              ? "Weka code uliyotumiwa kwa email na password mpya."
+              : "Weka email yako. Tutakutumia code ya tarakimu 6."}
           </p>
         </div>
       </div>
@@ -89,11 +133,11 @@ export function ForgotPasswordForm() {
           aria-live="polite"
         >
           <p className="font-semibold">{successMessage}</p>
-          <p className="mt-1">You will be redirected to sign in shortly.</p>
+          <p className="mt-1">Unapelekwa kwenye login...</p>
         </div>
-      ) : (
+      ) : !email ? (
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={requestForm.handleSubmit((d) => sendCode(d.email.trim().toLowerCase()))}
           className="mt-6 flex flex-col gap-4"
           noValidate
         >
@@ -104,65 +148,100 @@ export function ForgotPasswordForm() {
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
-            error={errors.email?.message}
-            {...register("email")}
+            error={requestForm.formState.errors.email?.message}
+            {...requestForm.register("email")}
           />
+          {errorBox}
+          <button type="submit" disabled={submitting} className={buttonClass}>
+            {submitting ? "Inatuma..." : "Tuma code"}
+            {!submitting && <ArrowRight className="h-4 w-4" />}
+          </button>
+        </form>
+      ) : (
+        <form
+          onSubmit={resetForm.handleSubmit(onReset)}
+          className="mt-6 flex flex-col gap-4"
+          noValidate
+        >
+          {notice && (
+            <p
+              className="rounded-xl bg-brand-blue-light px-3 py-2 text-sm text-brand-blue"
+              role="status"
+              aria-live="polite"
+            >
+              {notice}
+            </p>
+          )}
+          <p className="text-sm text-zinc-600">
+            Email: <span className="font-medium text-zinc-900 break-all">{email}</span>{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setEmail(null);
+                setNotice(null);
+                setServerError(null);
+                resetForm.reset();
+              }}
+              className="font-semibold text-brand-blue hover:text-brand-blue-dark"
+            >
+              Badilisha
+            </button>
+          </p>
+          <input type="hidden" {...resetForm.register("email")} />
 
           <IconInput
             id="code"
             icon={ShieldCheck}
-            label="Recovery code"
-            type="password"
-            autoComplete="off"
-            error={errors.code?.message}
-            {...register("code")}
+            label="Code ya tarakimu 6"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            placeholder="123456"
+            error={resetForm.formState.errors.code?.message}
+            {...resetForm.register("code")}
           />
 
           <IconInput
             id="newPassword"
             icon={Lock}
-            label="New password"
+            label="Password mpya"
             type="password"
             autoComplete="new-password"
-            error={errors.newPassword?.message}
-            {...register("newPassword")}
+            error={resetForm.formState.errors.newPassword?.message}
+            {...resetForm.register("newPassword")}
           />
 
           <IconInput
             id="confirmPassword"
             icon={Lock}
-            label="Confirm new password"
+            label="Rudia password mpya"
             type="password"
             autoComplete="new-password"
-            error={errors.confirmPassword?.message}
-            {...register("confirmPassword")}
+            error={resetForm.formState.errors.confirmPassword?.message}
+            {...resetForm.register("confirmPassword")}
           />
 
-          {serverError && (
-            <p
-              className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700"
-              role="alert"
-            >
-              {serverError}
-            </p>
-          )}
+          {errorBox}
+
+          <button type="submit" disabled={submitting} className={buttonClass}>
+            {submitting ? "Inabadilisha..." : "Badilisha password"}
+            {!submitting && <ArrowRight className="h-4 w-4" />}
+          </button>
 
           <button
-            type="submit"
-            disabled={submitting}
-            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/25 transition-opacity hover:opacity-95 disabled:opacity-50"
+            type="button"
+            disabled={submitting || resendIn > 0}
+            onClick={() => sendCode(email)}
+            className="min-h-11 text-sm font-semibold text-brand-blue hover:text-brand-blue-dark disabled:text-zinc-400"
           >
-            {submitting ? "Updating password..." : "Update password"}
-            {!submitting && <ArrowRight className="h-4 w-4" />}
+            {resendIn > 0 ? `Tuma code tena (${resendIn}s)` : "Tuma code tena"}
           </button>
         </form>
       )}
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        <Link
-          href="/login"
-          className="font-semibold text-brand-blue hover:text-brand-blue-dark"
-        >
+        <Link href="/login" className="font-semibold text-brand-blue hover:text-brand-blue-dark">
           Rudi kwenye login
         </Link>
       </p>
