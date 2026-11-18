@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
     preferredDate: d.preferredDate ? d.preferredDate : null,
     notes: d.notes ? d.notes : null,
     createdById: integrationUser.id,
+    // Requests from the client app are "Tovuti / app" unless it says otherwise.
+    source: d.source ?? "WEBSITE",
+    sourceDetail: d.sourceDetail ? d.sourceDetail : null,
   });
 
   return NextResponse.json({ booking }, { status: 201 });

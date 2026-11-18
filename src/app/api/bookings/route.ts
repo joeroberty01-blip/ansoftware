@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createBookingSchema } from "@/lib/validation/bookings";
-import { createBooking, listBookings } from "@/lib/repo/bookings";
+import { createBooking, getBookingStats, listBookings } from "@/lib/repo/bookings";
 
 export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
@@ -14,8 +14,12 @@ export async function GET(req: NextRequest) {
   }
 
   const status = req.nextUrl.searchParams.get("status") ?? undefined;
-  const bookings = await listBookings({ status });
-  return NextResponse.json({ bookings });
+  const due = req.nextUrl.searchParams.get("due") === "1";
+  const [bookings, stats] = await Promise.all([
+    listBookings({ status, due }),
+    getBookingStats(),
+  ]);
+  return NextResponse.json({ bookings, stats });
 }
 
 export async function POST(req: NextRequest) {
@@ -44,6 +48,9 @@ export async function POST(req: NextRequest) {
     preferredDate: d.preferredDate ? d.preferredDate : null,
     notes: d.notes ? d.notes : null,
     createdById: session.id,
+    source: d.source ?? null,
+    sourceDetail: d.sourceDetail ? d.sourceDetail : null,
+    nextFollowUpDate: d.nextFollowUpDate ? d.nextFollowUpDate : null,
   });
 
   return NextResponse.json({ booking }, { status: 201 });

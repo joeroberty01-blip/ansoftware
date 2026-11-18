@@ -57,6 +57,10 @@ export async function PATCH(
       d.assignedStaffId === undefined ? undefined : d.assignedStaffId || null,
     patientId: d.patientId === undefined ? undefined : d.patientId || null,
     notes: d.notes === undefined ? undefined : d.notes || null,
+    source: d.source,
+    sourceDetail: d.sourceDetail === undefined ? undefined : d.sourceDetail || null,
+    nextFollowUpDate:
+      d.nextFollowUpDate === undefined ? undefined : d.nextFollowUpDate || null,
   });
 
   return NextResponse.json({ booking });

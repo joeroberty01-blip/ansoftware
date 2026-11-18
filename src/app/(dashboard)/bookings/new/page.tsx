@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  BOOKING_SOURCES,
+  BOOKING_SOURCE_LABELS,
+  type BookingSource,
+} from "@/lib/validation/bookings";
+
+function todayLocal() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
 
 export default function NewBookingPage() {
   const router = useRouter();
@@ -10,6 +20,9 @@ export default function NewBookingPage() {
   const [serviceType, setServiceType] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [source, setSource] = useState<BookingSource | "">("");
+  const [sourceDetail, setSourceDetail] = useState("");
+  const [nextFollowUpDate, setNextFollowUpDate] = useState(todayLocal);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,6 +40,9 @@ export default function NewBookingPage() {
           serviceType,
           preferredDate: preferredDate || undefined,
           notes: notes || undefined,
+          source: source || undefined,
+          sourceDetail: sourceDetail || undefined,
+          nextFollowUpDate: nextFollowUpDate || undefined,
         }),
       });
       const json = await res.json();
@@ -95,6 +111,46 @@ export default function NewBookingPage() {
             onChange={(e) => setPreferredDate(e.target.value)}
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="source" className="text-xs font-medium text-zinc-600">
+            Umetusikia wapi?
+          </label>
+          <select
+            id="source"
+            value={source}
+            onChange={(e) => setSource(e.target.value as BookingSource | "")}
+            className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+          >
+            <option value="">-- chagua chanzo --</option>
+            {BOOKING_SOURCES.map((s) => (
+              <option key={s} value={s}>
+                {BOOKING_SOURCE_LABELS[s]}
+              </option>
+            ))}
+          </select>
+          <input
+            value={sourceDetail}
+            onChange={(e) => setSourceDetail(e.target.value)}
+            placeholder="mf. Aga Khan, Dkt. Mushi, Facebook..."
+            aria-label="Maelezo ya chanzo"
+            className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="next-follow-up" className="text-xs font-medium text-zinc-600">
+            Tarehe ya kumfuatilia
+          </label>
+          <input
+            id="next-follow-up"
+            type="date"
+            value={nextFollowUpDate}
+            onChange={(e) => setNextFollowUpDate(e.target.value)}
+            className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
+          />
+          <p className="text-xs text-zinc-500">
+            Kawaida ni leo: mpigie simu ndani ya saa 2.
+          </p>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">

@@ -348,6 +348,9 @@ export interface BookingRow {
   assigned_staff_id: string | null;
   patient_id: string | null;
   notes: string | null;
+  source: string | null;
+  source_detail: string | null;
+  next_follow_up_date: string | null;
   created_by_id: string;
   created_at: string;
   updated_at: string;

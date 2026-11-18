@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     { "path": "/api/cron/visit-reminders?slot=MISSED", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/booking-followups", "schedule": "0 6 * * *" },
     { "path": "/api/cron/visit-reminders?slot=MORNING", "schedule": "0 7 * * *" },
     { "path": "/api/cron/visit-reminders?slot=AFTERNOON", "schedule": "0 12 * * *" },
     { "path": "/api/cron/visit-reminders?slot=EVENING", "schedule": "0 17 * * *" }

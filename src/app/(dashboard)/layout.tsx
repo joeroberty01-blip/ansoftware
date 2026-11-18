@@ -6,7 +6,7 @@ import { canAccessBilling } from "@/lib/permissions";
 import { listPendingStaff } from "@/lib/repo/users";
 import { listLowStockItems } from "@/lib/repo/inventory";
 import { countOutstandingInvoices } from "@/lib/repo/invoices";
-import { countNewBookings } from "@/lib/repo/bookings";
+import { countBookingsNeedingAction } from "@/lib/repo/bookings";
 import { countMissedVisitsForStaff } from "@/lib/repo/home-visits";
 import { DashboardShell } from "./_components/dashboard-shell";
 
@@ -44,7 +44,7 @@ export default async function DashboardLayout({
       safe("listPendingStaff", listPendingStaff, []),
       safe("listLowStockItems", listLowStockItems, []),
       safe("countOutstandingInvoices", countOutstandingInvoices, 0),
-      safe("countNewBookings", countNewBookings, 0),
+      safe("countBookingsNeedingAction", countBookingsNeedingAction, 0),
     ]);
     pendingStaffCount = pendingStaff.length;
     lowStockCount = lowStock.length;
