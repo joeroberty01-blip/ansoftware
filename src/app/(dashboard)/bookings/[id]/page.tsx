@@ -68,6 +68,50 @@ function followUpLabel(date: string | null, status: string) {
   return `Fuatilia: ${day}`;
 }
 
+/**
+ * wa.me wants the number in international form without "+".
+ * Tanzanian 07xx/06xx numbers become 2557xx/2556xx; numbers already
+ * written with + or 00 (diaspora) are kept as they are.
+ */
+function whatsappNumber(phone: string): string | null {
+  let digits = phone.trim();
+  const international = digits.startsWith("+") || digits.startsWith("00");
+  digits = digits.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (!international) {
+    if (digits.startsWith("0")) digits = `255${digits.slice(1)}`;
+    else if (digits.length === 9) digits = `255${digits}`;
+  }
+  return digits.length >= 10 && digits.length <= 15 ? digits : null;
+}
+
+/** The follow-up messages from the marketing plan, day 1, 3, 7 and 30. */
+function whatsappTemplates(name: string, service: string) {
+  const first = name.trim().split(/\s+/)[0] || name;
+  return [
+    {
+      key: "day1",
+      label: "Siku 1: shukrani",
+      text: `Habari ${first}, asante kwa kuwasiliana na Afya Nyumbani kuhusu ${service}. Nurse wetu anaweza kuja kufanya tathmini nyumbani. Ni siku na muda gani unakufaa?`,
+    },
+    {
+      key: "day3",
+      label: "Siku 3: maswali",
+      text: `Habari ${first}, natumaini mgonjwa anaendelea vizuri. Kama una swali lolote kuhusu huduma au bei, niko tayari kujibu. Tunaweza kuanza na ziara moja ya tathmini. Afya Nyumbani.`,
+    },
+    {
+      key: "day7",
+      label: "Siku 7: mwisho",
+      text: `Habari ${first}, sitaki kukusumbua. Kama bado unahitaji msaada wa nurse nyumbani, tuko tayari kuanza ndani ya saa 48. Jibu NDIYO tukupigie, au BADO tukutafute baadaye. Asante, Afya Nyumbani.`,
+    },
+    {
+      key: "day30",
+      label: "Siku 30: kumbusho",
+      text: `Habari ${first}, ni Afya Nyumbani. Tunapenda kujua mgonjwa anaendeleaje. Kama mnahitaji nurse nyumbani, tupo. Tunaweza kuja kwa tathmini wiki hii.`,
+    },
+  ];
+}
+
 interface StaffOption {
   id: string;
   full_name: string;
@@ -400,6 +444,44 @@ export default function BookingDetailPage() {
 
           {booking.status !== "COMPLETED" && booking.status !== "CANCELLED" && (
             <div className="flex flex-col gap-3">
+              <div className="rounded-lg bg-zinc-50 p-3">
+                <p className="text-xs font-medium text-zinc-600">Wasiliana sasa</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <a
+                    href={`tel:${booking.phone.replace(/[^\d+]/g, "")}`}
+                    onClick={() => {
+                      setFuChannel("CALL");
+                    }}
+                    className="inline-flex min-h-9 items-center rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-800 hover:bg-zinc-100"
+                  >
+                    Piga simu
+                  </a>
+                  {whatsappNumber(booking.phone) &&
+                    whatsappTemplates(booking.full_name, booking.service_type).map((t) => (
+                      <a
+                        key={t.key}
+                        href={`https://wa.me/${whatsappNumber(booking.phone)}?text=${encodeURIComponent(t.text)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          setFuChannel("WHATSAPP");
+                          setFuNote((n) => n || `Nimetuma WhatsApp (${t.label.toLowerCase()}).`);
+                        }}
+                        className="inline-flex min-h-9 items-center rounded-lg border border-green-300 bg-white px-3 text-xs font-semibold text-green-800 hover:bg-green-50"
+                      >
+                        WhatsApp: {t.label}
+                      </a>
+                    ))}
+                </div>
+                {!whatsappNumber(booking.phone) && (
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Namba hii haitambuliki kwa WhatsApp. Iandike kama 07XXXXXXXX au +44...
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-zinc-500">
+                  WhatsApp inafunguka na ujumbe tayari. Ukishatuma, rudi hapa uhifadhi ufuatiliaji.
+                </p>
+              </div>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Njia ya mawasiliano">
                 {FOLLOW_UP_CHANNELS.map((c) => (
                   <button
