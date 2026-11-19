@@ -50,9 +50,12 @@ export function NewHomeVisitForm({
 
   const [patientId, setPatientId] = useState(prefillPatientId);
   const [staffId, setStaffId] = useState(ownStaffId ?? prefillStaffId);
-  const [visitDate, setVisitDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
+  // Today on this device (Dar es Salaam), not UTC: a report written
+  // between midnight and 03:00 must not land on yesterday.
+  const [visitDate, setVisitDate] = useState(() => {
+    const d = new Date();
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  });
   const [visitSession, setVisitSession] = useState<
     (typeof VISIT_SESSIONS)[number]
   >(defaultSessionForNow());
@@ -69,6 +72,7 @@ export function NewHomeVisitForm({
   const [treatmentNotes, setTreatmentNotes] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [existingId, setExistingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const geo = useGeoCheckIn();
 
@@ -102,6 +106,7 @@ export function NewHomeVisitForm({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setExistingId(null);
     if (!patientId) {
       setError("Chagua mgonjwa.");
       return;
@@ -136,6 +141,7 @@ export function NewHomeVisitForm({
       const json = await res.json();
       if (!res.ok) {
         setError(json.error ?? "Imeshindwa kurekodi ziara.");
+        setExistingId(typeof json.existingId === "string" ? json.existingId : null);
         return;
       }
       router.push(`/home-visits/${json.visit.id}`);
@@ -393,6 +399,14 @@ export function NewHomeVisitForm({
         {error && (
           <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
+            {existingId && (
+              <>
+                {" "}
+                <a href={`/home-visits/${existingId}`} className="font-semibold underline">
+                  Fungua ripoti iliyopo
+                </a>
+              </>
+            )}
           </p>
         )}
 

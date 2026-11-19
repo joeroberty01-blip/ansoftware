@@ -1,12 +1,13 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { BRAND } from "@/lib/invoice-brand";
 import type { HomeVisitWithNames } from "@/lib/repo/home-visits";
-
-const SESSION_LABELS: Record<string, string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
-};
+import {
+  DAILY_SESSIONS,
+  DAILY_SESSION_LABELS,
+  NO_SESSION_LABEL,
+  groupDailyReports,
+  sessionState,
+} from "@/lib/daily-reports";
 
 const styles = StyleSheet.create({
   page: { paddingTop: 28, paddingBottom: 36, paddingHorizontal: 32, fontSize: 9.5, fontFamily: "Helvetica", color: "#1a1a1a" },
@@ -19,14 +20,21 @@ const styles = StyleSheet.create({
   card: { border: 1, borderColor: "#E5E1D8", borderRadius: 6, padding: 9, marginBottom: 8 },
   cardAlert: { borderColor: "#F5A25D", backgroundColor: "#FFF8F1" },
   cardHead: { flexDirection: "row", justifyContent: "space-between", borderBottom: 1, borderBottomColor: "#EFEAE0", paddingBottom: 4, marginBottom: 5 },
-  date: { fontSize: 10, fontWeight: 700 },
-  vitals: { flexDirection: "row", flexWrap: "wrap", marginBottom: 4 },
+  date: { fontSize: 10.5, fontWeight: 700 },
+  session: { borderTop: 1, borderTopColor: "#F3EFE6", paddingTop: 4, marginTop: 4 },
+  sessionFirst: { paddingTop: 0, marginTop: 0, borderTop: 0 },
+  sessionHead: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2 },
+  sessionName: { fontSize: 9, fontWeight: 700, color: BRAND.navy, textTransform: "uppercase" },
+  vitals: { flexDirection: "row", flexWrap: "wrap", marginBottom: 2 },
   chip: { backgroundColor: "#F3F1EC", borderRadius: 4, paddingVertical: 2, paddingHorizontal: 5, marginRight: 4, marginBottom: 3, fontSize: 8.5 },
   chipWarn: { backgroundColor: "#FDE3C8", color: "#9A4A06" },
   label: { fontSize: 7.5, fontWeight: 700, color: BRAND.gray, marginTop: 3, textTransform: "uppercase" },
   text: { fontSize: 9.5, lineHeight: 1.4 },
+  empty: { fontSize: 8.5, color: "#A8A29E" },
   footer: { position: "absolute", bottom: 16, left: 32, right: 32, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: BRAND.gray },
 });
+
+const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
 
 function fmtDate(value: string | Date) {
   return new Date(value).toISOString().slice(0, 10);
@@ -42,8 +50,8 @@ export interface VisitReportPatient {
   chronic_conditions: string | null;
 }
 
-function vitalChips(v: HomeVisitWithNames, warn: boolean) {
-  const items = [
+function vitalChips(v: HomeVisitWithNames) {
+  return [
     v.blood_pressure ? `BP ${v.blood_pressure} mmHg` : null,
     v.temperature ? `Joto ${v.temperature} °C` : null,
     v.pulse != null ? `Pulse ${v.pulse} bpm` : null,
@@ -51,9 +59,46 @@ function vitalChips(v: HomeVisitWithNames, warn: boolean) {
     v.spo2 != null ? `SpO2 ${v.spo2}%` : null,
     v.weight ? `Uzito ${v.weight} kg` : null,
   ].filter(Boolean) as string[];
-  return { items, warn };
 }
 
+function Entry({ v, warn }: { v: HomeVisitWithNames; warn: boolean }) {
+  const items = vitalChips(v);
+  const blocks = [
+    { label: "Chakula", value: v.food_intake },
+    { label: "Matibabu / Procedures", value: v.treatment_notes },
+    { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+  ].filter((b) => b.value);
+  const meta = [
+    v.staff_name,
+    v.location,
+    v.visit_type === "PART_TIME" ? "Part-time" : null,
+    v.status === "SCHEDULED" ? "Imepangwa tu" : v.status === "CANCELLED" ? "Imeghairiwa" : null,
+  ].filter(Boolean);
+  return (
+    <View>
+      {meta.length > 0 && <Text style={styles.sub}>{meta.join("  •  ")}</Text>}
+      <View style={styles.vitals}>
+        {items.length === 0 ? (
+          <Text style={styles.empty}>Hakuna vitals zilizorekodiwa.</Text>
+        ) : (
+          items.map((t) => (
+            <Text key={t} style={warn ? [styles.chip, styles.chipWarn] : styles.chip}>
+              {t}
+            </Text>
+          ))
+        )}
+      </View>
+      {blocks.map((b) => (
+        <View key={b.label}>
+          <Text style={styles.label}>{b.label}</Text>
+          <Text style={styles.text}>{b.value}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Patient visit report: one card per day, holding morning, afternoon and evening. */
 export function VisitReportDocument({
   patient,
   visits,
@@ -65,13 +110,14 @@ export function VisitReportDocument({
   rangeLabel: string;
   alertIds: Set<string>;
 }) {
+  const days = groupDailyReports(visits);
   return (
     <Document title={`Ripoti za Ziara - ${patient.full_name}`}>
       <Page size="A4" style={styles.page} wrap>
         <View style={styles.header} fixed>
           <View>
             <Text style={styles.company}>{BRAND.name}</Text>
-            <Text style={styles.sub}>Ripoti za Ziara za Nyumbani • {rangeLabel}</Text>
+            <Text style={styles.sub}>Ripoti za Kila Siku • {rangeLabel}</Text>
           </View>
         </View>
 
@@ -89,45 +135,35 @@ export function VisitReportDocument({
           </Text>
         </View>
 
-        {visits.length === 0 ? (
+        {days.length === 0 ? (
           <Text style={styles.sub}>Hakuna ripoti za ziara katika kipindi hiki.</Text>
         ) : (
-          visits.map((v) => {
-            const warn = alertIds.has(v.id);
-            const { items } = vitalChips(v, warn);
-            const blocks = [
-              { label: "Chakula", value: v.food_intake },
-              { label: "Matibabu / Procedures", value: v.treatment_notes },
-              { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
-            ].filter((b) => b.value);
+          days.map((day) => {
+            const dayWarn = day.visits.some((v) => alertIds.has(v.id));
+            const filled = DAILY_SESSIONS.filter((s) => sessionState(day.sessions[s]) === "done").length;
+            const slots = [
+              ...DAILY_SESSIONS.map((s) => ({ key: s, label: DAILY_SESSION_LABELS[s], entries: day.sessions[s] })),
+              ...(day.other.length > 0 ? [{ key: "other", label: NO_SESSION_LABEL, entries: day.other }] : []),
+            ];
+            const weekday = WEEKDAYS[new Date(`${day.date}T00:00:00Z`).getUTCDay()] ?? "";
             return (
-              <View key={v.id} style={warn ? [styles.card, styles.cardAlert] : styles.card}>
-                <View style={styles.cardHead}>
+              <View key={day.key} style={dayWarn ? [styles.card, styles.cardAlert] : styles.card}>
+                <View style={styles.cardHead} minPresenceAhead={60}>
                   <Text style={styles.date}>
-                    {fmtDate(v.visit_date)}
-                    {v.visit_session ? ` — ${SESSION_LABELS[v.visit_session] ?? v.visit_session}` : ""}
-                    {v.visit_type === "PART_TIME" ? "  [Part-time]" : ""}
+                    {weekday}, {day.date}
                   </Text>
-                  <Text style={styles.sub}>
-                    {v.staff_name ?? "-"}
-                    {v.location ? `  •  ${v.location}` : ""}
-                  </Text>
+                  <Text style={styles.sub}>Sessions zilizojazwa: {filled}/3</Text>
                 </View>
-                <View style={styles.vitals}>
-                  {items.length === 0 ? (
-                    <Text style={styles.sub}>Hakuna vitals zilizorekodiwa.</Text>
-                  ) : (
-                    items.map((t) => (
-                      <Text key={t} style={warn ? [styles.chip, styles.chipWarn] : styles.chip}>
-                        {t}
-                      </Text>
-                    ))
-                  )}
-                </View>
-                {blocks.map((b) => (
-                  <View key={b.label}>
-                    <Text style={styles.label}>{b.label}</Text>
-                    <Text style={styles.text}>{b.value}</Text>
+                {slots.map((slot, i) => (
+                  <View key={slot.key} style={i === 0 ? [styles.session, styles.sessionFirst] : styles.session}>
+                    <View style={styles.sessionHead}>
+                      <Text style={styles.sessionName}>{slot.label}</Text>
+                    </View>
+                    {slot.entries.length === 0 ? (
+                      <Text style={styles.empty}>Haijajazwa.</Text>
+                    ) : (
+                      slot.entries.map((v) => <Entry key={v.id} v={v} warn={alertIds.has(v.id)} />)
+                    )}
                   </View>
                 ))}
               </View>

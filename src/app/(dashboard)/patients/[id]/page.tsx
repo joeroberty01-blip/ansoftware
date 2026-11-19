@@ -20,6 +20,13 @@ import { compressImageForUpload } from "@/lib/compress-image";
 import { MAR_SLOTS, MAR_SLOT_LABELS, type MarSlot } from "@/lib/mar";
 import { MarPanel } from "./_components/mar-panel";
 import { downloadCsv } from "@/lib/csv-export";
+import {
+  DAILY_SESSIONS,
+  DAILY_SESSION_LABELS,
+  NO_SESSION_LABEL,
+  groupDailyReports,
+  sessionState,
+} from "@/lib/daily-reports";
 import { GeoCheckInButton } from "../../_components/geo-checkin-button";
 import {
   ClipboardPlus,
@@ -119,6 +126,86 @@ function VisitStatusBadge({ status }: { status: string }) {
     >
       {meta.label}
     </span>
+  );
+}
+
+/** Today's date on this device (Dar es Salaam), not UTC. */
+function localToday(): string {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+
+function weekdayOf(date: string): string {
+  return WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()] ?? "";
+}
+
+/** One session's entry inside a daily report: vitals, then the written notes. */
+function VisitEntryBody({ v }: { v: HomeVisit }) {
+  const chips: { label: string; value: string | null; status: "normal" | "warning" | null }[] = [
+    { label: "BP", value: v.blood_pressure ? `${v.blood_pressure} mmHg` : null, status: bpStatus(v.blood_pressure) },
+    { label: "Joto", value: v.temperature ? `${v.temperature} °C` : null, status: temperatureStatus(v.temperature) },
+    { label: "Pulse", value: v.pulse != null ? `${v.pulse} bpm` : null, status: pulseStatus(v.pulse) },
+    { label: "Sukari", value: v.blood_glucose ? `${v.blood_glucose} mmol/L` : null, status: glucoseStatus(v.blood_glucose) },
+    { label: "SpO₂", value: v.spo2 != null ? `${v.spo2}%` : null, status: spo2Status(v.spo2) },
+    { label: "Uzito", value: v.weight ? `${v.weight} kg` : null, status: null },
+  ];
+  const textBlocks = [
+    { label: "Chakula (Food Intake)", value: v.food_intake },
+    { label: "Matibabu / Procedures", value: v.treatment_notes },
+    { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+  ];
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+        <VisitStatusBadge status={v.status} />
+        {v.visit_type === "PART_TIME" && (
+          <span className="rounded-full bg-brand-orange-light px-2 py-0.5 text-[11px] font-semibold text-brand-orange">
+            Part-time
+          </span>
+        )}
+        <span>
+          {v.staff_name ?? "-"}
+          {v.location ? ` · ${v.location}` : ""}
+        </span>
+        <Link href={`/home-visits/${v.id}`} className="ml-auto font-semibold text-brand-blue underline">
+          Fungua
+        </Link>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {chips
+          .filter((c) => c.value)
+          .map((c) => (
+            <span
+              key={c.label}
+              className={`rounded-md px-2 py-1 text-xs ${
+                c.status === "warning"
+                  ? "bg-orange-100 font-semibold text-orange-800"
+                  : "bg-zinc-100 text-zinc-700"
+              }`}
+            >
+              <span className="text-zinc-500">{c.label}: </span>
+              {c.value}
+            </span>
+          ))}
+        {chips.every((c) => !c.value) && (
+          <span className="text-xs text-zinc-400">Hakuna vitals zilizorekodiwa.</span>
+        )}
+      </div>
+      <dl className="mt-2 flex flex-col gap-2">
+        {textBlocks.filter((b) => b.value).map((b) => (
+          <div key={b.label}>
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+              {b.label}
+            </dt>
+            <dd className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-800">
+              {b.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 
@@ -256,8 +343,8 @@ function VitalsTrendChart({
     <div className="h-32 w-full">
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="h-full w-full">
         <path d={path} fill="none" stroke="var(--color-brand-blue)" strokeWidth={2} vectorEffect="non-scaling-stroke" />
-        {coords.map((c) => (
-          <circle key={c.date} cx={c.x} cy={c.y} r={2} fill="var(--color-brand-blue)" vectorEffect="non-scaling-stroke" />
+        {coords.map((c, i) => (
+          <circle key={`${c.date}-${i}`} cx={c.x} cy={c.y} r={2} fill="var(--color-brand-blue)" vectorEffect="non-scaling-stroke" />
         ))}
       </svg>
       <div className="mt-1 flex justify-between text-[10px] text-zinc-400">
@@ -366,6 +453,8 @@ interface PatientDocument {
 
 interface HomeVisit {
   id: string;
+  patient_id: string;
+  created_at: string;
   staff_name: string | null;
   visit_date: string;
   visit_session: string | null;
@@ -799,7 +888,7 @@ export default function PatientDetailPage() {
     homeVisits
       .filter(
         (v) =>
-          v.visit_date.slice(0, 10) === new Date().toISOString().slice(0, 10) &&
+          v.visit_date.slice(0, 10) === localToday() &&
           v.status === "COMPLETED"
       )
       .map((v) => v.visit_session)
@@ -836,7 +925,7 @@ export default function PatientDetailPage() {
         body: JSON.stringify({
           patientId: id,
           staffId: myStaffId || undefined,
-          visitDate: new Date().toISOString().slice(0, 10),
+          visitDate: localToday(),
           visitSession: qrVisitSession,
           visitType: isChiefCo || isAdmin ? qrVisitType : "FULL_TIME",
           status: "COMPLETED",
@@ -1891,11 +1980,12 @@ export default function PatientDetailPage() {
 
           {showQuickReport && (
             <form
+              id="quick-report"
               onSubmit={onAddQuickReport}
-              className="mb-4 flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+              className="mb-4 flex scroll-mt-20 flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
             >
               <p className="text-xs text-zinc-500">
-                Rekodi ripoti/vitals za leo ({new Date().toISOString().slice(0, 10)})
+                Rekodi ripoti/vitals za leo ({localToday()})
                 kwa mgonjwa huyu bila kuondoka ukurasa huu.
               </p>
               {(isChiefCo || isAdmin) && (
@@ -2097,95 +2187,107 @@ export default function PatientDetailPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {homeVisits.map((v) => {
-                const alert = hasVitalsAlert(v);
-                const chips: { label: string; value: string | null; status: "normal" | "warning" | null }[] = [
-                  { label: "BP", value: v.blood_pressure ? `${v.blood_pressure} mmHg` : null, status: bpStatus(v.blood_pressure) },
-                  { label: "Joto", value: v.temperature ? `${v.temperature} °C` : null, status: temperatureStatus(v.temperature) },
-                  { label: "Pulse", value: v.pulse != null ? `${v.pulse} bpm` : null, status: pulseStatus(v.pulse) },
-                  { label: "Sukari", value: v.blood_glucose ? `${v.blood_glucose} mmol/L` : null, status: glucoseStatus(v.blood_glucose) },
-                  { label: "SpO₂", value: v.spo2 != null ? `${v.spo2}%` : null, status: spo2Status(v.spo2) },
-                  { label: "Uzito", value: v.weight ? `${v.weight} kg` : null, status: null },
-                ];
-                const textBlocks = [
-                  { label: "Chakula (Food Intake)", value: v.food_intake },
-                  { label: "Matibabu / Procedures", value: v.treatment_notes },
-                  { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+              {/* One report per day: that day's morning, afternoon and
+                  evening entries together, in that order. */}
+              {groupDailyReports(homeVisits).map((day) => {
+                const alert = day.visits.some((v) => hasVitalsAlert(v));
+                const filled = DAILY_SESSIONS.filter(
+                  (s) => sessionState(day.sessions[s]) === "done"
+                ).length;
+                const isToday = day.date === localToday();
+                const slots = [
+                  ...DAILY_SESSIONS.map((s) => ({
+                    key: s,
+                    session: s,
+                    label: DAILY_SESSION_LABELS[s],
+                    entries: day.sessions[s],
+                  })),
+                  ...(day.other.length > 0
+                    ? [{ key: "other", session: null, label: NO_SESSION_LABEL, entries: day.other }]
+                    : []),
                 ];
                 return (
                   <article
-                    key={v.id}
+                    key={day.key}
                     className={`rounded-lg border p-4 ${
                       alert ? "border-orange-300 bg-orange-50/40" : "border-zinc-200 bg-white"
                     }`}
                   >
-                    <header className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/home-visits/${v.id}`}
-                          className="text-sm font-bold text-zinc-900 underline"
-                        >
-                          {v.visit_date.slice(0, 10)}
-                        </Link>
-                        {v.visit_session && (
-                          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600">
-                            {VISIT_SESSION_LABELS[v.visit_session as (typeof VISIT_SESSIONS)[number]]}
+                    <header className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-2">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <h3 className="text-sm font-bold text-zinc-900">
+                          {weekdayOf(day.date)}, {day.date}
+                        </h3>
+                        {isToday && (
+                          <span className="rounded-full bg-brand-blue-light px-2 py-0.5 text-[11px] font-semibold text-brand-blue">
+                            Leo
                           </span>
                         )}
-                        {v.visit_type === "PART_TIME" && (
-                          <span className="rounded-full bg-brand-orange-light px-2 py-0.5 text-[11px] font-semibold text-brand-orange">
-                            Part-time
-                          </span>
-                        )}
-                        <VisitStatusBadge status={v.status} />
                         {alert && (
                           <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
                             Vitals nje ya kawaida
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500">
-                        {v.staff_name ?? "-"}
-                        {v.location ? ` · ${v.location}` : ""}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {DAILY_SESSIONS.map((s) => {
+                          const state = sessionState(day.sessions[s]);
+                          return (
+                            <span
+                              key={s}
+                              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                state === "done"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : state === "scheduled"
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-zinc-100 text-zinc-500"
+                              }`}
+                            >
+                              {state === "done" ? "✓" : "○"} {DAILY_SESSION_LABELS[s]}
+                            </span>
+                          );
+                        })}
+                        <span className="text-[11px] text-zinc-500">{filled}/3</span>
+                      </div>
                     </header>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {chips
-                        .filter((c) => c.value)
-                        .map((c) => (
-                          <span
-                            key={c.label}
-                            className={`rounded-md px-2 py-1 text-xs ${
-                              c.status === "warning"
-                                ? "bg-orange-100 font-semibold text-orange-800"
-                                : "bg-zinc-100 text-zinc-700"
-                            }`}
-                          >
-                            <span className="text-zinc-500">{c.label}: </span>
-                            {c.value}
-                          </span>
-                        ))}
-                      {chips.every((c) => !c.value) && (
-                        <span className="text-xs text-zinc-400">Hakuna vitals zilizorekodiwa.</span>
-                      )}
-                    </div>
-
-                    <dl className="mt-3 flex flex-col gap-3">
-                      {textBlocks.filter((b) => b.value).map((b) => (
-                        <div key={b.label}>
-                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-                            {b.label}
-                          </dt>
-                          <dd className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-800">
-                            {b.value}
-                          </dd>
-                        </div>
+                    <div className="divide-y divide-zinc-100">
+                      {slots.map((slot) => (
+                        <section key={slot.key} className="py-3 first:pt-3 last:pb-0">
+                          <h4 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-zinc-600">
+                            {slot.label}
+                          </h4>
+                          {slot.entries.length === 0 ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-xs text-zinc-400">Haijajazwa.</p>
+                              {isToday && slot.session && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setQrVisitSession(slot.session);
+                                    setShowQuickReport(true);
+                                    window.setTimeout(() => {
+                                      document
+                                        .getElementById("quick-report")
+                                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                    }, 50);
+                                  }}
+                                  className="rounded-md border border-brand-blue/40 px-2 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue-light"
+                                >
+                                  Jaza {slot.label.toLowerCase()}
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-3">
+                              {slot.entries.map((v) => (
+                                <VisitEntryBody key={v.id} v={v} />
+                              ))}
+                            </div>
+                          )}
+                        </section>
                       ))}
-                      {textBlocks.every((b) => !b.value) && (
-                        <p className="text-xs text-zinc-400">Hakuna maelezo ya ziada yaliyoandikwa.</p>
-                      )}
-                    </dl>
+                    </div>
                   </article>
                 );
               })}

@@ -4,9 +4,11 @@ import { logAudit } from "@/lib/audit";
 import { updateHomeVisitSchema } from "@/lib/validation/home-visits";
 import {
   deleteHomeVisit,
+  findVisitForSession,
   getHomeVisitById,
   updateHomeVisit,
 } from "@/lib/repo/home-visits";
+import { DAILY_SESSION_LABELS, dayOf } from "@/lib/daily-reports";
 import { assertPatientAccess } from "@/lib/patient-access";
 
 export async function GET(
@@ -63,6 +65,27 @@ export async function PATCH(
   }
 
   const d = parsed.data;
+
+  // Moving an entry to another session must not create a second report
+  // for that session on the same day.
+  if (d.visitSession && d.visitSession !== existingVisit.visit_session) {
+    const clash = await findVisitForSession(
+      existingVisit.patient_id,
+      dayOf(existingVisit.visit_date),
+      d.visitSession,
+      id
+    );
+    if (clash) {
+      return NextResponse.json(
+        {
+          error: `Ripoti ya ${DAILY_SESSION_LABELS[d.visitSession]} ya siku hii tayari ipo.`,
+          existingId: clash.id,
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const visit = await updateHomeVisit(id, {
     status: d.status,
     visitSession:

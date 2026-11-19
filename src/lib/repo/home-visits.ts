@@ -94,6 +94,71 @@ export async function createHomeVisit(input: {
   return row;
 }
 
+/**
+ * The patient's non-cancelled entry for one session of one day, if any
+ * (a completed one first). A day holds at most one report per session.
+ */
+export async function findVisitForSession(
+  patientId: string,
+  visitDate: string,
+  visitSession: string,
+  excludeId?: string
+): Promise<HomeVisitRow | null> {
+  return queryOne<HomeVisitRow>(
+    `SELECT * FROM home_visits
+     WHERE patient_id = $1 AND visit_date = $2::date AND visit_session = $3::visit_session_type
+       AND status <> 'CANCELLED'
+       AND ($4::text IS NULL OR id <> $4)
+     ORDER BY (status = 'COMPLETED') DESC, created_at ASC
+     LIMIT 1`,
+    [patientId, visitDate, visitSession, excludeId ?? null]
+  );
+}
+
+/**
+ * Writes a report into a visit that was only SCHEDULED (e.g. by a care
+ * plan), instead of adding a second entry for the same session.
+ */
+export async function fillScheduledVisit(
+  id: string,
+  input: Omit<Parameters<typeof createHomeVisit>[0], "patientId" | "visitDate" | "visitSession" | "createdById">
+): Promise<HomeVisitRow | null> {
+  const hasCheckIn = input.checkInLat != null && input.checkInLng != null;
+  return queryOne<HomeVisitRow>(
+    `UPDATE home_visits SET
+       staff_id = COALESCE($2, staff_id), status = $3, visit_type = $4::visit_type,
+       location = COALESCE($5, location),
+       check_in_lat = $6, check_in_lng = $7, check_in_accuracy_m = $8,
+       check_in_at = CASE WHEN $9 THEN now() ELSE check_in_at END,
+       blood_pressure = $10, temperature = $11, pulse = $12, weight = $13, height_cm = $14,
+       blood_glucose = $15, spo2 = $16, food_intake = $17, treatment_notes = $18, notes = $19,
+       updated_at = now()
+     WHERE id = $1 AND status = 'SCHEDULED'
+     RETURNING *`,
+    [
+      id,
+      input.staffId,
+      input.status,
+      input.visitType,
+      input.location,
+      input.checkInLat,
+      input.checkInLng,
+      input.checkInAccuracyM,
+      hasCheckIn,
+      input.bloodPressure,
+      input.temperature,
+      input.pulse,
+      input.weight,
+      input.heightCm,
+      input.bloodGlucose,
+      input.spo2,
+      input.foodIntake,
+      input.treatmentNotes,
+      input.notes,
+    ]
+  );
+}
+
 export async function listHomeVisits(filters: {
   patientId?: string;
   staffId?: string;

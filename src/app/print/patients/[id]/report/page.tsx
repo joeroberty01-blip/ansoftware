@@ -1,5 +1,47 @@
 import { getPatientById, listMedications } from "@/lib/repo/patients";
-import { listHomeVisits } from "@/lib/repo/home-visits";
+import { listHomeVisits, type HomeVisitWithNames } from "@/lib/repo/home-visits";
+import {
+  DAILY_SESSIONS,
+  DAILY_SESSION_LABELS,
+  NO_SESSION_LABEL,
+  groupDailyReports,
+} from "@/lib/daily-reports";
+
+const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+
+function EntryText({ v }: { v: HomeVisitWithNames }) {
+  const vitals = [
+    v.blood_pressure ? `BP ${v.blood_pressure} mmHg` : null,
+    v.temperature ? `Joto ${v.temperature} °C` : null,
+    v.pulse != null ? `Pulse ${v.pulse}` : null,
+    v.blood_glucose ? `Sukari ${v.blood_glucose} mmol/L` : null,
+    v.spo2 != null ? `SpO₂ ${v.spo2}%` : null,
+    v.weight ? `Uzito ${v.weight} kg` : null,
+  ].filter(Boolean);
+  const blocks = [
+    { label: "Chakula", value: v.food_intake },
+    { label: "Matibabu / Procedures", value: v.treatment_notes },
+    { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+  ].filter((b) => b.value);
+  return (
+    <div>
+      <p className="text-xs text-zinc-600">
+        {v.staff_name ?? "-"}
+        {v.location ? ` · ${v.location}` : ""}
+      </p>
+      <p className="mt-0.5">
+        <span className="text-zinc-600">Vitals: </span>
+        {vitals.length ? vitals.join("  ·  ") : "Hazikurekodiwa"}
+      </p>
+      {blocks.map((b) => (
+        <p key={b.label} className="mt-0.5 whitespace-pre-wrap break-words">
+          <span className="text-zinc-600">{b.label}: </span>
+          {b.value}
+        </p>
+      ))}
+    </div>
+  );
+}
 import { AutoPrint } from "../../../_components/auto-print";
 
 export default async function PatientReportPrintPage(
@@ -17,7 +59,8 @@ export default async function PatientReportPrintPage(
     listHomeVisits({ patientId: id }),
   ]);
 
-  const recentVisits = visits.slice(0, 30);
+  // One report per day (morning, afternoon, evening), the last 14 days.
+  const recentDays = groupDailyReports(visits).slice(0, 14);
 
   return (
     <div className="mx-auto max-w-[210mm] p-8 text-zinc-900 print:p-0">
@@ -108,54 +151,44 @@ export default async function PatientReportPrintPage(
 
       <div>
         <h3 className="mb-2 text-sm font-semibold">
-          Ripoti za Ziara za Nyumbani (Ziara {recentVisits.length} za Hivi Karibuni)
+          Ripoti za Kila Siku (siku {recentDays.length} za hivi karibuni)
         </h3>
-        {recentVisits.length === 0 ? (
+        {recentDays.length === 0 ? (
           <p className="text-sm text-zinc-500">
             Hakuna ziara zilizorekodiwa bado.
           </p>
         ) : (
           <div className="flex flex-col gap-3">
-            {recentVisits.map((v) => {
-              const vitals = [
-                v.blood_pressure ? `BP ${v.blood_pressure} mmHg` : null,
-                v.temperature ? `Joto ${v.temperature} °C` : null,
-                v.pulse != null ? `Pulse ${v.pulse}` : null,
-                v.blood_glucose ? `Sukari ${v.blood_glucose} mmol/L` : null,
-                v.spo2 != null ? `SpO₂ ${v.spo2}%` : null,
-                v.weight ? `Uzito ${v.weight} kg` : null,
-              ].filter(Boolean);
-              const blocks = [
-                { label: "Chakula", value: v.food_intake },
-                { label: "Matibabu / Procedures", value: v.treatment_notes },
-                { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
-              ].filter((b) => b.value);
+            {recentDays.map((day) => {
+              const slots = [
+                ...DAILY_SESSIONS.map((s) => ({
+                  key: s,
+                  label: DAILY_SESSION_LABELS[s],
+                  entries: day.sessions[s],
+                })),
+                ...(day.other.length > 0
+                  ? [{ key: "other", label: NO_SESSION_LABEL, entries: day.other }]
+                  : []),
+              ];
               return (
                 <div
-                  key={v.id}
+                  key={day.key}
                   className="break-inside-avoid rounded border border-zinc-300 p-3 text-sm"
                 >
-                  <div className="flex flex-wrap justify-between gap-2 border-b border-zinc-200 pb-1.5">
-                    <span className="font-semibold">
-                      {v.visit_date.slice(0, 10)}
-                      {v.visit_session
-                        ? ` — ${{ MORNING: "Asubuhi", AFTERNOON: "Mchana", EVENING: "Jioni" }[v.visit_session]}`
-                        : ""}
-                    </span>
-                    <span className="text-zinc-600">
-                      {v.staff_name ?? "-"}
-                      {v.location ? ` · ${v.location}` : ""}
-                    </span>
-                  </div>
-                  <p className="mt-1.5">
-                    <span className="text-zinc-600">Vitals: </span>
-                    {vitals.length ? vitals.join("  ·  ") : "Hazikurekodiwa"}
+                  <p className="border-b border-zinc-200 pb-1.5 font-semibold">
+                    {WEEKDAYS[new Date(`${day.date}T00:00:00Z`).getUTCDay()]}, {day.date}
                   </p>
-                  {blocks.map((b) => (
-                    <p key={b.label} className="mt-1 whitespace-pre-wrap break-words">
-                      <span className="text-zinc-600">{b.label}: </span>
-                      {b.value}
-                    </p>
+                  {slots.map((slot) => (
+                    <div key={slot.key} className="mt-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-zinc-700">
+                        {slot.label}
+                      </p>
+                      {slot.entries.length === 0 ? (
+                        <p className="text-xs text-zinc-400">Haijajazwa.</p>
+                      ) : (
+                        slot.entries.map((v) => <EntryText key={v.id} v={v} />)
+                      )}
+                    </div>
                   ))}
                 </div>
               );

@@ -3,7 +3,13 @@ import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { createHomeVisitSchema } from "@/lib/validation/home-visits";
-import { createHomeVisit, listHomeVisits } from "@/lib/repo/home-visits";
+import {
+  createHomeVisit,
+  fillScheduledVisit,
+  findVisitForSession,
+  listHomeVisits,
+} from "@/lib/repo/home-visits";
+import { DAILY_SESSION_LABELS } from "@/lib/daily-reports";
 import { assertPatientAccess } from "@/lib/patient-access";
 import { getStaffByUserId } from "@/lib/repo/staff";
 
@@ -74,11 +80,28 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const visit = await createHomeVisit({
-    patientId: d.patientId,
+  // One report per patient per day, split into morning, afternoon and
+  // evening: every new entry names its session, and a session is filled once.
+  if (!d.visitSession) {
+    return NextResponse.json(
+      { error: "Chagua muda wa ripoti: Asubuhi, Mchana au Jioni." },
+      { status: 400 }
+    );
+  }
+  const sessionWord = DAILY_SESSION_LABELS[d.visitSession];
+  const existing = await findVisitForSession(d.patientId, d.visitDate, d.visitSession);
+  if (existing && (existing.status !== "SCHEDULED" || d.status === "SCHEDULED")) {
+    return NextResponse.json(
+      {
+        error: `Ripoti ya ${sessionWord} ya ${d.visitDate} kwa mgonjwa huyu tayari ipo. Ifungue uihariri badala ya kuandika nyingine.`,
+        existingId: existing.id,
+      },
+      { status: 409 }
+    );
+  }
+
+  const fields = {
     staffId,
-    visitDate: d.visitDate,
-    visitSession: d.visitSession ? d.visitSession : null,
     visitType: d.visitType,
     status: d.status,
     location: d.location ? d.location : null,
@@ -95,6 +118,23 @@ export async function POST(req: NextRequest) {
     foodIntake: d.foodIntake ? d.foodIntake : null,
     treatmentNotes: d.treatmentNotes ? d.treatmentNotes : null,
     notes: d.notes ? d.notes : null,
+  };
+
+  // A session that was only planned (care plan) gets this report written
+  // into it, so it stops counting as missed and is not doubled.
+  if (existing) {
+    const filled = await fillScheduledVisit(existing.id, fields);
+    if (filled) {
+      await logAudit({ userId: session.id, action: "HOME_VISIT_UPDATED", entity: "home_visit", entityId: filled.id, meta: { patientId: filled.patient_id, filledScheduled: true } });
+      return NextResponse.json({ visit: filled, filledScheduled: true }, { status: 200 });
+    }
+  }
+
+  const visit = await createHomeVisit({
+    ...fields,
+    patientId: d.patientId,
+    visitDate: d.visitDate,
+    visitSession: d.visitSession,
     createdById: session.id,
   });
 
