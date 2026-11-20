@@ -8,6 +8,7 @@ import { listLowStockItems } from "@/lib/repo/inventory";
 import { countOutstandingInvoices } from "@/lib/repo/invoices";
 import { countBookingsNeedingAction } from "@/lib/repo/bookings";
 import { countMissedVisitsForStaff } from "@/lib/repo/home-visits";
+import { getAttendanceReminder } from "@/lib/repo/attendance";
 import { DashboardShell } from "./_components/dashboard-shell";
 
 export default async function DashboardLayout({
@@ -62,6 +63,26 @@ export default async function DashboardLayout({
     }
   }
 
+  // Field staff who have not checked in today see a red reminder at the top
+  // of every page until they press "Nimefika kazini". Office staff and the
+  // accountant are not tied to a patient's home.
+  let attendanceReminder: { shiftStart: string; lateNow: boolean } | null = null;
+  if (
+    user.role !== "ADMIN" &&
+    staff &&
+    staff.profession !== "ADMIN_STAFF" &&
+    staff.profession !== "ACCOUNTANT"
+  ) {
+    try {
+      const r = await getAttendanceReminder(staff);
+      if (!r.checkedInToday && r.hasPatients) {
+        attendanceReminder = { shiftStart: r.shiftStart, lateNow: r.lateNow };
+      }
+    } catch (err) {
+      console.error("[dashboard-layout] getAttendanceReminder failed:", err);
+    }
+  }
+
   const notificationCount =
     pendingStaffCount + lowStockCount + outstandingCount + newBookingsCount + missedVisitsCount;
 
@@ -76,6 +97,7 @@ export default async function DashboardLayout({
       outstandingCount={outstandingCount}
       newBookingsCount={newBookingsCount}
       notificationCount={notificationCount}
+      attendanceReminder={attendanceReminder}
     >
       {children}
     </DashboardShell>

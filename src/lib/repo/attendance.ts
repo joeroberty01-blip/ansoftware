@@ -375,3 +375,31 @@ export async function listPatientsForCheckIn(staff: {
     all ? [] : [staff.id]
   );
 }
+
+/**
+ * What the top-of-app reminder needs: has this staff member checked in
+ * anywhere today, do they have patients to check in for, and the shift start.
+ */
+export async function getAttendanceReminder(staff: {
+  id: string;
+  profession: string;
+  is_chief_co: boolean;
+}): Promise<{ checkedInToday: boolean; hasPatients: boolean; shiftStart: string; lateNow: boolean }> {
+  const all = staff.profession === "ADMIN_STAFF" || staff.is_chief_co;
+  const [row, shiftStart] = await Promise.all([
+    queryOne<{ checked_in: boolean; has_patients: boolean; now_hm: string }>(
+      `SELECT
+         EXISTS (SELECT 1 FROM staff_attendance WHERE staff_id = $1 AND work_date = ${EAT_TODAY}) AS checked_in,
+         EXISTS (SELECT 1 FROM patients ${all ? "" : "WHERE assigned_staff_id = $1"}) AS has_patients,
+         to_char(now() AT TIME ZONE ${EAT}, 'HH24:MI') AS now_hm`,
+      [staff.id]
+    ),
+    getShiftStart(),
+  ]);
+  return {
+    checkedInToday: !!row?.checked_in,
+    hasPatients: !!row?.has_patients,
+    shiftStart,
+    lateNow: (row?.now_hm ?? "00:00") > shiftStart,
+  };
+}

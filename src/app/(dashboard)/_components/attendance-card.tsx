@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NEAR_HOME_METERS, formatDistance } from "@/lib/geo";
 
 interface Shift {
@@ -95,6 +96,7 @@ function DistanceBadge({ distance, hasHome }: { distance: number | null; hasHome
 
 /** "Nimefika kazini" / "Naondoka" for field staff: selfie + GPS on arrival, GPS on leaving. */
 export function AttendanceCard() {
+  const router = useRouter();
   const [data, setData] = useState<MeResponse | null>(null);
   const [patientId, setPatientId] = useState("");
   const [selfie, setSelfie] = useState<Blob | null>(null);
@@ -173,6 +175,7 @@ export function AttendanceCard() {
       setPosition(null);
       setMessage("Umeingia kazini. Sasa unaweza kujaza ripoti ya leo.");
       await load();
+      router.refresh();
     } finally {
       setBusy(false);
     }

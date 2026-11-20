@@ -194,6 +194,9 @@ export function StaffPortalDashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
+      {/* First thing on screen: check in at the patient's home. */}
+      <AttendanceCard />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
@@ -228,8 +231,6 @@ export function StaffPortalDashboard() {
           </Link>
         </div>
       </div>
-
-      <AttendanceCard />
 
       <PushSetupCard />
 

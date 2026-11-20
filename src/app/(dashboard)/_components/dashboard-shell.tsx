@@ -25,6 +25,37 @@ const CREATE_LINKS = [
   { label: "New Inventory Item", href: "/inventory/new" },
 ];
 
+/** Red bar at the very top of every page until the nurse checks in today. */
+function AttendanceReminder({ shiftStart, lateNow }: { shiftStart: string; lateNow: boolean }) {
+  return (
+    <div
+      role="alert"
+      className="sticky top-0 z-30 m-3 mb-0 flex flex-col gap-3 rounded-xl border-2 border-red-300 bg-red-50 p-4 shadow-md sm:m-4 sm:mb-0 sm:flex-row sm:items-center sm:justify-between print:hidden"
+    >
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-full bg-red-600 text-lg text-white">
+          ⏰
+        </span>
+        <div className="min-w-0">
+          <p className="text-base font-bold text-red-800">Hujaingia kazini leo</p>
+          <p className="text-sm text-red-700">
+            {lateNow
+              ? `Zamu ilianza saa ${shiftStart}. Ukifika kwa mgonjwa, bonyeza "Nimefika kazini" sasa (selfie + GPS).`
+              : `Zamu inaanza saa ${shiftStart}. Ukifika kwa mgonjwa, bonyeza "Nimefika kazini" (selfie + GPS).`}{" "}
+            Ripoti ya leo haijazwi kabla ya hapo.
+          </p>
+        </div>
+      </div>
+      <a
+        href="/dashboard#mahudhurio"
+        className="shrink-0 rounded-lg bg-red-600 px-4 py-2.5 text-center text-sm font-bold text-white shadow hover:bg-red-700"
+      >
+        Nimefika kazini →
+      </a>
+    </div>
+  );
+}
+
 export function DashboardShell({
   fullName,
   role,
@@ -35,6 +66,7 @@ export function DashboardShell({
   outstandingCount,
   newBookingsCount,
   notificationCount,
+  attendanceReminder = null,
   children,
 }: {
   fullName: string;
@@ -46,6 +78,7 @@ export function DashboardShell({
   outstandingCount: number;
   newBookingsCount: number;
   notificationCount: number;
+  attendanceReminder?: { shiftStart: string; lateNow: boolean } | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -265,6 +298,7 @@ export function DashboardShell({
         <main className="min-w-0 flex-1 print:bg-white">
           <div className="mx-auto flex w-full max-w-[1500px] flex-col">
             <TableLabels />
+            {attendanceReminder && <AttendanceReminder {...attendanceReminder} />}
             {children}
           </div>
         </main>
