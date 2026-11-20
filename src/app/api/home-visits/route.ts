@@ -10,6 +10,7 @@ import {
   listHomeVisits,
 } from "@/lib/repo/home-visits";
 import { DAILY_SESSION_LABELS } from "@/lib/daily-reports";
+import { eatToday, hasCheckInToday } from "@/lib/repo/attendance";
 import { assertPatientAccess } from "@/lib/patient-access";
 import { getStaffByUserId } from "@/lib/repo/staff";
 
@@ -78,6 +79,24 @@ export async function POST(req: NextRequest) {
     if (d.visitType === "PART_TIME" && !ownStaff?.is_chief_co) {
       return NextResponse.json(
         { error: "Ni Chief C.O pekee anayeweza kurekodi ziara za Part-time." },
+        { status: 403 }
+      );
+    }
+    // Field staff fill today's report only after checking in at this
+    // patient's home (selfie + GPS). Office staff are not tied to a home.
+    if (
+      ownStaff &&
+      ownStaff.profession !== "ADMIN_STAFF" &&
+      d.status === "COMPLETED" &&
+      d.visitDate === (await eatToday()) &&
+      !(await hasCheckInToday(ownStaff.id, d.patientId))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Bonyeza "Nimefika kazini" kwenye Dashboard kwanza (selfie na GPS kwa mgonjwa huyu), kisha ujaze ripoti.',
+          code: "ATTENDANCE_REQUIRED",
+        },
         { status: 403 }
       );
     }

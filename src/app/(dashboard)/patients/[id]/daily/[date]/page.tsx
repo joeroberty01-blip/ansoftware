@@ -345,6 +345,21 @@ export default function DailyReportPage() {
     load();
   }, [load]);
 
+  // Field staff must check in at this patient's home before filling today's report.
+  const [needCheckIn, setNeedCheckIn] = useState(false);
+  useEffect(() => {
+    fetch("/api/attendance/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        const mine = j?.staff && j.staff.profession !== "ADMIN_STAFF";
+        const checkedIn = (j?.today ?? []).some(
+          (a: { patient_id: string | null }) => a.patient_id === patientId
+        );
+        setNeedCheckIn(Boolean(mine && j.date === date && !checkedIn));
+      })
+      .catch(() => undefined);
+  }, [date, patientId]);
+
   if (loading) return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   if (loadError || !patient) {
     return <div className="p-6 text-sm text-red-700">{loadError ?? "Haikupatikana."}</div>;
@@ -409,6 +424,21 @@ export default function DailyReportPage() {
           Pakua PDF
         </a>
       </div>
+
+      {needCheckIn && (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
+          <p className="font-semibold">Hujaingia kazini kwa mgonjwa huyu leo.</p>
+          <p className="mt-1">
+            Bonyeza &quot;Nimefika kazini&quot; (selfie na GPS) kwanza, kisha urudi kujaza ripoti.
+          </p>
+          <Link
+            href="/dashboard#mahudhurio"
+            className="mt-2 inline-block rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-blue-dark"
+          >
+            Nenda kwenye Mahudhurio
+          </Link>
+        </div>
+      )}
 
       <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-zinc-100 pb-3">

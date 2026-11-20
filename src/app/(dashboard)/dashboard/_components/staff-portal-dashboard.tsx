@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { PushSetupCard } from "../../_components/push-setup-card";
+import { AttendanceCard } from "../../_components/attendance-card";
 import {
   Users,
   MapPinned,
@@ -227,6 +228,8 @@ export function StaffPortalDashboard() {
           </Link>
         </div>
       </div>
+
+      <AttendanceCard />
 
       <PushSetupCard />
 

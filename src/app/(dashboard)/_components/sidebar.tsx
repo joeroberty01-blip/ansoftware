@@ -17,6 +17,7 @@ import {
   Megaphone,
   Settings,
   CalendarClock,
+  UserCheck,
   type LucideIcon,
 } from "@/components/icons";
 import type { UserRole } from "@/lib/types";
@@ -37,6 +38,13 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
   { label: "Patients", href: "/patients", icon: HeartPulse, area: "clinical", group: "main" },
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, area: "clinical", group: "main" },
+  {
+    label: "Mahudhurio",
+    href: "/attendance",
+    icon: UserCheck,
+    hideForStaff: true,
+    group: "main",
+  },
   {
     label: "Bookings",
     href: "/bookings",

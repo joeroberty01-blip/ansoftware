@@ -36,6 +36,8 @@ const PROTECTED_PREFIXES = [
   "/settings",
   "/api/settings",
   "/api/push",
+  "/attendance",
+  "/api/attendance",
 ];
 
 const ADMIN_ONLY_PREFIXES = [
@@ -50,6 +52,7 @@ const ADMIN_ONLY_PREFIXES = [
   "/api/bills",
   "/marketing",
   "/api/marketing",
+  "/attendance",
 ];
 
 // "My own profile" routes: STAFF must be able to reach these even though
@@ -147,5 +150,7 @@ export const config = {
     "/settings/:path*",
     "/api/settings/:path*",
     "/api/push/:path*",
+    "/attendance/:path*",
+    "/api/attendance/:path*",
   ],
 };
