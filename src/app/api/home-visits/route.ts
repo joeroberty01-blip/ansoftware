@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
   const patientId = req.nextUrl.searchParams.get("patientId") ?? undefined;
   let staffId = req.nextUrl.searchParams.get("staffId") ?? undefined;
   const status = req.nextUrl.searchParams.get("status") ?? undefined;
+  // One day only (the daily report page).
+  const dateParam = req.nextUrl.searchParams.get("date");
+  const visitDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : undefined;
 
   if (session.role !== "ADMIN") {
     if (patientId) {
@@ -39,7 +42,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const visits = await listHomeVisits({ patientId, staffId, status });
+  const visits = await listHomeVisits({ patientId, staffId, status, visitDate });
   return NextResponse.json({ visits });
 }
 

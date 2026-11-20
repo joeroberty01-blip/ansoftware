@@ -13,6 +13,7 @@ const VISIT_SESSION_LABELS: Record<string, string> = {
 
 interface Visit {
   id: string;
+  patient_id: string;
   patient_name: string;
   staff_name: string | null;
   visit_date: string;
@@ -151,8 +152,8 @@ export default function HomeVisitDetailPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
             {visit.patient_name}
           </h1>
@@ -164,6 +165,14 @@ export default function HomeVisitDetailPage() {
             {" "}— Staff: {visit.staff_name ?? "-"}
             {visit.location ? ` — ${visit.location}` : ""}
           </p>
+          <a
+            href={`/patients/${visit.patient_id}/daily/${visit.visit_date.slice(0, 10)}${
+              visit.visit_session ? `#${visit.visit_session}` : ""
+            }`}
+            className="mt-1 inline-block text-sm font-semibold text-brand-blue underline"
+          >
+            Fungua ripoti nzima ya siku hii (Asubuhi, Mchana, Jioni)
+          </a>
         </div>
         {!editing && (
           <div className="flex gap-2">

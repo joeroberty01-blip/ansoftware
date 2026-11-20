@@ -13,9 +13,7 @@ import {
   pulseStatus,
   bmiStatus,
   hasVitalsAlert,
-  vitalsAlertReasons,
 } from "@/lib/vitals";
-import { useGeoCheckIn } from "@/lib/use-geo-checkin";
 import { compressImageForUpload } from "@/lib/compress-image";
 import { MAR_SLOTS, MAR_SLOT_LABELS, type MarSlot } from "@/lib/mar";
 import { MarPanel } from "./_components/mar-panel";
@@ -27,7 +25,6 @@ import {
   groupDailyReports,
   sessionState,
 } from "@/lib/daily-reports";
-import { GeoCheckInButton } from "../../_components/geo-checkin-button";
 import {
   ClipboardPlus,
   User,
@@ -65,13 +62,6 @@ const VISIT_SESSION_LABELS: Record<(typeof VISIT_SESSIONS)[number], string> = {
   AFTERNOON: "Mchana",
   EVENING: "Jioni",
 };
-
-function defaultSessionForNow(): (typeof VISIT_SESSIONS)[number] {
-  const hour = new Date().getHours();
-  if (hour < 12) return "MORNING";
-  if (hour < 17) return "AFTERNOON";
-  return "EVENING";
-}
 
 function InfoField({
   icon: Icon,
@@ -484,24 +474,14 @@ export default function PatientDetailPage() {
     "overview" | "medications" | "documents" | "homeVisits" | "carePlans"
   >("overview");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [myStaffId, setMyStaffId] = useState<string | null>(null);
-  const [isChiefCo, setIsChiefCo] = useState(false);
   const [reportFrom, setReportFrom] = useState("");
   const [reportTo, setReportTo] = useState("");
-  const [qrVisitType, setQrVisitType] = useState<"FULL_TIME" | "PART_TIME">("FULL_TIME");
   const [deletingPatient, setDeletingPatient] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
-      .catch(() => {});
-    fetch("/api/staff/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => {
-        setMyStaffId(json?.staff?.id ?? null);
-        setIsChiefCo(!!json?.staff?.is_chief_co);
-      })
       .catch(() => {});
   }, []);
 
@@ -894,90 +874,10 @@ export default function PatientDetailPage() {
       .map((v) => v.visit_session)
   );
 
-  // --- Quick daily report (add today's visit without leaving this page) ---
-  const [showQuickReport, setShowQuickReport] = useState(false);
-  const [qrVisitSession, setQrVisitSession] = useState<
-    (typeof VISIT_SESSIONS)[number]
-  >(defaultSessionForNow());
-  const [qrBloodPressure, setQrBloodPressure] = useState("");
-  const [qrTemperature, setQrTemperature] = useState("");
-  const [qrPulse, setQrPulse] = useState("");
-  const [qrWeight, setQrWeight] = useState("");
-  const [qrHeightCm, setQrHeightCm] = useState("");
-  const [qrBloodGlucose, setQrBloodGlucose] = useState("");
-  const [qrSpo2, setQrSpo2] = useState("");
-  const [qrFoodIntake, setQrFoodIntake] = useState("");
-  const [qrTreatmentNotes, setQrTreatmentNotes] = useState("");
-  const [qrNotes, setQrNotes] = useState("");
-  const [qrError, setQrError] = useState<string | null>(null);
-  const [qrSubmitting, setQrSubmitting] = useState(false);
-  const [vitalsAlert, setVitalsAlert] = useState<string[] | null>(null);
-  const qrGeo = useGeoCheckIn();
+  // One report per patient per day, with morning, afternoon and evening parts.
+  const dailyHref = (date: string, session?: string | null) =>
+    `/patients/${id}/daily/${date}${session ? `#${session}` : ""}`;
 
-  const onAddQuickReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setQrError(null);
-    setQrSubmitting(true);
-    try {
-      const res = await fetch(`/api/home-visits`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patientId: id,
-          staffId: myStaffId || undefined,
-          visitDate: localToday(),
-          visitSession: qrVisitSession,
-          visitType: isChiefCo || isAdmin ? qrVisitType : "FULL_TIME",
-          status: "COMPLETED",
-          location: patient?.address || undefined,
-          checkInLat: qrGeo.checkIn?.lat,
-          checkInLng: qrGeo.checkIn?.lng,
-          checkInAccuracyM: qrGeo.checkIn?.accuracy,
-          bloodPressure: qrBloodPressure || undefined,
-          temperature: qrTemperature || undefined,
-          pulse: qrPulse ? Number(qrPulse) : undefined,
-          weight: qrWeight || undefined,
-          heightCm: qrHeightCm || undefined,
-          bloodGlucose: qrBloodGlucose || undefined,
-          spo2: qrSpo2 ? Number(qrSpo2) : undefined,
-          foodIntake: qrFoodIntake || undefined,
-          treatmentNotes: qrTreatmentNotes || undefined,
-          notes: qrNotes || undefined,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setQrError(json.error ?? "Failed to add report.");
-        return;
-      }
-      const reasons = vitalsAlertReasons({
-        blood_pressure: qrBloodPressure || null,
-        temperature: qrTemperature || null,
-        pulse: qrPulse ? Number(qrPulse) : null,
-        blood_glucose: qrBloodGlucose || null,
-        spo2: qrSpo2 ? Number(qrSpo2) : null,
-      });
-      setVitalsAlert(reasons.length > 0 ? reasons : null);
-      qrGeo.reset();
-      setQrVisitSession(defaultSessionForNow());
-      setQrBloodPressure("");
-      setQrTemperature("");
-      setQrPulse("");
-      setQrWeight("");
-      setQrHeightCm("");
-      setQrBloodGlucose("");
-      setQrSpo2("");
-      setQrFoodIntake("");
-      setQrTreatmentNotes("");
-      setQrNotes("");
-      setShowQuickReport(false);
-      await loadHomeVisits();
-    } catch {
-      setQrError("Network error.");
-    } finally {
-      setQrSubmitting(false);
-    }
-  };
 
   if (loading) {
     return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
@@ -1419,16 +1319,13 @@ export default function PatientDetailPage() {
                       Historia ya Ziara
                     </h2>
                   </div>
-                  <button
-                    onClick={() => {
-                      setTab("homeVisits");
-                      setShowQuickReport(true);
-                    }}
+                  <Link
+                    href={dailyHref(localToday())}
                     className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
                   >
                     <ClipboardPlus className="h-3.5 w-3.5" />
-                    Today's Report
-                  </button>
+                    Ripoti ya Leo
+                  </Link>
                 </div>
 
                 {recentVisits.length === 0 ? (
@@ -1560,11 +1457,8 @@ export default function PatientDetailPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <QuickActionButton
                     icon={ClipboardPlus}
-                    label="Today's Report"
-                    onClick={() => {
-                      setTab("homeVisits");
-                      setShowQuickReport(true);
-                    }}
+                    label="Ripoti ya Leo"
+                    onClick={() => router.push(dailyHref(localToday()))}
                   />
                   <QuickActionButton
                     icon={Pill}
@@ -1859,17 +1753,13 @@ export default function PatientDetailPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowQuickReport((v) => !v)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm transition-colors ${
-                showQuickReport
-                  ? "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
-                  : "bg-brand-blue text-white hover:bg-brand-blue-dark"
-              }`}
+            <Link
+              href={dailyHref(localToday())}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
             >
               <ClipboardPlus className="h-4 w-4" />
-              {showQuickReport ? "Close" : "Today's Report"}
-            </button>
+              Ripoti ya Leo
+            </Link>
           </div>
 
           <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -1893,28 +1783,6 @@ export default function PatientDetailPage() {
             })}
           </div>
 
-          {vitalsAlert && (
-            <div className="mb-4 flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 text-xs text-orange-800">
-              <Activity className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
-              <div>
-                <p className="font-semibold">
-                  Onyo: vitals za mwisho zilizorekodiwa ziko nje ya kawaida
-                </p>
-                <ul className="mt-1 list-inside list-disc">
-                  {vitalsAlert.map((reason) => (
-                    <li key={reason}>{reason}</li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                type="button"
-                onClick={() => setVitalsAlert(null)}
-                className="ml-auto shrink-0 text-orange-400 hover:text-orange-600"
-              >
-                ✕
-              </button>
-            </div>
-          )}
 
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 print:hidden">
             <span className="text-xs font-semibold text-zinc-600">Pakua ripoti:</span>
@@ -1978,191 +1846,6 @@ export default function PatientDetailPage() {
             </button>
           </div>
 
-          {showQuickReport && (
-            <form
-              id="quick-report"
-              onSubmit={onAddQuickReport}
-              className="mb-4 flex scroll-mt-20 flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
-            >
-              <p className="text-xs text-zinc-500">
-                Rekodi ripoti/vitals za leo ({localToday()})
-                kwa mgonjwa huyu bila kuondoka ukurasa huu.
-              </p>
-              {(isChiefCo || isAdmin) && (
-                <div className="flex flex-col gap-1 sm:max-w-xs">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Aina ya Ziara
-                  </label>
-                  <select
-                    value={qrVisitType}
-                    onChange={(e) =>
-                      setQrVisitType(e.target.value as "FULL_TIME" | "PART_TIME")
-                    }
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  >
-                    <option value="FULL_TIME">Full-time</option>
-                    <option value="PART_TIME">Part-time</option>
-                  </select>
-                </div>
-              )}
-              <div className="flex flex-col gap-1 sm:max-w-xs">
-                <label className="text-xs font-medium text-zinc-600">
-                  Muda (Session)
-                </label>
-                <select
-                  value={qrVisitSession}
-                  onChange={(e) =>
-                    setQrVisitSession(
-                      e.target.value as (typeof VISIT_SESSIONS)[number]
-                    )
-                  }
-                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                >
-                  {VISIT_SESSIONS.map((session) => (
-                    <option key={session} value={session}>
-                      {VISIT_SESSION_LABELS[session]}
-                      {todaySessionsDone.has(session) ? " (tayari imerekodiwa)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <GeoCheckInButton
-                checkIn={qrGeo.checkIn}
-                checking={qrGeo.checking}
-                error={qrGeo.error}
-                onCapture={qrGeo.captureLocation}
-              />
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Blood Pressure
-                  </label>
-                  <input
-                    value={qrBloodPressure}
-                    onChange={(e) => setQrBloodPressure(e.target.value)}
-                    placeholder="e.g. 120/80"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Temp (°C)
-                  </label>
-                  <input
-                    value={qrTemperature}
-                    onChange={(e) => setQrTemperature(e.target.value)}
-                    inputMode="decimal"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Pulse
-                  </label>
-                  <input
-                    value={qrPulse}
-                    onChange={(e) => setQrPulse(e.target.value)}
-                    inputMode="numeric"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Weight (kg)
-                  </label>
-                  <input
-                    value={qrWeight}
-                    onChange={(e) => setQrWeight(e.target.value)}
-                    inputMode="decimal"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Sugar / Blood Glucose
-                  </label>
-                  <input
-                    value={qrBloodGlucose}
-                    onChange={(e) => setQrBloodGlucose(e.target.value)}
-                    inputMode="decimal"
-                    placeholder="e.g. 5.5"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    SpO₂ / Oxygen (%)
-                  </label>
-                  <input
-                    value={qrSpo2}
-                    onChange={(e) => setQrSpo2(e.target.value)}
-                    inputMode="numeric"
-                    placeholder="e.g. 97"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Height (cm)
-                  </label>
-                  <input
-                    value={qrHeightCm}
-                    onChange={(e) => setQrHeightCm(e.target.value)}
-                    inputMode="decimal"
-                    placeholder="e.g. 170"
-                    className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-zinc-600">
-                  Food Intake
-                </label>
-                <input
-                  value={qrFoodIntake}
-                  onChange={(e) => setQrFoodIntake(e.target.value)}
-                  placeholder="e.g. Ate ugali and vegetables, one cup of tea..."
-                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-zinc-600">
-                  Procedures Performed
-                </label>
-                <textarea
-                  value={qrTreatmentNotes}
-                  onChange={(e) => setQrTreatmentNotes(e.target.value)}
-                  rows={3}
-                  placeholder="e.g. Bandage changed, sugar checked, given medication X..."
-                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-zinc-600">
-                  Patient Progress / Other Notes
-                </label>
-                <textarea
-                  value={qrNotes}
-                  onChange={(e) => setQrNotes(e.target.value)}
-                  rows={3}
-                  placeholder="e.g. Patient's condition today, pain, appetite, sleep, any changes..."
-                  className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                />
-              </div>
-              {qrError && (
-                <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {qrError}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={qrSubmitting}
-                className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
-              >
-                {qrSubmitting ? "Saving..." : "Save Today's Report"}
-              </button>
-            </form>
-          )}
 
           {homeVisits.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-zinc-200 bg-zinc-50/50 py-12 text-center">
@@ -2175,14 +1858,14 @@ export default function PatientDetailPage() {
               <p className="max-w-sm text-xs text-zinc-500">
                 Anza kwa kuongeza ripoti mpya ya ziara ya mgonjwa nyumbani.
               </p>
-              {!showQuickReport && (
-                <button
-                  onClick={() => setShowQuickReport(true)}
+              {(
+                <Link
+                  href={dailyHref(localToday())}
                   className="mt-1 flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
                 >
                   <ClipboardPlus className="h-4 w-4" />
                   Andika Ripoti ya Kwanza
-                </button>
+                </Link>
               )}
             </div>
           ) : (
@@ -2223,6 +1906,12 @@ export default function PatientDetailPage() {
                             Leo
                           </span>
                         )}
+                        <Link
+                          href={dailyHref(day.date)}
+                          className="text-xs font-semibold text-brand-blue underline"
+                        >
+                          Fungua ripoti ya siku
+                        </Link>
                         {alert && (
                           <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
                             Vitals nje ya kawaida
@@ -2260,22 +1949,13 @@ export default function PatientDetailPage() {
                           {slot.entries.length === 0 ? (
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="text-xs text-zinc-400">Haijajazwa.</p>
-                              {isToday && slot.session && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setQrVisitSession(slot.session);
-                                    setShowQuickReport(true);
-                                    window.setTimeout(() => {
-                                      document
-                                        .getElementById("quick-report")
-                                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                                    }, 50);
-                                  }}
+                              {day.date <= localToday() && slot.session && (
+                                <Link
+                                  href={dailyHref(day.date, slot.session)}
                                   className="rounded-md border border-brand-blue/40 px-2 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue-light"
                                 >
                                   Jaza {slot.label.toLowerCase()}
-                                </button>
+                                </Link>
                               )}
                             </div>
                           ) : (

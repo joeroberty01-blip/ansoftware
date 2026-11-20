@@ -9,6 +9,7 @@ import {
   DAILY_SESSIONS,
   DAILY_SESSION_LABELS,
   NO_SESSION_LABEL,
+  dayOf,
   groupDailyReports,
   sessionState,
 } from "@/lib/daily-reports";
@@ -64,6 +65,10 @@ const STATUS_OPTIONS = [
 const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
 const weekdayOf = (date: string) => WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()] ?? "";
 
+/** The patient's single report for that day, opened at one part. */
+const dailyHref = (patientId: string, date: string, session?: string | null) =>
+  `/patients/${patientId}/daily/${date}${session ? `#${session}` : ""}`;
+
 const SESSION_ORDER: Record<string, number> = { MORNING: 0, AFTERNOON: 1, EVENING: 2 };
 
 /** One session slot of a daily report: a link per entry, or a dash. */
@@ -76,7 +81,7 @@ function SessionCell({ entries }: { entries: Visit[] }) {
       {entries.map((v) => (
         <Link
           key={v.id}
-          href={`/home-visits/${v.id}`}
+          href={dailyHref(v.patient_id, dayOf(v.visit_date), v.visit_session)}
           onClick={(e) => e.stopPropagation()}
           className={`inline-flex w-fit items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${
             v.status === "COMPLETED"
@@ -199,7 +204,7 @@ export default function HomeVisitsListPage() {
                 const filled = DAILY_SESSIONS.filter((s) => sessionState(r.sessions[s]) === "done").length;
                 return (
                   <li key={r.key} className="rounded-lg border border-zinc-200 p-3">
-                    <Link href={`/patients/${r.patientId}`} className="block">
+                    <Link href={dailyHref(r.patientId, r.date)} className="block">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-zinc-900">{first.patient_name}</p>
@@ -257,7 +262,7 @@ export default function HomeVisitsListPage() {
                   {reports.map((r) => (
                     <tr
                       key={r.key}
-                      onClick={() => router.push(`/patients/${r.patientId}`)}
+                      onClick={() => router.push(dailyHref(r.patientId, r.date))}
                       className="cursor-pointer border-b border-zinc-100 align-top last:border-0 hover:bg-zinc-50"
                     >
                       <td className="whitespace-nowrap py-2 pr-4">

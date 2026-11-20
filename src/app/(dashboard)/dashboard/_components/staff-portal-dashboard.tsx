@@ -12,6 +12,13 @@ import {
   Package,
 } from "@/components/icons";
 
+/** A visit opens its patient's single report for that day, at its part. */
+function dailyHref(v: { patient_id: string; visit_date: string; visit_session?: string | null }) {
+  return `/patients/${v.patient_id}/daily/${String(v.visit_date).slice(0, 10)}${
+    v.visit_session ? `#${v.visit_session}` : ""
+  }`;
+}
+
 interface VisitItem {
   id: string;
   patient_id: string;
@@ -246,7 +253,7 @@ export function StaffPortalDashboard() {
                 {data.missedVisits.map((v) => (
                   <li key={v.id}>
                     <Link
-                      href={`/home-visits/${v.id}`}
+                      href={dailyHref(v)}
                       className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 text-sm shadow-sm hover:bg-red-100/40"
                     >
                       <span className="font-medium text-zinc-900">{v.patient_name}</span>
@@ -405,7 +412,7 @@ export function StaffPortalDashboard() {
                   <div className="flex shrink-0 items-center gap-2">
                     <VisitStatusBadge status={v.status} />
                     <Link
-                      href={`/home-visits/${v.id}`}
+                      href={dailyHref(v)}
                       className="text-xs font-medium text-brand-blue"
                     >
                       Open
@@ -439,7 +446,7 @@ export function StaffPortalDashboard() {
                     </p>
                   </div>
                   <Link
-                    href={`/home-visits/${v.id}`}
+                    href={dailyHref(v)}
                     className="shrink-0 text-xs font-medium text-red-600"
                   >
                     Due

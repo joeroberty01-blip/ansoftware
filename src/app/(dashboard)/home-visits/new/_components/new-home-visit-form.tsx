@@ -144,7 +144,8 @@ export function NewHomeVisitForm({
         setExistingId(typeof json.existingId === "string" ? json.existingId : null);
         return;
       }
-      router.push(`/home-visits/${json.visit.id}`);
+      // Back to that day's single report (morning, afternoon, evening).
+      router.push(`/patients/${patientId}/daily/${visitDate}#${visitSession}`);
     } catch {
       setError("Network error.");
     } finally {
@@ -402,8 +403,11 @@ export function NewHomeVisitForm({
             {existingId && (
               <>
                 {" "}
-                <a href={`/home-visits/${existingId}`} className="font-semibold underline">
-                  Fungua ripoti iliyopo
+                <a
+                  href={`/patients/${patientId}/daily/${visitDate}#${visitSession}`}
+                  className="font-semibold underline"
+                >
+                  Fungua ripoti ya siku hiyo
                 </a>
               </>
             )}
