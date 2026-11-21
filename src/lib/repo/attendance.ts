@@ -5,6 +5,13 @@ import { distanceMeters } from "../geo";
 const EAT = `'Africa/Dar_es_Salaam'`;
 const EAT_TODAY = `(now() AT TIME ZONE ${EAT})::date`;
 
+/**
+ * An open shift counts as "still at work" for this long (covers a night
+ * shift that crosses midnight). Older open shifts mean the nurse forgot
+ * "Naondoka": the next check-in closes them with no hours and no GPS.
+ */
+const ACTIVE_WINDOW = `interval '16 hours'`;
+
 const SHIFT_START_KEY = "attendance_shift_start";
 export const DEFAULT_SHIFT_START = "07:00";
 
@@ -61,7 +68,7 @@ const SELECT_WITH_NAMES = `
   p.home_lat AS patient_home_lat,
   p.home_lng AS patient_home_lng,
   EXISTS (SELECT 1 FROM staff_attendance_photos ph WHERE ph.attendance_id = a.id) AS has_photo,
-  CASE WHEN a.check_out_at IS NULL THEN NULL
+  CASE WHEN a.check_out_at IS NULL OR a.check_out_lat IS NULL THEN NULL
        ELSE ROUND(EXTRACT(EPOCH FROM a.check_out_at - a.check_in_at) / 60)::int END AS minutes_worked
 `;
 
@@ -76,6 +83,18 @@ export async function getOpenAttendance(staffId: string): Promise<AttendanceWith
   return queryOne<AttendanceWithNames>(
     `SELECT ${SELECT_WITH_NAMES} ${FROM_WITH_NAMES}
      WHERE a.staff_id = $1 AND a.check_out_at IS NULL
+       AND a.check_in_at >= now() - ${ACTIVE_WINDOW}
+     ORDER BY a.check_in_at DESC LIMIT 1`,
+    [staffId]
+  );
+}
+
+/** An open shift too old to be real: the nurse forgot to press "Naondoka". */
+export async function getForgottenShift(staffId: string): Promise<AttendanceWithNames | null> {
+  return queryOne<AttendanceWithNames>(
+    `SELECT ${SELECT_WITH_NAMES} ${FROM_WITH_NAMES}
+     WHERE a.staff_id = $1 AND a.check_out_at IS NULL
+       AND a.check_in_at < now() - ${ACTIVE_WINDOW}
      ORDER BY a.check_in_at DESC LIMIT 1`,
     [staffId]
   );
@@ -95,7 +114,9 @@ export async function hasCheckInToday(staffId: string, patientId: string): Promi
   const row = await queryOne<{ ok: boolean }>(
     `SELECT EXISTS (
        SELECT 1 FROM staff_attendance
-       WHERE staff_id = $1 AND patient_id = $2 AND work_date = ${EAT_TODAY}
+       WHERE staff_id = $1 AND patient_id = $2
+         AND (work_date = ${EAT_TODAY}
+              OR (check_out_at IS NULL AND check_in_at >= now() - ${ACTIVE_WINDOW}))
      ) AS ok`,
     [staffId, patientId]
   );
@@ -127,6 +148,14 @@ export async function checkIn(input: {
   userAgent: string | null;
 }): Promise<AttendanceRow> {
   return withTransaction(async (client) => {
+    // A shift left open from an earlier day is closed with no hours and no
+    // GPS (shown to the admin as "Hakubonyeza Naondoka"); nothing is removed.
+    await client.query(
+      `UPDATE staff_attendance SET check_out_at = check_in_at
+       WHERE staff_id = $1 AND check_out_at IS NULL
+         AND check_in_at < now() - ${ACTIVE_WINDOW}`,
+      [input.staffId]
+    );
     const open = await client.query(
       `SELECT a.id, p.full_name FROM staff_attendance a
        LEFT JOIN patients p ON p.id = a.patient_id
@@ -280,12 +309,13 @@ export async function getMonthlySummary(
     `SELECT s.id AS staff_id, u.full_name, s.staff_number,
             COUNT(DISTINCT a.work_date)::text AS days,
             COUNT(a.id)::text AS shifts,
-            COALESCE(SUM(EXTRACT(EPOCH FROM a.check_out_at - a.check_in_at) / 60), 0)::int::text AS minutes_worked,
+            COALESCE(SUM(EXTRACT(EPOCH FROM a.check_out_at - a.check_in_at) / 60)
+                     FILTER (WHERE a.check_out_lat IS NOT NULL), 0)::int::text AS minutes_worked,
             COUNT(*) FILTER (WHERE a.late_minutes > 0)::text AS late_days,
             COALESCE(SUM(a.late_minutes), 0)::text AS late_minutes,
             COUNT(*) FILTER (WHERE a.check_in_distance_m > $3)::text AS away_check_ins,
             COUNT(*) FILTER (WHERE a.check_in_distance_m IS NULL)::text AS no_home_check_ins,
-            COUNT(*) FILTER (WHERE a.check_out_at IS NULL)::text AS open_shifts
+            COUNT(*) FILTER (WHERE a.check_out_at IS NULL OR a.check_out_lat IS NULL)::text AS open_shifts
      FROM staff_attendance a
      JOIN staff s ON s.id = a.staff_id
      JOIN users u ON u.id = s.user_id
@@ -389,7 +419,9 @@ export async function getAttendanceReminder(staff: {
   const [row, shiftStart] = await Promise.all([
     queryOne<{ checked_in: boolean; has_patients: boolean; now_hm: string }>(
       `SELECT
-         EXISTS (SELECT 1 FROM staff_attendance WHERE staff_id = $1 AND work_date = ${EAT_TODAY}) AS checked_in,
+         EXISTS (SELECT 1 FROM staff_attendance WHERE staff_id = $1
+                 AND (work_date = ${EAT_TODAY}
+                      OR (check_out_at IS NULL AND check_in_at >= now() - ${ACTIVE_WINDOW}))) AS checked_in,
          EXISTS (SELECT 1 FROM patients ${all ? "" : "WHERE assigned_staff_id = $1"}) AS has_patients,
          to_char(now() AT TIME ZONE ${EAT}, 'HH24:MI') AS now_hm`,
       [staff.id]

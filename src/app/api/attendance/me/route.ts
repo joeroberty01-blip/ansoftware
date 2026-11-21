@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getStaffByUserId } from "@/lib/repo/staff";
 import {
   eatToday,
+  getForgottenShift,
   getOpenAttendance,
   getShiftStart,
   listAttendanceForStaffToday,
@@ -21,8 +22,9 @@ export async function GET() {
   if (!staff) {
     return NextResponse.json({ staff: null });
   }
-  const [open, today, patients, shiftStart, date] = await Promise.all([
+  const [open, forgotten, today, patients, shiftStart, date] = await Promise.all([
     getOpenAttendance(staff.id),
+    getForgottenShift(staff.id),
     listAttendanceForStaffToday(staff.id),
     listPatientsForCheckIn(staff),
     getShiftStart(),
@@ -33,6 +35,7 @@ export async function GET() {
     date,
     shiftStart,
     open,
+    forgotten,
     today,
     patients,
   });

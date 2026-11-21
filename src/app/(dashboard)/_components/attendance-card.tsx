@@ -23,6 +23,7 @@ interface MeResponse {
   date?: string;
   shiftStart?: string;
   open?: Shift | null;
+  forgotten?: Shift | null;
   today?: Shift[];
   patients?: { id: string; full_name: string; address: string | null; has_home: boolean }[];
 }
@@ -39,26 +40,124 @@ const time = (iso: string) =>
 const hours = (minutes: number | null) =>
   minutes == null ? "-" : `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
 
-/** One GPS reading, as accurate as the phone can give within 20 seconds. */
-function getPosition(): Promise<Position> {
+type GeoProblem = "denied" | "unavailable" | "unsupported";
+
+class GeoError extends Error {
+  constructor(public kind: GeoProblem, message: string) {
+    super(message);
+  }
+}
+
+function readPosition(options: PositionOptions): Promise<Position> {
   return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Simu/kivinjari hiki hakina GPS."));
-      return;
-    }
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
-      (err) =>
-        reject(
-          new Error(
-            err.code === err.PERMISSION_DENIED
-              ? "Ruhusa ya location imekataliwa. Fungua mipangilio ya kivinjari uruhusu Location kwa ERP."
-              : "Imeshindikana kupata mahali. Washa location (GPS) na ujaribu tena, ikiwezekana karibu na dirisha."
-          )
-        ),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      reject,
+      options
     );
   });
+}
+
+/**
+ * One GPS reading. Tries the precise GPS first; if the phone cannot get a
+ * satellite fix (indoors, weak signal) it falls back to the network/Wi-Fi
+ * location instead of failing.
+ */
+async function getPosition(): Promise<Position> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    throw new GeoError("unsupported", "Kivinjari hiki hakina GPS. Fungua ERP kwenye Google Chrome.");
+  }
+  const denied = () =>
+    new GeoError(
+      "denied",
+      "Simu imezuia Location kwa ERP. Location ya simu kuwashwa haitoshi: fuata hatua zilizo hapa chini."
+    );
+  try {
+    return await readPosition({ enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  } catch (err) {
+    const e = err as GeolocationPositionError;
+    if (e?.code === 1) throw denied();
+  }
+  try {
+    return await readPosition({ enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 });
+  } catch (err) {
+    const e = err as GeolocationPositionError;
+    if (e?.code === 1) throw denied();
+    throw new GeoError(
+      "unavailable",
+      "Simu imeshindwa kupata mahali. Hakikisha Location imewashwa, toka nje au karibu na dirisha, kisha bonyeza tena."
+    );
+  }
+}
+
+/** Opened inside WhatsApp/Facebook/Instagram instead of a real browser. */
+function inAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /WhatsApp|FBAN|FBAV|Instagram|; wv\)/i.test(navigator.userAgent);
+}
+
+function isIphone(): boolean {
+  return typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+/** Step-by-step help when the phone refuses location to the ERP. */
+function GpsHelp({ kind }: { kind: GeoProblem }) {
+  const [copied, setCopied] = useState(false);
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.origin + "/dashboard");
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
+  if (kind === "unavailable") return null;
+  return (
+    <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+      <p className="font-bold">Jinsi ya kuruhusu Location kwa ERP</p>
+      {inAppBrowser() ? (
+        <div className="mt-2 space-y-2">
+          <p>
+            Umefungua ERP ndani ya WhatsApp/Facebook. Humo GPS haifanyi kazi. Fungua ERP kwenye{" "}
+            <b>Google Chrome</b>{isIphone() ? " au Safari" : ""}: bonyeza vitone 3 (⋮) juu kulia, chagua
+            &quot;Open in Chrome / Fungua kwenye kivinjari&quot;.
+          </p>
+          <button
+            type="button"
+            onClick={copyLink}
+            className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold"
+          >
+            {copied ? "Link imenakiliwa ✓ Ibandike kwenye Chrome" : "Nakili link ya ERP"}
+          </button>
+        </div>
+      ) : isIphone() ? (
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
+          <li>Fungua <b>Settings</b> (Mipangilio) ya iPhone.</li>
+          <li><b>Privacy &amp; Security</b> → <b>Location Services</b> → hakikisha iko ON.</li>
+          <li>Shuka chini, chagua <b>Safari Websites</b> (au Chrome) → <b>While Using the App</b>.</li>
+          <li>Rudi kwenye ERP, funga ukurasa uufungue upya, bonyeza <b>Pata mahali</b>, kisha <b>Allow</b>.</li>
+        </ol>
+      ) : (
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
+          <li>
+            Kwenye Chrome, gusa <b>alama ya kufuli 🔒</b> (au ⓘ) kushoto mwa anwani ya ERP juu.
+          </li>
+          <li>
+            Chagua <b>Permissions / Ruhusa</b> → <b>Location</b> → <b>Allow / Ruhusu</b>. Ukiona &quot;Reset
+            permissions&quot;, ibonyeze.
+          </li>
+          <li>
+            Bado? Fungua <b>Settings</b> ya simu → <b>Apps</b> → <b>Chrome</b> → <b>Permissions</b> →{" "}
+            <b>Location</b> → <b>Allow only while using the app</b>, na washa <b>Use precise location</b>.
+          </li>
+          <li>
+            Kama umeweka ERP kama app kwenye skrini, fanya hatua hizo hizo kwa app hiyo (Settings → Apps).
+          </li>
+          <li>Rudi kwenye ERP, <b>refresh</b> ukurasa, bonyeza <b>Pata mahali</b>, kisha <b>Allow</b>.</li>
+        </ol>
+      )}
+    </div>
+  );
 }
 
 /** Small JPEG of the selfie (max 480 px), so it uploads fast on mobile data. */
@@ -105,6 +204,7 @@ export function AttendanceCard() {
   const [locating, setLocating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [geoProblem, setGeoProblem] = useState<GeoProblem | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -130,11 +230,13 @@ export function AttendanceCard() {
 
   const locate = async () => {
     setError(null);
+    setGeoProblem(null);
     setLocating(true);
     try {
       setPosition(await getPosition());
     } catch (e) {
       setError((e as Error).message);
+      if (e instanceof GeoError) setGeoProblem(e.kind);
     } finally {
       setLocating(false);
     }
@@ -201,12 +303,14 @@ export function AttendanceCard() {
       await load();
     } catch (e) {
       setError((e as Error).message);
+      if (e instanceof GeoError) setGeoProblem(e.kind);
     } finally {
       setBusy(false);
     }
   };
 
   const open = data.open ?? null;
+  const forgotten = data.forgotten ?? null;
   const today = data.today ?? [];
   const patients = data.patients ?? [];
 
@@ -219,6 +323,17 @@ export function AttendanceCard() {
         <h2 className="text-base font-semibold text-zinc-900">Mahudhurio ya Leo</h2>
         <span className="text-xs text-zinc-500">Zamu inaanza saa {data.shiftStart}</span>
       </div>
+
+      {!open && forgotten && (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Zamu yako ya{" "}
+          {new Date(forgotten.check_in_at).toLocaleDateString("sw-TZ", { day: "numeric", month: "short" })}{" "}
+          saa {time(forgotten.check_in_at)}
+          {forgotten.patient_name ? ` kwa ${forgotten.patient_name}` : ""} haikufungwa (hukubonyeza
+          &quot;Naondoka&quot;). Ukiingia kazini sasa, itafungwa bila saa za kazi. Kumbuka kubonyeza
+          &quot;Naondoka&quot; ukimaliza zamu.
+        </p>
+      )}
 
       {open ? (
         <div className="mt-3 rounded-xl bg-emerald-50 p-3">
@@ -345,6 +460,7 @@ export function AttendanceCard() {
       )}
 
       {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {geoProblem && <GpsHelp kind={geoProblem} />}
       {message && <p className="mt-3 text-sm font-medium text-emerald-700">{message}</p>}
 
       {today.length > 0 && (

@@ -302,7 +302,9 @@ export default function AttendancePage() {
                           </span>
                         </td>
                         <td className="py-2 pr-4">
-                          {r.check_out_at ? (
+                          {r.check_out_at && !r.check_out_lat ? (
+                            <span className="text-xs font-semibold text-amber-700">Hakubonyeza Naondoka</span>
+                          ) : r.check_out_at ? (
                             <span className="flex flex-col items-start gap-1">
                               {time(r.check_out_at)}
                               <Distance m={r.check_out_distance_m} near={near} hasHome={!!r.patient_home_lat} />
