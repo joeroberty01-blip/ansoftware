@@ -22,8 +22,8 @@ function initialDocType(param: string | null): DocType {
 }
 
 const CLIENT_TYPE_OPTIONS = [
-  { value: "INDIVIDUAL", label: "Mtu Binafsi" },
-  { value: "CORPORATE", label: "Kampuni" },
+  { value: "INDIVIDUAL", label: "Individual" },
+  { value: "CORPORATE", label: "Company" },
   { value: "INSURANCE", label: "Bima" },
 ];
 
@@ -94,7 +94,7 @@ export default function NewBillingPage() {
     e.preventDefault();
     setError(null);
     if (!newClientName.trim() || !newClientPhone.trim()) {
-      setError("Jina na simu ya client vinahitajika.");
+      setError("Client name and phone are required.");
       return;
     }
     setSubmitting(true);
@@ -127,7 +127,7 @@ export default function NewBillingPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kutengeneza.");
+        setError(json.error ?? "Could not create.");
         return;
       }
       router.push(`/billing/${json.invoice.id}`);
@@ -142,10 +142,10 @@ export default function NewBillingPage() {
     <div className="flex flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-          Tengeneza Quotation/Invoice
+          Create Quotation/Invoice
         </h1>
         <p className="mt-0.5 text-sm text-zinc-500">
-          Jaza taarifa za hati, client na items, kisha ubofye Tengeneza.
+          Fill in the document, client and item details, then click Create.
         </p>
       </div>
 
@@ -155,7 +155,7 @@ export default function NewBillingPage() {
       >
         {/* Aina ya Hati */}
         <div className="flex flex-col gap-2">
-          <label className={labelClass}>Aina ya Hati</label>
+          <label className={labelClass}>Document Type</label>
           <div className="flex flex-wrap gap-1 self-start rounded-lg bg-zinc-100 p-1">
             {DOC_TYPE_OPTIONS.map((opt) => (
               <button
@@ -178,22 +178,22 @@ export default function NewBillingPage() {
 
         {/* Taarifa za Hati */}
         <div className="flex flex-col gap-3">
-          <h2 className={sectionTitleClass}>Taarifa za Hati</h2>
+          <h2 className={sectionTitleClass}>Document Details</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex flex-col gap-1">
               <label className={labelClass}>
-                Namba ya Hati <span className="text-zinc-400">(hiari)</span>
+                Document Number <span className="text-zinc-400">(optional)</span>
               </label>
               <input
                 value={documentNumber}
                 onChange={(e) => setDocumentNumber(e.target.value)}
-                placeholder="Kiotomatiki ikiwa wazi"
+                placeholder="Automatic if left blank"
                 className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className={labelClass}>
-                Tarehe ya Kutolewa <span className="text-zinc-400">(hiari)</span>
+                Issue Date <span className="text-zinc-400">(optional)</span>
               </label>
               <input
                 type="date"
@@ -204,7 +204,7 @@ export default function NewBillingPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className={labelClass}>
-                Due Date <span className="text-zinc-400">(hiari)</span>
+                Due Date <span className="text-zinc-400">(optional)</span>
               </label>
               <input
                 type="date"
@@ -220,19 +220,19 @@ export default function NewBillingPage() {
 
         {/* Taarifa za Client */}
         <div className="flex flex-col gap-3">
-          <h2 className={sectionTitleClass}>Taarifa za Client</h2>
+          <h2 className={sectionTitleClass}>Client Details</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <label className={labelClass}>Jina la Client</label>
+              <label className={labelClass}>Client Name</label>
               <input
                 value={newClientName}
                 onChange={(e) => setNewClientName(e.target.value)}
-                placeholder="mf. Mama Amina"
+                placeholder="e.g. Mama Amina"
                 className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className={labelClass}>Simu</label>
+              <label className={labelClass}>Phone</label>
               <input
                 value={newClientPhone}
                 onChange={(e) => setNewClientPhone(e.target.value)}
@@ -242,17 +242,17 @@ export default function NewBillingPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className={labelClass}>
-                Barua Pepe <span className="text-zinc-400">(hiari)</span>
+                Email <span className="text-zinc-400">(optional)</span>
               </label>
               <input
                 value={newClientEmail}
                 onChange={(e) => setNewClientEmail(e.target.value)}
-                placeholder="mf. amina@mail.com"
+                placeholder="e.g. amina@mail.com"
                 className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className={labelClass}>Aina</label>
+              <label className={labelClass}>Type</label>
               <select
                 value={newClientType}
                 onChange={(e) => setNewClientType(e.target.value)}
@@ -267,12 +267,12 @@ export default function NewBillingPage() {
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className={labelClass}>
-                Anwani <span className="text-zinc-400">(hiari)</span>
+                Address <span className="text-zinc-400">(optional)</span>
               </label>
               <input
                 value={newClientAddress}
                 onChange={(e) => setNewClientAddress(e.target.value)}
-                placeholder="mf. Mikocheni, Dar es Salaam"
+                placeholder="e.g. Mikocheni, Dar es Salaam"
                 className={inputClass}
               />
             </div>
@@ -290,15 +290,15 @@ export default function NewBillingPage() {
               onClick={addItem}
               className="text-xs font-semibold text-brand-blue hover:underline"
             >
-              + Ongeza Item
+              + Add Item
             </button>
           </div>
 
           <div className="hidden grid-cols-12 gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 sm:grid">
-            <span className="col-span-6">Maelezo</span>
-            <span className="col-span-2">Idadi</span>
-            <span className="col-span-2">Bei</span>
-            <span className="col-span-2">Jumla</span>
+            <span className="col-span-6">Description</span>
+            <span className="col-span-2">Quantity</span>
+            <span className="col-span-2">Price</span>
+            <span className="col-span-2">Total</span>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -312,7 +312,7 @@ export default function NewBillingPage() {
                   onChange={(e) =>
                     updateItem(i, { description: e.target.value })
                   }
-                  placeholder="Maelezo ya huduma"
+                  placeholder="Service description"
                   className={`col-span-12 sm:col-span-6 ${inputClass}`}
                 />
                 <input
@@ -320,7 +320,7 @@ export default function NewBillingPage() {
                   onChange={(e) =>
                     updateItem(i, { quantity: e.target.value })
                   }
-                  placeholder="Idadi"
+                  placeholder="Quantity"
                   inputMode="decimal"
                   className={`col-span-4 sm:col-span-2 ${inputClass}`}
                 />
@@ -329,7 +329,7 @@ export default function NewBillingPage() {
                   onChange={(e) =>
                     updateItem(i, { unitPrice: e.target.value })
                   }
-                  placeholder="Bei"
+                  placeholder="Price"
                   inputMode="decimal"
                   className={`col-span-4 sm:col-span-2 ${inputClass}`}
                 />
@@ -342,7 +342,7 @@ export default function NewBillingPage() {
                   disabled={items.length <= 1}
                   className="col-span-1 justify-self-end text-xs font-medium text-red-600 hover:underline disabled:opacity-30"
                 >
-                  Ondoa
+                  Remove
                 </button>
               </div>
             ))}
@@ -355,7 +355,7 @@ export default function NewBillingPage() {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <label className={labelClass}>
-              Maelezo ya Ziada <span className="text-zinc-400">(hiari)</span>
+              Additional Notes <span className="text-zinc-400">(optional)</span>
             </label>
             <textarea
               value={notes}
@@ -372,9 +372,9 @@ export default function NewBillingPage() {
               onChange={(e) => setApplyVat(e.target.checked)}
               className="h-4 w-4"
             />
-            Ongeza VAT ({VAT_RATE_PERCENT}%)
+            Add VAT ({VAT_RATE_PERCENT}%)
             <span className="text-zinc-400">
-              {applyVat ? "— VAT iko ON" : "— VAT iko OFF"}
+              {applyVat ? "(VAT is ON)" : "(VAT is OFF)"}
             </span>
           </label>
 
@@ -388,7 +388,7 @@ export default function NewBillingPage() {
               <span>{applyVat ? `TZS ${fmt(vatPreview)}` : "N/A"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-zinc-600">Jumla (makadirio)</span>
+              <span className="text-sm text-zinc-600">Total (estimate)</span>
               <span className="text-base font-bold text-zinc-900">
                 TZS {fmt(subtotalPreview + vatPreview)}
               </span>
@@ -407,7 +407,7 @@ export default function NewBillingPage() {
           disabled={submitting}
           className="self-start rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inatengeneza..." : "Tengeneza"}
+          {submitting ? "Inatengeneza..." : "Create"}
         </button>
       </form>
     </div>

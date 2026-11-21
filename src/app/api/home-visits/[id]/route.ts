@@ -18,7 +18,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -26,7 +26,7 @@ export async function GET(
   const { id } = await ctx.params;
   const visit = await getHomeVisitById(id);
   if (!visit) {
-    return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Home visit not found." }, { status: 404 });
   }
 
   const denied = await assertPatientAccess(session, visit.patient_id);
@@ -42,7 +42,7 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -50,7 +50,7 @@ export async function PATCH(
   const { id } = await ctx.params;
   const existingVisit = await getHomeVisitById(id);
   if (!existingVisit) {
-    return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Home visit not found." }, { status: 404 });
   }
   const denied = await assertPatientAccess(session, existingVisit.patient_id);
   if (denied) return denied;
@@ -59,7 +59,7 @@ export async function PATCH(
   const parsed = updateHomeVisitSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -78,7 +78,7 @@ export async function PATCH(
     if (clash) {
       return NextResponse.json(
         {
-          error: `Ripoti ya ${DAILY_SESSION_LABELS[d.visitSession]} ya siku hii tayari ipo.`,
+          error: `The ${DAILY_SESSION_LABELS[d.visitSession]} report for this day already exists.`,
           existingId: clash.id,
         },
         { status: 409 }
@@ -106,7 +106,7 @@ export async function PATCH(
   });
 
   if (!visit) {
-    return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Home visit not found." }, { status: 404 });
   }
 
   await logAudit({ userId: session.id, action: "HOME_VISIT_UPDATED", entity: "home_visit", entityId: id, meta: { patientId: visit.patient_id } });
@@ -120,19 +120,19 @@ export async function DELETE(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
 
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const deleted = await deleteHomeVisit(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Home visit haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Home visit not found." }, { status: 404 });
   }
 
   await logAudit({ userId: session.id, action: "HOME_VISIT_DELETED", entity: "home_visit", entityId: id });

@@ -7,20 +7,20 @@ const decimalString = (message: string) =>
     .refine((v) => Number(v) >= 0, message);
 
 export const createBillSchema = z.object({
-  name: z.string().trim().min(2, "Jina la bill linahitajika"),
-  category: z.string().trim().min(1, "Category inahitajika"),
-  amount: decimalString("Kiasi sio sahihi"),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi"),
+  name: z.string().trim().min(2, "Bill name is required"),
+  category: z.string().trim().min(1, "Category is required"),
+  amount: decimalString("Invalid amount"),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export type CreateBillInput = z.infer<typeof createBillSchema>;
 
 export const updateBillSchema = z.object({
-  name: z.string().trim().min(2, "Jina la bill linahitajika").optional(),
-  category: z.string().trim().min(1, "Category inahitajika").optional(),
-  amount: decimalString("Kiasi sio sahihi").optional(),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi").optional(),
+  name: z.string().trim().min(2, "Bill name is required").optional(),
+  category: z.string().trim().min(1, "Category is required").optional(),
+  amount: decimalString("Invalid amount").optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").optional(),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
 

@@ -9,18 +9,18 @@ export async function DELETE(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { docId } = await ctx.params;
   const deleted = await deleteStaffDocument(docId);
   if (!deleted) {
-    return NextResponse.json({ error: "Hati haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Document not found." }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }

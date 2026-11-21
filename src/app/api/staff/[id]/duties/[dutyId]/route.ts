@@ -10,12 +10,12 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { dutyId } = await ctx.params;
@@ -23,7 +23,7 @@ export async function PATCH(
   const parsed = updateDutySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -37,7 +37,7 @@ export async function PATCH(
   });
 
   if (!duty) {
-    return NextResponse.json({ error: "Jukumu halikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Duty not found." }, { status: 404 });
   }
 
   return NextResponse.json({ duty });
@@ -50,18 +50,18 @@ export async function DELETE(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { dutyId } = await ctx.params;
   const existing = await getDutyById(dutyId);
   if (!existing) {
-    return NextResponse.json({ error: "Jukumu halikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Duty not found." }, { status: 404 });
   }
 
   await deleteDuty(dutyId);

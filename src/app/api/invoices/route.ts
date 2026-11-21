@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   const parsed = createInvoiceSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     if (err instanceof DuplicateDocumentNumberError) {
       return NextResponse.json(
-        { error: "Namba hii ya hati tayari ipo. Tumia namba nyingine." },
+        { error: "This document number already exists. Use another number." },
         { status: 400 }
       );
     }

@@ -9,7 +9,7 @@ export default async function MyStaffProfilePage() {
   if (!staff) {
     return (
       <div className="p-6 text-sm text-zinc-500">
-        Huna wasifu wa Staff kwenye akaunti hii.
+        There is no staff profile on this account.
       </div>
     );
   }

@@ -16,10 +16,10 @@ interface Item {
 }
 
 const CSV_COLUMNS = [
-  { key: "name", label: "Jina" },
+  { key: "name", label: "Name" },
   { key: "category", label: "Category" },
   { key: "unit", label: "Unit" },
-  { key: "current_stock", label: "Stock ya Sasa" },
+  { key: "current_stock", label: "Current Stock" },
   { key: "reorder_level", label: "Reorder Level" },
 ];
 
@@ -45,7 +45,7 @@ export default function InventoryListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const onDelete = async (item: Item) => {
-    if (!window.confirm(`Futa item "${item.name}" KABISA?`)) return;
+    if (!window.confirm(`Permanently delete item "${item.name}"?`)) return;
     setDeletingId(item.id);
     try {
       const res = await fetch(`/api/inventory/items/${item.id}`, {
@@ -53,7 +53,7 @@ export default function InventoryListPage() {
       });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error ?? "Imeshindwa kufuta.");
+        alert(json.error ?? "Could not delete.");
         return;
       }
       await load();
@@ -80,16 +80,16 @@ export default function InventoryListPage() {
             href="/inventory/new"
             className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
-            Ongeza Item Mpya
+            Add New Item
           </Link>
         </div>
       </div>
 
       {lowStockCount > 0 && (
         <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800 print:hidden">
-          Items {lowStockCount} ziko chini ya reorder level.{" "}
+          {lowStockCount} items are below reorder level.{" "}
           <Link href="/inventory/alerts" className="underline">
-            Ona alerts
+            View alerts
           </Link>
         </p>
       )}
@@ -98,16 +98,16 @@ export default function InventoryListPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : items.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna items bado.</p>
+          <p className="text-sm text-zinc-500">No items yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Jina</th>
+                <th className="py-2 pr-4">Name</th>
                 <th className="py-2 pr-4">Category</th>
                 <th className="py-2 pr-4">Unit</th>
-                <th className="py-2 pr-4 text-right">Stock ya Sasa</th>
+                <th className="py-2 pr-4 text-right">Current Stock</th>
                 <th className="py-2 pr-4 text-right">Reorder Level</th>
                 <th className="py-2 pr-4 print:hidden"></th>
               </tr>
@@ -136,7 +136,7 @@ export default function InventoryListPage() {
                     {item.current_stock}
                     {item.is_low_stock && (
                       <span className="ml-2 text-xs font-medium text-amber-700">
-                        chini
+                        low
                       </span>
                     )}
                   </td>
@@ -150,7 +150,7 @@ export default function InventoryListPage() {
                       disabled={deletingId === item.id}
                       className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                     >
-                      Futa
+                      Delete
                     </button>
                   </td>
                 </tr>

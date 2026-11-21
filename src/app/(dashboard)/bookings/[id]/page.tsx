@@ -53,19 +53,19 @@ function addDays(days: number) {
 /** The plan's rhythm: day 1, 3, 7, then a reminder at day 30. */
 const QUICK_DATES = [
   { days: 1, label: "Kesho" },
-  { days: 3, label: "Siku 3" },
-  { days: 7, label: "Wiki 1" },
-  { days: 30, label: "Siku 30" },
+  { days: 3, label: "3 Days" },
+  { days: 7, label: "1 Week" },
+  { days: 30, label: "30 Days" },
 ];
 
 function followUpLabel(date: string | null, status: string) {
-  if (status === "COMPLETED" || status === "CANCELLED") return "Ombi limefungwa";
-  if (!date) return "Hakuna tarehe ya kufuatilia";
+  if (status === "COMPLETED" || status === "CANCELLED") return "Request closed";
+  if (!date) return "No follow-up date";
   const day = date.slice(0, 10);
   const today = todayLocal();
-  if (day < today) return `Imechelewa: ${day}`;
-  if (day === today) return "Fuatilia leo";
-  return `Fuatilia: ${day}`;
+  if (day < today) return `Overdue: ${day}`;
+  if (day === today) return "Follow up today";
+  return `Follow up: ${day}`;
 }
 
 /**
@@ -91,22 +91,22 @@ function whatsappTemplates(name: string, service: string) {
   return [
     {
       key: "day1",
-      label: "Siku 1: shukrani",
+      label: "Day 1: thank you",
       text: `Habari ${first}, asante kwa kuwasiliana na Afya Nyumbani kuhusu ${service}. Nurse wetu anaweza kuja kufanya tathmini nyumbani. Ni siku na muda gani unakufaa?`,
     },
     {
       key: "day3",
-      label: "Siku 3: maswali",
+      label: "Day 3: questions",
       text: `Habari ${first}, natumaini mgonjwa anaendelea vizuri. Kama una swali lolote kuhusu huduma au bei, niko tayari kujibu. Tunaweza kuanza na ziara moja ya tathmini. Afya Nyumbani.`,
     },
     {
       key: "day7",
-      label: "Siku 7: mwisho",
+      label: "Day 7: last try",
       text: `Habari ${first}, sitaki kukusumbua. Kama bado unahitaji msaada wa nurse nyumbani, tuko tayari kuanza ndani ya saa 48. Jibu NDIYO tukupigie, au BADO tukutafute baadaye. Asante, Afya Nyumbani.`,
     },
     {
       key: "day30",
-      label: "Siku 30: kumbusho",
+      label: "Day 30: reminder",
       text: `Habari ${first}, ni Afya Nyumbani. Tunapenda kujua mgonjwa anaendeleaje. Kama mnahitaji nurse nyumbani, tupo. Tunaweza kuja kwa tathmini wiki hii.`,
     },
   ];
@@ -193,7 +193,7 @@ export default function BookingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kupangia staff.");
+        setError(json.error ?? "Could not assign staff.");
         return;
       }
       await load();
@@ -214,7 +214,7 @@ export default function BookingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuunganisha mgonjwa.");
+        setError(json.error ?? "Could not link the patient.");
         return;
       }
       await load();
@@ -232,7 +232,7 @@ export default function BookingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kutengeneza mgonjwa mpya.");
+        setError(json.error ?? "Could not create a new patient.");
         return;
       }
       await load();
@@ -252,7 +252,7 @@ export default function BookingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kubadilisha status.");
+        setError(json.error ?? "Could not change the status.");
         return;
       }
       await load();
@@ -278,16 +278,16 @@ export default function BookingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi ufuatiliaji.");
+        setError(json.error ?? "Could not save the follow-up.");
         return;
       }
       setFuNote("");
       setFuMessage(
         closeAs
-          ? "Imehifadhiwa na ombi limefungwa."
+          ? "Saved and the request is closed."
           : fuNext
-            ? `Imehifadhiwa. Kumfuatilia tena: ${fuNext}.`
-            : "Imehifadhiwa. Hakuna tarehe ya kufuatilia tena."
+            ? `Saved. Next follow-up: ${fuNext}.`
+            : "Saved. No further follow-up date."
       );
       await load();
     } finally {
@@ -309,7 +309,7 @@ export default function BookingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi chanzo.");
+        setError(json.error ?? "Could not save the source.");
         return;
       }
       await load();
@@ -322,7 +322,7 @@ export default function BookingDetailPage() {
     return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!booking) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   return (
@@ -352,11 +352,11 @@ export default function BookingDetailPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-            Maelezo ya Booking
+            Booking Details
           </h2>
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-zinc-500">Tarehe Anayopendelea</span>
+              <span className="text-zinc-500">Preferred Date</span>
               <span>{booking.preferred_date?.slice(0, 10) ?? "-"}</span>
             </div>
             <div className="flex justify-between">
@@ -365,7 +365,7 @@ export default function BookingDetailPage() {
             </div>
             {booking.notes && (
               <div>
-                <span className="text-zinc-500">Maelezo</span>
+                <span className="text-zinc-500">Description</span>
                 <p className="mt-1">{booking.notes}</p>
               </div>
             )}
@@ -379,7 +379,7 @@ export default function BookingDetailPage() {
                 disabled={busy}
                 className="rounded border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
               >
-                Ghairi Booking
+                Cancel Booking
               </button>
             )}
             {booking.status === "ASSIGNED" && (
@@ -389,14 +389,14 @@ export default function BookingDetailPage() {
                 disabled={busy}
                 className="rounded border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-50 disabled:opacity-50"
               >
-                Kamilisha
+                Complete
               </button>
             )}
           </div>
 
           <div className="mt-5 border-t border-zinc-100 pt-4">
             <label htmlFor="source" className="text-xs font-medium text-zinc-600">
-              Umetusikia wapi?
+              How did they hear about us?
             </label>
             <div className="mt-1 flex flex-col gap-2 sm:flex-row">
               <select
@@ -405,7 +405,7 @@ export default function BookingDetailPage() {
                 onChange={(e) => setSource(e.target.value as BookingSource | "")}
                 className="rounded border border-zinc-300 px-2 py-2 text-sm"
               >
-                <option value="">-- chagua chanzo --</option>
+                <option value="">-- select source --</option>
                 {BOOKING_SOURCES.map((s) => (
                   <option key={s} value={s}>
                     {BOOKING_SOURCE_LABELS[s]}
@@ -415,8 +415,8 @@ export default function BookingDetailPage() {
               <input
                 value={sourceDetail}
                 onChange={(e) => setSourceDetail(e.target.value)}
-                placeholder="mf. Aga Khan, Dkt. Mushi"
-                aria-label="Maelezo ya chanzo"
+                placeholder="e.g. Aga Khan, Dr. Mushi"
+                aria-label="Source details"
                 className="min-w-0 flex-1 rounded border border-zinc-300 px-2 py-2 text-sm"
               />
               <button
@@ -425,7 +425,7 @@ export default function BookingDetailPage() {
                 disabled={busy}
                 className="rounded-lg border border-zinc-300 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
               >
-                Hifadhi
+                Save
               </button>
             </div>
           </div>
@@ -445,7 +445,7 @@ export default function BookingDetailPage() {
           {booking.status !== "COMPLETED" && booking.status !== "CANCELLED" && (
             <div className="flex flex-col gap-3">
               <div className="rounded-lg bg-zinc-50 p-3">
-                <p className="text-xs font-medium text-zinc-600">Wasiliana sasa</p>
+                <p className="text-xs font-medium text-zinc-600">Contact now</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <a
                     href={`tel:${booking.phone.replace(/[^\d+]/g, "")}`}
@@ -454,7 +454,7 @@ export default function BookingDetailPage() {
                     }}
                     className="inline-flex min-h-9 items-center rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-800 hover:bg-zinc-100"
                   >
-                    Piga simu
+                    Call
                   </a>
                   {whatsappNumber(booking.phone) &&
                     whatsappTemplates(booking.full_name, booking.service_type).map((t) => (
@@ -465,7 +465,7 @@ export default function BookingDetailPage() {
                         rel="noopener noreferrer"
                         onClick={() => {
                           setFuChannel("WHATSAPP");
-                          setFuNote((n) => n || `Nimetuma WhatsApp (${t.label.toLowerCase()}).`);
+                          setFuNote((n) => n || `Sent a WhatsApp (${t.label.toLowerCase()}).`);
                         }}
                         className="inline-flex min-h-9 items-center rounded-lg border border-green-300 bg-white px-3 text-xs font-semibold text-green-800 hover:bg-green-50"
                       >
@@ -475,14 +475,14 @@ export default function BookingDetailPage() {
                 </div>
                 {!whatsappNumber(booking.phone) && (
                   <p className="mt-2 text-xs text-zinc-500">
-                    Namba hii haitambuliki kwa WhatsApp. Iandike kama 07XXXXXXXX au +44...
+                    WhatsApp doesn't recognise this number. Write it as 07XXXXXXXX or +44...
                   </p>
                 )}
                 <p className="mt-2 text-xs text-zinc-500">
-                  WhatsApp inafunguka na ujumbe tayari. Ukishatuma, rudi hapa uhifadhi ufuatiliaji.
+                  WhatsApp opens with the message ready. After sending, come back here and save the follow-up.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Njia ya mawasiliano">
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Contact method">
                 {FOLLOW_UP_CHANNELS.map((c) => (
                   <button
                     key={c}
@@ -503,13 +503,13 @@ export default function BookingDetailPage() {
                 value={fuNote}
                 onChange={(e) => setFuNote(e.target.value)}
                 rows={3}
-                placeholder="Mmezungumza nini? mf. Ameomba bei ya ziara 3 kwa wiki, atajibu Ijumaa."
-                aria-label="Kilichozungumzwa"
+                placeholder="What did you discuss? e.g. Asked for the price of 3 visits a week, will reply on Friday."
+                aria-label="What was discussed"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <div className="flex flex-col gap-1">
                 <label htmlFor="fu-next" className="text-xs font-medium text-zinc-600">
-                  Mfuatilie tena lini?
+                  When to follow up again?
                 </label>
                 <div className="flex flex-wrap items-center gap-2">
                   <input
@@ -538,7 +538,7 @@ export default function BookingDetailPage() {
                   disabled={busy || fuNote.trim().length < 2}
                   className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
                 >
-                  Hifadhi ufuatiliaji
+                  Save follow-up
                 </button>
                 <button
                   type="button"
@@ -546,7 +546,7 @@ export default function BookingDetailPage() {
                   disabled={busy || fuNote.trim().length < 2}
                   className="rounded-lg border border-red-300 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                 >
-                  Hifadhi na funga (hajakubali)
+                  Save and close (declined)
                 </button>
               </div>
               {fuMessage && (
@@ -559,12 +559,12 @@ export default function BookingDetailPage() {
 
           <ol className="mt-5 flex flex-col gap-3 border-t border-zinc-100 pt-4">
             {followUps.length === 0 ? (
-              <li className="text-sm text-zinc-500">Bado hakuna mawasiliano yaliyorekodiwa.</li>
+              <li className="text-sm text-zinc-500">No contact recorded yet.</li>
             ) : (
               followUps.map((f) => (
                 <li key={f.id} className="text-sm">
                   <p className="text-xs text-zinc-500">
-                    {new Date(f.created_at).toLocaleString("sw-TZ", {
+                    {new Date(f.created_at).toLocaleString("en-GB", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}{" "}
@@ -574,7 +574,7 @@ export default function BookingDetailPage() {
                   <p className="mt-0.5 whitespace-pre-line break-words text-zinc-900">{f.note}</p>
                   {f.next_follow_up_date && (
                     <p className="text-xs text-zinc-500">
-                      Kufuatilia tena: {f.next_follow_up_date.slice(0, 10)}
+                      Next follow-up: {f.next_follow_up_date.slice(0, 10)}
                     </p>
                   )}
                 </li>
@@ -586,7 +586,7 @@ export default function BookingDetailPage() {
         <div className="flex flex-col gap-4">
           <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-              1. Pangia Staff
+              1. Assign Staff
             </h2>
             <div className="flex gap-2">
               <select
@@ -594,7 +594,7 @@ export default function BookingDetailPage() {
                 onChange={(e) => setStaffId(e.target.value)}
                 className="flex-1 rounded border border-zinc-300 px-2 py-1.5 text-sm"
               >
-                <option value="">-- chagua staff --</option>
+                <option value="">-- select staff --</option>
                 {staffOptions.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.full_name}
@@ -607,19 +607,19 @@ export default function BookingDetailPage() {
                 disabled={busy || !staffId}
                 className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                Pangia
+                Assign
               </button>
             </div>
             {booking.staff_name && (
               <p className="mt-2 text-xs text-zinc-500">
-                Amepangiwa: <span className="font-medium">{booking.staff_name}</span>
+                Assigned to: <span className="font-medium">{booking.staff_name}</span>
               </p>
             )}
           </div>
 
           <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-              2. Unganisha na Mgonjwa
+              2. Link to a Patient
             </h2>
             {booking.patient_id ? (
               <p className="text-sm">
@@ -639,7 +639,7 @@ export default function BookingDetailPage() {
                     onChange={(e) => setLinkPatientId(e.target.value)}
                     className="flex-1 rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   >
-                    <option value="">-- chagua mgonjwa aliyepo --</option>
+                    <option value="">-- select an existing patient --</option>
                     {patientOptions.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.full_name}
@@ -652,7 +652,7 @@ export default function BookingDetailPage() {
                     disabled={busy || !linkPatientId}
                     className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
                   >
-                    Unganisha
+                    Link
                   </button>
                 </div>
                 <p className="text-center text-xs text-zinc-400">au</p>
@@ -662,7 +662,7 @@ export default function BookingDetailPage() {
                   disabled={busy}
                   className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
                 >
-                  Tengeneza Mgonjwa Mpya kutoka Booking Hii
+                  Create a New Patient from This Booking
                 </button>
               </div>
             )}
@@ -671,13 +671,13 @@ export default function BookingDetailPage() {
           {booking.patient_id && booking.assigned_staff_id && (
             <div className="rounded-xl border border-brand-blue/30 bg-brand-blue-light/40 p-5 shadow-sm">
               <h2 className="mb-2 text-sm font-semibold text-zinc-900">
-                3. Panga Ziara ya Kwanza
+                3. Schedule the First Visit
               </h2>
               <Link
                 href={`/home-visits/new?patientId=${booking.patient_id}&staffId=${booking.assigned_staff_id}`}
                 className="inline-block rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark"
               >
-                Rekodi Ziara
+                Record Visit
               </Link>
             </div>
           )}

@@ -185,31 +185,31 @@ export function StaffIdCardDocument({
         </View>
 
         <View style={styles.backRow}>
-          <Text style={styles.backLabel}>Simu:</Text>
+          <Text style={styles.backLabel}>Phone:</Text>
           <Text style={styles.backValue}>{staff.phone ?? "-"}</Text>
         </View>
         <View style={styles.backRow}>
-          <Text style={styles.backLabel}>Barua pepe:</Text>
+          <Text style={styles.backLabel}>Email:</Text>
           <Text style={styles.backValue}>{staff.email}</Text>
         </View>
         <View style={styles.backRow}>
-          <Text style={styles.backLabel}>Mahali:</Text>
+          <Text style={styles.backLabel}>Location:</Text>
           <Text style={styles.backValue}>Dar es Salaam, Tanzania</Text>
         </View>
         <View style={styles.backRow}>
-          <Text style={styles.backLabel}>Tovuti:</Text>
+          <Text style={styles.backLabel}>Website:</Text>
           <Text style={styles.backValue}>afyanyumbani.com</Text>
         </View>
 
         <View style={styles.qrBox}>
           <Image src={qrDataUri} style={styles.qrImg} />
         </View>
-        <Text style={styles.qrCaption}>Tembelea tovuti yetu</Text>
+        <Text style={styles.qrCaption}>Visit our website</Text>
 
         <Text style={styles.disclaimer}>
-          Kadi hii ni mali ya Afya Nyumbani Home Care Service Ltd. Ikiwa
-          itaokotwa, tafadhali rejesha kwa namba ya simu iliyoainishwa hapo
-          juu.
+          This card is the property of Afya Nyumbani Home Care Service Ltd. If
+          found, please return it using the phone number shown
+          above.
         </Text>
       </Page>
     </Document>

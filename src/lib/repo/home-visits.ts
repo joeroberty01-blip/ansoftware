@@ -90,7 +90,7 @@ export async function createHomeVisit(input: {
       input.visitType,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kurekodi home visit");
+  if (!row) throw new Error("Could not record the home visit");
   return row;
 }
 

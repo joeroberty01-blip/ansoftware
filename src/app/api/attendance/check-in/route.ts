@@ -15,22 +15,22 @@ function num(v: FormDataEntryValue | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** "Nimefika kazini": opens a shift with GPS and a selfie. Multipart form. */
+/** "Check in": opens a shift with GPS and a selfie. Multipart form. */
 export async function POST(req: Request) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   const staff = await getStaffByUserId(session.id);
   if (!staff) {
-    return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have a staff profile." }, { status: 403 });
   }
 
   let form: FormData;
   try {
     form = await req.formData();
   } catch {
-    return NextResponse.json({ error: "Data sio sahihi." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid data." }, { status: 400 });
   }
 
   const patientId = form.get("patientId");
@@ -40,22 +40,22 @@ export async function POST(req: Request) {
   const photo = form.get("photo");
 
   if (typeof patientId !== "string" || !patientId) {
-    return NextResponse.json({ error: "Chagua mgonjwa uliyefika kwake." }, { status: 400 });
+    return NextResponse.json({ error: "Select the patient you've arrived at." }, { status: 400 });
   }
   if (lat == null || lng == null || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
     return NextResponse.json(
-      { error: "Mahali (GPS) hapajapatikana. Washa location kwenye simu, kisha bonyeza \"Pata mahali\"." },
+      { error: "Location (GPS) not found. Turn on location on your phone, then tap \"Get location\"." },
       { status: 400 }
     );
   }
   if (!(photo instanceof File) || photo.size === 0) {
-    return NextResponse.json({ error: "Piga selfie kwanza." }, { status: 400 });
+    return NextResponse.json({ error: "Take a selfie first." }, { status: 400 });
   }
   if (!photo.type.startsWith("image/")) {
-    return NextResponse.json({ error: "Selfie lazima iwe picha." }, { status: 400 });
+    return NextResponse.json({ error: "The selfie must be a photo." }, { status: 400 });
   }
   if (photo.size > MAX_PHOTO_BYTES) {
-    return NextResponse.json({ error: "Picha ni kubwa mno. Jaribu tena." }, { status: 413 });
+    return NextResponse.json({ error: "The photo is too large. Please try again." }, { status: 413 });
   }
 
   const denied = await assertPatientAccess(session, patientId);
@@ -84,6 +84,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
     console.error("[attendance] check-in failed:", err);
-    return NextResponse.json({ error: "Imeshindikana. Jaribu tena." }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

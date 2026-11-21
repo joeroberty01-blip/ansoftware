@@ -58,7 +58,7 @@ export async function createBooking(input: {
       input.nextFollowUpDate ?? null,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kutengeneza booking");
+  if (!row) throw new Error("Could not create the booking");
   return row;
 }
 

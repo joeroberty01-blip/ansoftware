@@ -8,13 +8,13 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Data sio sahihi" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
 
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const user = await findUserByEmail(email);
     if (!user) {
       return NextResponse.json(
-        { error: "Barua pepe au password sio sahihi." },
+        { error: "Incorrect email or password." },
         { status: 401 }
       );
     }
@@ -31,20 +31,20 @@ export async function POST(req: NextRequest) {
     const validPassword = await verifyPassword(password, user.password_hash);
     if (!validPassword) {
       return NextResponse.json(
-        { error: "Barua pepe au password sio sahihi." },
+        { error: "Incorrect email or password." },
         { status: 401 }
       );
     }
 
     if (user.status === "PENDING") {
       return NextResponse.json(
-        { error: "Akaunti yako bado inasubiri idhini ya Admin." },
+        { error: "Your account is still waiting for Admin approval." },
         { status: 403 }
       );
     }
     if (user.status === "REJECTED" || user.status === "SUSPENDED") {
       return NextResponse.json(
-        { error: "Akaunti yako haijaruhusiwa kuingia. Wasiliana na Admin." },
+        { error: "Your account isn't allowed to sign in. Contact the Admin." },
         { status: 403 }
       );
     }
@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
         {
           error:
             role === "ADMIN"
-              ? "Akaunti hii si ya Admin. Chagua 'Staff' kuingia."
-              : "Akaunti hii ni ya Admin. Chagua 'Admin' kuingia.",
+              ? "This is not an Admin account. Choose 'Staff' to sign in."
+              : "This is an Admin account. Choose 'Admin' to sign in.",
         },
         { status: 403 }
       );
@@ -71,14 +71,14 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      message: "Umeingia kikamilifu.",
+      message: "Signed in successfully.",
       user: { id: user.id, role: user.role, fullName: user.full_name },
     });
   } catch (err) {
     // Shows the real cause in Vercel → Logs instead of an empty 500.
     console.error("[login] unexpected error:", err);
     return NextResponse.json(
-      { error: "Hitilafu ya seva. Jaribu tena baadaye." },
+      { error: "Server error. Please try again later." },
       { status: 500 }
     );
   }

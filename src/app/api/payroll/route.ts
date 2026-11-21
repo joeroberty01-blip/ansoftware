@@ -6,10 +6,10 @@ import { createPayrollForStaff, listPayrollHistory } from "@/lib/repo/payroll";
 import { getStaffByUserId } from "@/lib/repo/staff";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Staff hakupatikana." },
+  NOT_FOUND: { status: 404, message: "Staff member not found." },
   ALREADY_EXISTS: {
     status: 400,
-    message: "Payroll ya mwezi huu tayari ipo kwa staff huyu.",
+    message: "This month's payroll already exists for this staff member.",
   },
 };
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -27,13 +27,13 @@ export async function GET(req: NextRequest) {
   if (session.role !== "ADMIN") {
     const ownStaff = await getStaffByUserId(session.id);
     if (!ownStaff) {
-      return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 404 });
+      return NextResponse.json({ error: "You don't have a staff profile." }, { status: 404 });
     }
     staffId = ownStaff.id;
   }
 
   if (!staffId) {
-    return NextResponse.json({ error: "staffId inahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "staffId is required." }, { status: 400 });
   }
 
   const yearParam = req.nextUrl.searchParams.get("year");
@@ -47,19 +47,19 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const body = await req.json();
   const parsed = createPayrollSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

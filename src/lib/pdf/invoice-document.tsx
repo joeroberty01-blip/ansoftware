@@ -325,12 +325,12 @@ export function InvoiceDocument({
               {isPayable && Number(invoice.amount_paid) > 0 && (
                 <View style={{ marginTop: 6 }}>
                   <View style={styles.totalsRow}>
-                    <Text style={styles.totalsLabel}>Imelipwa</Text>
+                    <Text style={styles.totalsLabel}>Paid</Text>
                     <Text style={styles.totalsValue}>TZS {fmt(invoice.amount_paid)}</Text>
                   </View>
                   <View style={styles.divider} />
                   <View style={styles.totalsRow}>
-                    <Text style={[styles.totalsLabel, { color: INK, fontWeight: 700 }]}>Salio</Text>
+                    <Text style={[styles.totalsLabel, { color: INK, fontWeight: 700 }]}>Balance</Text>
                     <Text style={styles.totalsValue}>TZS {fmt(balance)}</Text>
                   </View>
                 </View>

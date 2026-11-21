@@ -7,21 +7,21 @@ import {
   groupDailyReports,
 } from "@/lib/daily-reports";
 
-const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function EntryText({ v }: { v: HomeVisitWithNames }) {
   const vitals = [
     v.blood_pressure ? `BP ${v.blood_pressure} mmHg` : null,
-    v.temperature ? `Joto ${v.temperature} °C` : null,
+    v.temperature ? `Temp ${v.temperature} °C` : null,
     v.pulse != null ? `Pulse ${v.pulse}` : null,
-    v.blood_glucose ? `Sukari ${v.blood_glucose} mmol/L` : null,
+    v.blood_glucose ? `Glucose ${v.blood_glucose} mmol/L` : null,
     v.spo2 != null ? `SpO₂ ${v.spo2}%` : null,
-    v.weight ? `Uzito ${v.weight} kg` : null,
+    v.weight ? `Weight ${v.weight} kg` : null,
   ].filter(Boolean);
   const blocks = [
-    { label: "Chakula", value: v.food_intake },
-    { label: "Matibabu / Procedures", value: v.treatment_notes },
-    { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+    { label: "Food Intake", value: v.food_intake },
+    { label: "Treatment / Procedures", value: v.treatment_notes },
+    { label: "Patient Progress / Notes", value: v.notes },
   ].filter((b) => b.value);
   return (
     <div>
@@ -51,7 +51,7 @@ export default async function PatientReportPrintPage(
   const patient = await getPatientById(id);
 
   if (!patient) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const [medications, visits] = await Promise.all([
@@ -75,26 +75,26 @@ export default async function PatientReportPrintPage(
       </div>
 
       <h2 className="mb-4 text-lg font-bold">
-        Ripoti ya Huduma ya Mgonjwa (Patient Care Report)
+        Patient Care Report
       </h2>
 
       <div className="mb-6 rounded border border-zinc-300 p-4">
         <h3 className="mb-2 text-base font-semibold">{patient.full_name}</h3>
         <div className="grid grid-cols-2 gap-y-1 text-sm sm:grid-cols-3">
           <div>
-            <span className="text-zinc-600">Jinsia: </span>
+            <span className="text-zinc-600">Gender: </span>
             {patient.gender ?? "-"}
           </div>
           <div>
-            <span className="text-zinc-600">Tarehe ya Kuzaliwa: </span>
+            <span className="text-zinc-600">Date of Birth: </span>
             {patient.date_of_birth?.slice(0, 10) ?? "-"}
           </div>
           <div>
-            <span className="text-zinc-600">Simu: </span>
+            <span className="text-zinc-600">Phone: </span>
             {patient.phone ?? "-"}
           </div>
           <div>
-            <span className="text-zinc-600">Anwani: </span>
+            <span className="text-zinc-600">Address: </span>
             {patient.address ?? "-"}
           </div>
           <div>
@@ -110,24 +110,24 @@ export default async function PatientReportPrintPage(
           </div>
         </div>
         <div className="mt-3 text-sm">
-          <span className="text-zinc-600">Mzio (Allergies): </span>
+          <span className="text-zinc-600">Allergies: </span>
           <span className="font-medium text-red-700">
             {patient.allergies || "Nothing recorded"}
           </span>
         </div>
         <div className="mt-1 text-sm">
-          <span className="text-zinc-600">Magonjwa Sugu: </span>
+          <span className="text-zinc-600">Chronic Conditions: </span>
           {patient.chronic_conditions || "Nothing recorded"}
         </div>
       </div>
 
       {medications.length > 0 && (
         <div className="mb-6">
-          <h3 className="mb-2 text-sm font-semibold">Dawa (Medications)</h3>
+          <h3 className="mb-2 text-sm font-semibold">Medications</h3>
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b-2 border-zinc-800">
-                <th className="py-1.5 pr-2 font-semibold">Dawa</th>
+                <th className="py-1.5 pr-2 font-semibold">Medications</th>
                 <th className="py-1.5 pr-2 font-semibold">Dosage</th>
                 <th className="py-1.5 pr-2 font-semibold">Frequency</th>
                 <th className="py-1.5 pr-2 font-semibold">Ilianza</th>
@@ -151,11 +151,11 @@ export default async function PatientReportPrintPage(
 
       <div>
         <h3 className="mb-2 text-sm font-semibold">
-          Ripoti za Kila Siku (siku {recentDays.length} za hivi karibuni)
+          Daily Reports (last {recentDays.length} days)
         </h3>
         {recentDays.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            Hakuna ziara zilizorekodiwa bado.
+            No visits recorded yet.
           </p>
         ) : (
           <div className="flex flex-col gap-3">
@@ -198,7 +198,7 @@ export default async function PatientReportPrintPage(
       </div>
 
       <p className="mt-10 text-xs text-zinc-400">
-        Ripoti hii imetengenezwa kwa ajili ya familia ya mgonjwa — Afya Nyumbani ERP —{" "}
+        This report was prepared for the patient's family. Afya Nyumbani ERP,{" "}
         {new Date().toISOString().slice(0, 10)}
       </p>
     </div>

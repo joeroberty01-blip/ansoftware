@@ -33,23 +33,23 @@ interface ManualReceipt {
 }
 
 const CSV_COLUMNS = [
-  { key: "paid_at", label: "Tarehe" },
-  { key: "receipt_number", label: "Risiti Na." },
-  { key: "document_number", label: "Hati" },
+  { key: "paid_at", label: "Date" },
+  { key: "receipt_number", label: "Receipt No." },
+  { key: "document_number", label: "Document" },
   { key: "client_name", label: "Client" },
-  { key: "amount", label: "Kiasi" },
-  { key: "balance_after", label: "Salio" },
-  { key: "method", label: "Njia" },
+  { key: "amount", label: "Amount" },
+  { key: "balance_after", label: "Balance" },
+  { key: "method", label: "Method" },
   { key: "reference", label: "Kumbukumbu" },
   { key: "received_by_name", label: "Aliyepokea" },
 ];
 
 const MANUAL_CSV_COLUMNS = [
-  { key: "issued_at", label: "Tarehe" },
-  { key: "receipt_number", label: "Namba" },
+  { key: "issued_at", label: "Date" },
+  { key: "receipt_number", label: "Number" },
   { key: "client_name", label: "Client" },
-  { key: "amount", label: "Kiasi" },
-  { key: "method", label: "Njia" },
+  { key: "amount", label: "Amount" },
+  { key: "method", label: "Method" },
   { key: "reference", label: "Kumbukumbu" },
   { key: "issued_by_name", label: "Aliyetoa" },
 ];
@@ -133,7 +133,7 @@ export default function ReceiptsPage() {
     e.preventDefault();
     setMrError(null);
     if (!mrClientName.trim()) {
-      setMrError("Jina la client linahitajika.");
+      setMrError("Client name is required.");
       return;
     }
     setMrSubmitting(true);
@@ -154,7 +154,7 @@ export default function ReceiptsPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setMrError(json.error ?? "Imeshindwa kutengeneza risiti.");
+        setMrError(json.error ?? "Could not create the receipt.");
         return;
       }
       resetManualForm();
@@ -187,7 +187,7 @@ export default function ReceiptsPage() {
                 : "bg-brand-blue text-white hover:bg-brand-blue-dark"
             }`}
           >
-            {showManualForm ? "Funga" : "Ongeza Risiti"}
+            {showManualForm ? "Close" : "Add Receipt"}
           </button>
         </div>
       </div>
@@ -199,29 +199,29 @@ export default function ReceiptsPage() {
         >
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">
-              Risiti Papo kwa Papo
+              Instant Receipts
             </h2>
             <p className="text-xs text-zinc-500">
-              Kwa malipo yasiyotoka kwenye Invoice (mf. huduma ndogo ya haraka).
-              Risiti hizi <span className="font-semibold">hazihesabiwi</span>{" "}
-              kwenye Mapato/Finance — ni kumbukumbu ya kuchapisha tu.
+              For payments not from an Invoice (e.g. a small quick service).
+              These receipts are <span className="font-semibold">not counted</span>{" "}
+              in Income/Finance; they are a printed record only.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Namba ya Risiti (hiari — kama huachwi wazi, itatengenezwa kiotomatiki)
+                Receipt Number (optional; generated automatically if left blank)
               </label>
               <input
                 value={mrReceiptNumber}
                 onChange={(e) => setMrReceiptNumber(e.target.value)}
-                placeholder="mf. RCT-00014"
+                placeholder="e.g. RCT-00014"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Tarehe (hiari — leo ndiyo default)
+                Date (optional; defaults to today)
               </label>
               <input
                 type="date"
@@ -232,18 +232,18 @@ export default function ReceiptsPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Jina la Client
+                Client Name
               </label>
               <input
                 value={mrClientName}
                 onChange={(e) => setMrClientName(e.target.value)}
-                placeholder="mf. Mama Amina"
+                placeholder="e.g. Mama Amina"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Simu (hiari)
+                Phone (optional)
               </label>
               <input
                 value={mrPhone}
@@ -254,7 +254,7 @@ export default function ReceiptsPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Kiasi (TZS)
+                Amount (TZS)
               </label>
               <input
                 value={mrAmount}
@@ -265,7 +265,7 @@ export default function ReceiptsPage() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Njia</label>
+              <label className="text-xs font-medium text-zinc-600">Method</label>
               <select
                 value={mrMethod}
                 onChange={(e) => setMrMethod(e.target.value)}
@@ -280,7 +280,7 @@ export default function ReceiptsPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Kumbukumbu (hiari)
+                Notes (optional)
               </label>
               <input
                 value={mrReference}
@@ -290,12 +290,12 @@ export default function ReceiptsPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Maelezo (hiari)
+                Notes (optional)
               </label>
               <input
                 value={mrDescription}
                 onChange={(e) => setMrDescription(e.target.value)}
-                placeholder="mf. Ushauri wa haraka"
+                placeholder="e.g. Quick consultation"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -310,7 +310,7 @@ export default function ReceiptsPage() {
             disabled={mrSubmitting}
             className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {mrSubmitting ? "Inatengeneza..." : "Tengeneza na Chapisha"}
+            {mrSubmitting ? "Inatengeneza..." : "Create and Print"}
           </button>
         </form>
       )}
@@ -321,7 +321,7 @@ export default function ReceiptsPage() {
           onChange={(e) => setMethodFilter(e.target.value)}
           className="w-full max-w-xs rounded border border-zinc-300 px-2 py-1.5 text-sm"
         >
-          <option value="">Njia Zote</option>
+          <option value="">All Methods</option>
           {methods.map((m) => (
             <option key={m} value={m}>
               {m}
@@ -329,7 +329,7 @@ export default function ReceiptsPage() {
           ))}
         </select>
         <p className="text-sm text-zinc-600">
-          Jumla: <span className="font-semibold">{fmt(String(totalAmount))}</span>
+          Total: <span className="font-semibold">{fmt(String(totalAmount))}</span>
         </p>
       </div>
 
@@ -337,19 +337,19 @@ export default function ReceiptsPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna risiti bado.</p>
+          <p className="text-sm text-zinc-500">No receipts yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Tarehe</th>
-                <th className="py-2 pr-4">Risiti Na.</th>
-                <th className="py-2 pr-4">Hati</th>
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2 pr-4">Receipt No.</th>
+                <th className="py-2 pr-4">Document</th>
                 <th className="py-2 pr-4">Client</th>
-                <th className="py-2 pr-4 text-right">Kiasi</th>
-                <th className="py-2 pr-4 text-right">Salio</th>
-                <th className="py-2 pr-4">Njia</th>
+                <th className="py-2 pr-4 text-right">Amount</th>
+                <th className="py-2 pr-4 text-right">Balance</th>
+                <th className="py-2 pr-4">Method</th>
                 <th className="py-2 pr-4">Aliyepokea</th>
                 <th className="py-2 pr-4 print:hidden"></th>
               </tr>
@@ -411,10 +411,10 @@ export default function ReceiptsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">
-              Risiti Papo kwa Papo
+              Instant Receipts
             </h2>
             <p className="text-xs text-zinc-500">
-              Hazihesabiwi kwenye Mapato/Finance — kumbukumbu ya kuchapisha tu.
+              Not counted in Income/Finance; a printed record only.
             </p>
           </div>
           <div className="print:hidden">
@@ -429,17 +429,17 @@ export default function ReceiptsPage() {
           {manualLoading ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : manualReceipts.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna risiti papo kwa papo bado.</p>
+            <p className="text-sm text-zinc-500">No instant receipts yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                    <th className="py-2 pr-4">Tarehe</th>
-                    <th className="py-2 pr-4">Namba</th>
+                    <th className="py-2 pr-4">Date</th>
+                    <th className="py-2 pr-4">Number</th>
                     <th className="py-2 pr-4">Client</th>
-                    <th className="py-2 pr-4 text-right">Kiasi</th>
-                    <th className="py-2 pr-4">Njia</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
+                    <th className="py-2 pr-4">Method</th>
                     <th className="py-2 pr-4">Aliyetoa</th>
                     <th className="py-2 pr-4 print:hidden"></th>
                   </tr>

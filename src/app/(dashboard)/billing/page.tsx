@@ -15,12 +15,12 @@ const CREATE_DOC_TYPE_LINKS = [
 ];
 
 const CSV_COLUMNS = [
-  { key: "document_number", label: "Namba" },
-  { key: "doc_type", label: "Aina" },
+  { key: "document_number", label: "Number" },
+  { key: "doc_type", label: "Type" },
   { key: "client_name", label: "Client" },
-  { key: "issue_date", label: "Tarehe" },
-  { key: "total_amount", label: "Jumla" },
-  { key: "amount_paid", label: "Imelipwa" },
+  { key: "issue_date", label: "Date" },
+  { key: "total_amount", label: "Total" },
+  { key: "amount_paid", label: "Paid" },
   { key: "payment_status", label: "Status" },
 ];
 
@@ -37,7 +37,7 @@ interface InvoiceListItem {
 }
 
 const DOC_TYPE_OPTIONS = [
-  { value: "", label: "Zote" },
+  { value: "", label: "All" },
   { value: "QUOTATION", label: "Quotation" },
   { value: "PROFORMA", label: "Proforma Invoice" },
   { value: "INVOICE", label: "Invoice" },
@@ -45,7 +45,7 @@ const DOC_TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "Zote" },
+  { value: "", label: "All" },
   { value: "PENDING", label: "Pending" },
   { value: "PARTIAL", label: "Partial" },
   { value: "PAID", label: "Paid" },
@@ -103,7 +103,7 @@ export default function BillingPage() {
               onClick={() => setCreateOpen((v) => !v)}
               className="flex items-center gap-1 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
             >
-              Tengeneza Invoice
+              Create Invoice
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             {createOpen && (
@@ -159,7 +159,7 @@ export default function BillingPage() {
             checked={outstandingOnly}
             onChange={(e) => setOutstandingOnly(e.target.checked)}
           />
-          Outstanding Pekee
+          Outstanding Only
         </label>
       </div>
 
@@ -167,18 +167,18 @@ export default function BillingPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : invoices.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna rekodi.</p>
+          <p className="text-sm text-zinc-500">No records.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Namba</th>
-                <th className="py-2 pr-4">Aina</th>
+                <th className="py-2 pr-4">Number</th>
+                <th className="py-2 pr-4">Type</th>
                 <th className="py-2 pr-4">Client</th>
-                <th className="py-2 pr-4">Tarehe</th>
-                <th className="py-2 pr-4 text-right">Jumla</th>
-                <th className="py-2 pr-4 text-right">Imelipwa</th>
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2 pr-4 text-right">Total</th>
+                <th className="py-2 pr-4 text-right">Paid</th>
                 <th className="py-2 pr-4">Status</th>
               </tr>
             </thead>

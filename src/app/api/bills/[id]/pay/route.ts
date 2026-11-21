@@ -3,8 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { payBill } from "@/lib/repo/bills";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Bill haikupatikana." },
-  ALREADY_PAID: { status: 400, message: "Bill hii tayari imelipwa." },
+  NOT_FOUND: { status: 404, message: "Bill not found." },
+  ALREADY_PAID: { status: 400, message: "This bill is already paid." },
 };
 
 export async function POST(
@@ -14,12 +14,12 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;

@@ -11,7 +11,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -21,7 +21,7 @@ export async function GET(
   const { id } = await ctx.params;
   const client = await getClientById(id);
   if (!client) {
-    return NextResponse.json({ error: "Client hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Client not found." }, { status: 404 });
   }
 
   return NextResponse.json({ client });
@@ -34,7 +34,7 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -46,7 +46,7 @@ export async function PATCH(
   const parsed = updateClientSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -61,17 +61,17 @@ export async function PATCH(
   });
 
   if (!client) {
-    return NextResponse.json({ error: "Client hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Client not found." }, { status: 404 });
   }
 
   return NextResponse.json({ client });
 }
 
 const DELETE_ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Client hakupatikana." },
+  NOT_FOUND: { status: 404, message: "Client not found." },
   HAS_INVOICES: {
     status: 400,
-    message: "Client huyu ana hati (invoices) zilizopo, hawezi kufutwa.",
+    message: "This client has existing documents (invoices) and can't be deleted.",
   },
 };
 
@@ -82,7 +82,7 @@ export async function DELETE(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }

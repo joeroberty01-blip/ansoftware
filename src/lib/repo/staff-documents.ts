@@ -32,7 +32,7 @@ export async function addStaffDocument(input: {
      RETURNING *`,
     [input.staffId, input.title, input.documentType, input.fileUrl, input.uploadedById]
   );
-  if (!row) throw new Error("Imeshindwa kupakia hati");
+  if (!row) throw new Error("Could not upload the document");
   return row;
 }
 

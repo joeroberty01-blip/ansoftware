@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 /** Vercel Cron, once a day (see vercel.json). */
 export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "CRON_SECRET haijawekwa." }, { status: 503 });
+    return NextResponse.json({ error: "CRON_SECRET is not set." }, { status: 503 });
   }
   if (!cronAuthorized(req)) {
     return NextResponse.json({ error: "Hairuhusiwi." }, { status: 401 });
   }
   if (!pushConfigured()) {
-    return NextResponse.json({ error: "VAPID keys hazijawekwa." }, { status: 503 });
+    return NextResponse.json({ error: "VAPID keys are not set." }, { status: 503 });
   }
   try {
     const result = await runFollowUpReminders();
@@ -23,6 +23,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("[cron] booking-followups failed:", err);
-    return NextResponse.json({ error: "Imeshindikana." }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
   }
 }

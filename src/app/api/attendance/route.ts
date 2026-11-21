@@ -17,10 +17,10 @@ export const dynamic = "force-dynamic";
 async function requireAdmin() {
   const session = await getCurrentUser();
   if (!session) {
-    return { error: NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 }) };
+    return { error: NextResponse.json({ error: "Please sign in first." }, { status: 401 }) };
   }
   if (session.role !== "ADMIN") {
-    return { error: NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 }) };
+    return { error: NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 }) };
   }
   return { session };
 }
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
 }
 
 const settingsSchema = z.object({
-  shiftStart: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Muda sio sahihi (mf. 07:00)"),
+  shiftStart: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time (e.g. 07:00)"),
 });
 
 /** Admin: set the shift start used to count lateness. */
@@ -61,7 +61,7 @@ export async function PUT(req: Request) {
   const parsed = settingsSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

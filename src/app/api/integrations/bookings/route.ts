@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "JSON sio sahihi" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   // Schema ileile inayotumika kwenye fomu ya admin. Ikibadilika,
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   const parsed = createBookingSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     preferredDate: d.preferredDate ? d.preferredDate : null,
     notes: d.notes ? d.notes : null,
     createdById: integrationUser.id,
-    // Requests from the client app are "Tovuti / app" unless it says otherwise.
+    // Requests from the client app are "Website / app" unless it says otherwise.
     source: d.source ?? "WEBSITE",
     sourceDetail: d.sourceDetail ? d.sourceDetail : null,
   });

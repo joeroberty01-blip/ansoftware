@@ -12,7 +12,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -23,7 +23,7 @@ export async function GET(
 
   const patient = await getPatientById(id);
   if (!patient) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   return NextResponse.json({ patient });
@@ -36,7 +36,7 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -49,7 +49,7 @@ export async function PATCH(
   const parsed = updatePatientSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -58,7 +58,7 @@ export async function PATCH(
 
   if (d.assignedStaffId !== undefined && session.role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Ruhusa hairuhusiwi kubadili nurse aliyepangiwa." },
+      { error: "You don't have permission to change the assigned nurse." },
       { status: 403 }
     );
   }
@@ -84,7 +84,7 @@ export async function PATCH(
   });
 
   if (!patient) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   await logAudit({ userId: session.id, action: "PATIENT_UPDATED", entity: "patient", entityId: id });
@@ -98,18 +98,18 @@ export async function DELETE(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const deleted = await deletePatient(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   await logAudit({ userId: session.id, action: "PATIENT_DELETED", entity: "patient", entityId: id });

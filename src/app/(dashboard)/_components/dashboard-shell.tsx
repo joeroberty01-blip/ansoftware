@@ -37,12 +37,12 @@ function AttendanceReminder({ shiftStart, lateNow }: { shiftStart: string; lateN
           ⏰
         </span>
         <div className="min-w-0">
-          <p className="text-base font-bold text-red-800">Hujaingia kazini leo</p>
+          <p className="text-base font-bold text-red-800">You haven't checked in today</p>
           <p className="text-sm text-red-700">
             {lateNow
-              ? `Zamu ilianza saa ${shiftStart}. Ukifika kwa mgonjwa, bonyeza "Nimefika kazini" sasa (selfie + GPS).`
-              : `Zamu inaanza saa ${shiftStart}. Ukifika kwa mgonjwa, bonyeza "Nimefika kazini" (selfie + GPS).`}{" "}
-            Ripoti ya leo haijazwi kabla ya hapo.
+              ? `Your shift started at ${shiftStart}. When you reach the patient, tap "Check in" now (selfie + GPS).`
+              : `Your shift starts at ${shiftStart}. When you reach the patient, tap "Check in" (selfie + GPS).`}{" "}
+            Today's report can't be filled in before that.
           </p>
         </div>
       </div>
@@ -50,7 +50,7 @@ function AttendanceReminder({ shiftStart, lateNow }: { shiftStart: string; lateN
         href="/dashboard#mahudhurio"
         className="shrink-0 rounded-lg bg-red-600 px-4 py-2.5 text-center text-sm font-bold text-white shadow hover:bg-red-700"
       >
-        Nimefika kazini →
+        Check in →
       </a>
     </div>
   );
@@ -165,15 +165,15 @@ export function DashboardShell({
               className="relative rounded-full p-2 text-zinc-500 hover:bg-zinc-100"
               aria-label={
                 notificationCount > 0
-                  ? `Arifa: ${notificationCount} zinahitaji kushughulikiwa`
-                  : "Arifa"
+                  ? `Notifications: ${notificationCount} need attention`
+                  : "Notifications"
               }
               title={
                 role === "ADMIN"
-                  ? "Arifa"
+                  ? "Notifications"
                   : notificationCount > 0
-                    ? "Una ziara ulizokosa"
-                    : "Hakuna arifa"
+                    ? "You have missed visits"
+                    : "No notifications"
               }
             >
               <Bell className="h-5 w-5" />

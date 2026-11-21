@@ -10,7 +10,7 @@ export default async function StaffProfilePage(
   const staff = await getStaffById(id);
 
   if (!staff) {
-    return <div className="p-6 text-sm text-zinc-500">Staff hakupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Staff member not found.</div>;
   }
 
   return (

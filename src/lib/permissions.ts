@@ -35,7 +35,7 @@ export async function assertBillingAccess(user: {
 }): Promise<NextResponse | null> {
   if (await userCanAccessBilling(user)) return null;
   return NextResponse.json(
-    { error: "Huna ruhusa ya kufikia sehemu ya malipo na invoices." },
+    { error: "You don't have access to payments and invoices." },
     { status: 403 }
   );
 }

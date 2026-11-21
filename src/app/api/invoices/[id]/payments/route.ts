@@ -5,15 +5,15 @@ import { recordPaymentSchema } from "@/lib/validation/invoices";
 import { recordPayment } from "@/lib/repo/invoices";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Invoice haikupatikana." },
+  NOT_FOUND: { status: 404, message: "Invoice not found." },
   NOT_PAYABLE: {
     status: 400,
     message:
-      "Huwezi kurekodi malipo kwenye Quotation/Proforma. Igeuze kuwa Invoice/Tax Invoice kwanza.",
+      "You can't record payments on a Quotation/Proforma. Convert it to an Invoice/Tax Invoice first.",
   },
   ALREADY_SETTLED: {
     status: 400,
-    message: "Invoice hii tayari imelipwa kikamilifu au imefutwa.",
+    message: "This invoice is already fully paid or cancelled.",
   },
 };
 
@@ -24,7 +24,7 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -36,7 +36,7 @@ export async function POST(
   const parsed = recordPaymentSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

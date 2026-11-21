@@ -22,8 +22,8 @@ interface Payment {
 type DocType = "QUOTATION" | "PROFORMA" | "INVOICE" | "TAX_INVOICE";
 
 const CONVERSION_TARGET_LABEL: Partial<Record<DocType, string>> = {
-  QUOTATION: "Geuza kuwa Invoice",
-  PROFORMA: "Geuza kuwa Tax Invoice",
+  QUOTATION: "Convert to Invoice",
+  PROFORMA: "Convert to Tax Invoice",
 };
 const PAYABLE_TYPES: DocType[] = ["INVOICE", "TAX_INVOICE"];
 
@@ -106,7 +106,7 @@ export default function BillingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setPayError(json.error ?? "Imeshindwa kurekodi malipo.");
+        setPayError(json.error ?? "Could not record the payment.");
         return;
       }
       setAmount("");
@@ -135,7 +135,7 @@ export default function BillingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setConvertError(json.error ?? "Imeshindwa kugeuza.");
+        setConvertError(json.error ?? "Could not convert.");
         return;
       }
       window.location.href = `/billing/${json.invoice.id}`;
@@ -150,7 +150,7 @@ export default function BillingDetailPage() {
     if (!invoice) return;
     if (
       !window.confirm(
-        `Una uhakika unataka kughairi ${invoice.document_number}? Hatua hii haiwezi kutenduliwa.`
+        `Are you sure you want to cancel ${invoice.document_number}? This cannot be undone.`
       )
     ) {
       return;
@@ -163,7 +163,7 @@ export default function BillingDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setCancelError(json.error ?? "Imeshindwa kughairi.");
+        setCancelError(json.error ?? "Could not cancel.");
         return;
       }
       await load();
@@ -178,7 +178,7 @@ export default function BillingDetailPage() {
     return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!invoice) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const convertLabel = CONVERSION_TARGET_LABEL[invoice.doc_type];
@@ -233,7 +233,7 @@ export default function BillingDetailPage() {
             rel="noopener noreferrer"
             className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
-            Pakua PDF
+            Download PDF
           </a>
           {canCancel && (
             <button
@@ -241,7 +241,7 @@ export default function BillingDetailPage() {
               disabled={cancelling}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {cancelling ? "Inaghairi..." : "Ghairi"}
+              {cancelling ? "Cancelling..." : "Cancel"}
             </button>
           )}
         </div>
@@ -264,15 +264,15 @@ export default function BillingDetailPage() {
             <PaymentStatusBadge status={invoice.payment_status} />
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Jumla</p>
+            <p className="text-xs text-zinc-500">Total</p>
             <p className="font-medium">{fmt(invoice.total_amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Imelipwa</p>
+            <p className="text-xs text-zinc-500">Paid</p>
             <p className="font-medium">{fmt(invoice.amount_paid)}</p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Tarehe</p>
+            <p className="text-xs text-zinc-500">Date</p>
             <p className="font-medium">{invoice.issue_date.slice(0, 10)}</p>
           </div>
         </div>
@@ -284,10 +284,10 @@ export default function BillingDetailPage() {
           <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              <th className="py-2 pr-4">Maelezo</th>
-              <th className="py-2 pr-4 text-right">Idadi</th>
-              <th className="py-2 pr-4 text-right">Bei</th>
-              <th className="py-2 pr-4 text-right">Jumla</th>
+              <th className="py-2 pr-4">Description</th>
+              <th className="py-2 pr-4 text-right">Quantity</th>
+              <th className="py-2 pr-4 text-right">Price</th>
+              <th className="py-2 pr-4 text-right">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -307,19 +307,19 @@ export default function BillingDetailPage() {
       {isPayable && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-            Historia ya Malipo
+            Payment History
           </h2>
           {invoice.payments.length === 0 ? (
-            <p className="mb-4 text-sm text-zinc-500">Hakuna malipo bado.</p>
+            <p className="mb-4 text-sm text-zinc-500">No payments yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="mb-4 w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Tarehe</th>
-                  <th className="py-2 pr-4">Njia</th>
+                  <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4">Method</th>
                   <th className="py-2 pr-4">Kumbukumbu</th>
-                  <th className="py-2 pr-4 text-right">Kiasi</th>
+                  <th className="py-2 pr-4 text-right">Amount</th>
                   <th className="py-2 pr-4"></th>
                 </tr>
               </thead>
@@ -337,7 +337,7 @@ export default function BillingDetailPage() {
                         rel="noopener noreferrer"
                         className="mr-2 text-xs font-medium text-zinc-900 underline"
                       >
-                        Print Risiti
+                        Print Receipt
                       </a>
                       <a
                         href={`/api/invoices/${invoice.id}/payments/${p.id}/receipt`}
@@ -360,7 +360,7 @@ export default function BillingDetailPage() {
               <input
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Kiasi"
+                placeholder="Amount"
                 inputMode="decimal"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
@@ -378,7 +378,7 @@ export default function BillingDetailPage() {
               <input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                placeholder="Kumbukumbu (hiari)"
+                placeholder="Notes (optional)"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <button
@@ -386,7 +386,7 @@ export default function BillingDetailPage() {
                 disabled={paying}
                 className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {paying ? "Inarekodi..." : "Rekodi Malipo"}
+                {paying ? "Recording..." : "Record Payment"}
               </button>
             </form>
           )}

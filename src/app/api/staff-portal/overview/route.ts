@@ -24,7 +24,7 @@ export async function GET() {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -32,7 +32,7 @@ export async function GET() {
   const staff = await getStaffByUserId(session.id);
   if (!staff) {
     return NextResponse.json(
-      { error: "Hakuna rekodi ya staff kwa akaunti hii." },
+      { error: "No staff record for this account." },
       { status: 404 }
     );
   }

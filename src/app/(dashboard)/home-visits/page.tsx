@@ -15,21 +15,21 @@ import {
 } from "@/lib/daily-reports";
 
 const CSV_COLUMNS = [
-  { key: "visit_date", label: "Tarehe" },
-  { key: "visit_session", label: "Muda" },
-  { key: "visit_type", label: "Aina" },
-  { key: "patient_name", label: "Mgonjwa" },
+  { key: "visit_date", label: "Date" },
+  { key: "visit_session", label: "Session" },
+  { key: "visit_type", label: "Type" },
+  { key: "patient_name", label: "Patient" },
   { key: "staff_name", label: "Staff" },
   { key: "location", label: "Location" },
   { key: "blood_pressure", label: "BP" },
-  { key: "temperature", label: "Joto (°C)" },
+  { key: "temperature", label: "Temp (°C)" },
   { key: "pulse", label: "Pulse" },
-  { key: "blood_glucose", label: "Sukari" },
+  { key: "blood_glucose", label: "Glucose" },
   { key: "spo2", label: "SpO2 (%)" },
-  { key: "weight", label: "Uzito (kg)" },
-  { key: "food_intake", label: "Chakula" },
-  { key: "treatment_notes", label: "Matibabu / Procedures" },
-  { key: "notes", label: "Maendeleo / Maelezo" },
+  { key: "weight", label: "Weight (kg)" },
+  { key: "food_intake", label: "Food Intake" },
+  { key: "treatment_notes", label: "Treatment / Procedures" },
+  { key: "notes", label: "Progress / Notes" },
   { key: "status", label: "Status" },
 ];
 
@@ -56,13 +56,13 @@ interface Visit {
 }
 
 const STATUS_OPTIONS = [
-  { value: "", label: "Zote" },
+  { value: "", label: "All" },
   { value: "SCHEDULED", label: "Scheduled" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const weekdayOf = (date: string) => WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()] ?? "";
 
 /** The patient's single report for that day, opened at one part. */
@@ -91,10 +91,10 @@ function SessionCell({ entries }: { entries: Visit[] }) {
                 : "bg-zinc-100 text-zinc-500 line-through"
           }`}
         >
-          {v.status === "COMPLETED" ? "✓" : v.status === "SCHEDULED" ? "Imepangwa" : "Imeghairiwa"}
+          {v.status === "COMPLETED" ? "✓" : v.status === "SCHEDULED" ? "Scheduled" : "Cancelled"}
           {v.blood_pressure ? ` · BP ${v.blood_pressure}` : ""}
           {hasVitalsAlert(v) && (
-            <span title="Vitals nje ya kawaida" className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+            <span title="Vitals outside normal range" className="h-1.5 w-1.5 rounded-full bg-orange-500" />
           )}
         </Link>
       ))}
@@ -153,7 +153,7 @@ export default function HomeVisitsListPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Home Visits</h1>
           <p className="text-sm text-zinc-500">
-            Ripoti moja kwa kila mgonjwa kwa siku: Asubuhi, Mchana na Jioni.
+            One report per patient per session: Morning, Afternoon and Evening.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -162,7 +162,7 @@ export default function HomeVisitsListPage() {
             href="/home-visits/new"
             className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
-            Rekodi Ziara Mpya
+            Record a New Visit
           </Link>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function HomeVisitsListPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          aria-label="Chuja kwa status"
+          aria-label="Filter by status"
           className="w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-base sm:max-w-xs sm:py-1.5 sm:text-sm"
         >
           {STATUS_OPTIONS.map((o) => (
@@ -194,7 +194,7 @@ export default function HomeVisitsListPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : reports.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna home visits bado.</p>
+          <p className="text-sm text-zinc-500">No home visits yet.</p>
         ) : (
           <>
             {/* Phone: a card per daily report with its three sessions. */}
@@ -247,8 +247,8 @@ export default function HomeVisitsListPage() {
               <table className="w-full text-left text-sm" data-keep-table>
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                    <th className="py-2 pr-4">Tarehe</th>
-                    <th className="py-2 pr-4">Mgonjwa</th>
+                    <th className="py-2 pr-4">Date</th>
+                    <th className="py-2 pr-4">Patient</th>
                     {DAILY_SESSIONS.map((s) => (
                       <th key={s} className="py-2 pr-4">
                         {DAILY_SESSION_LABELS[s]}

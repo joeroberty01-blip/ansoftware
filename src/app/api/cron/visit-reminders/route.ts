@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "CRON_SECRET haijawekwa." }, { status: 503 });
+    return NextResponse.json({ error: "CRON_SECRET is not set." }, { status: 503 });
   }
   if (!cronAuthorized(req)) {
     return NextResponse.json({ error: "Hairuhusiwi." }, { status: 401 });
@@ -16,12 +16,12 @@ export async function GET(req: NextRequest) {
   const slot = req.nextUrl.searchParams.get("slot") as ReminderSlot | null;
   if (!slot || !REMINDER_SLOTS.includes(slot)) {
     return NextResponse.json(
-      { error: `slot lazima iwe moja ya: ${REMINDER_SLOTS.join(", ")}` },
+      { error: `slot must be one of: ${REMINDER_SLOTS.join(", ")}` },
       { status: 400 }
     );
   }
   if (!pushConfigured()) {
-    return NextResponse.json({ error: "VAPID keys hazijawekwa." }, { status: 503 });
+    return NextResponse.json({ error: "VAPID keys are not set." }, { status: 503 });
   }
 
   try {
@@ -30,6 +30,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("[cron] visit-reminders failed:", err);
-    return NextResponse.json({ error: "Imeshindikana." }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
   }
 }

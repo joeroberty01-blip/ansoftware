@@ -17,7 +17,7 @@ export async function createBill(input: {
      RETURNING *`,
     [input.name, input.category, input.amount, input.dueDate, input.notes, input.createdById]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza bill");
+  if (!row) throw new Error("Could not add the bill");
   return row;
 }
 

@@ -20,36 +20,36 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const staff = await getStaffById(id);
   if (!staff) {
-    return NextResponse.json({ error: "Staff hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
   }
 
   const formData = await req.formData();
   const file = formData.get("photo");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Picha inahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "A photo is required." }, { status: 400 });
   }
 
   const ext = ALLOWED_TYPES[file.type];
   if (!ext) {
     return NextResponse.json(
-      { error: "Aina ya picha inayoruhusiwa: JPEG, PNG, WEBP." },
+      { error: "Allowed image types: JPEG, PNG, WEBP." },
       { status: 400 }
     );
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json(
-      { error: "Picha isizidi 5MB." },
+      { error: "Photo must not exceed 5MB." },
       { status: 400 }
     );
   }

@@ -4,23 +4,23 @@ export const CARE_PLAN_FREQUENCIES = ["DAILY", "WEEKLY"] as const;
 export const CARE_PLAN_STATUSES = ["ACTIVE", "PAUSED", "ENDED"] as const;
 export const CARE_PLAN_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 
-const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi");
+const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date");
 
 export const createCarePlanSchema = z
   .object({
-    patientId: z.string().min(1, "Mgonjwa anahitajika"),
+    patientId: z.string().min(1, "Patient is required"),
     staffId: z.string().optional().or(z.literal("")),
     frequency: z.enum(CARE_PLAN_FREQUENCIES),
     weekdays: z.array(z.number().int().min(0).max(6)).optional(),
     sessions: z
       .array(z.enum(CARE_PLAN_SESSIONS))
-      .min(1, "Chagua angalau muda mmoja (session)"),
+      .min(1, "Choose at least one session"),
     startDate: dateStr,
     endDate: dateStr,
     notes: z.string().trim().max(1000).optional().or(z.literal("")),
   })
   .refine((d) => d.endDate >= d.startDate, {
-    message: "Tarehe ya mwisho lazima iwe baada ya tarehe ya kuanza",
+    message: "The end date must be after the start date",
     path: ["endDate"],
   })
   .refine(
@@ -31,12 +31,12 @@ export const createCarePlanSchema = z
       return days <= 120;
     },
     {
-      message: "Muda wa care plan usizidi siku 120 kwa mara moja",
+      message: "A care plan can't be longer than 120 days at a time",
       path: ["endDate"],
     }
   )
   .refine((d) => d.frequency !== "WEEKLY" || (d.weekdays && d.weekdays.length > 0), {
-    message: "Chagua siku za wiki kwa care plan ya WEEKLY",
+    message: "Choose the weekdays for a WEEKLY care plan",
     path: ["weekdays"],
   });
 

@@ -9,16 +9,16 @@ export async function GET(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const booking = await getBookingById(id);
   if (!booking) {
-    return NextResponse.json({ error: "Booking haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Booking not found." }, { status: 404 });
   }
   return NextResponse.json({ booking });
 }
@@ -29,23 +29,23 @@ export async function PATCH(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const existing = await getBookingById(id);
   if (!existing) {
-    return NextResponse.json({ error: "Booking haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Booking not found." }, { status: 404 });
   }
 
   const body = await req.json();
   const parsed = updateBookingSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -72,16 +72,16 @@ export async function DELETE(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const deleted = await deleteBooking(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Booking haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Booking not found." }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }

@@ -15,7 +15,7 @@ export async function createLeaveRequest(input: {
      RETURNING *`,
     [input.staffId, input.startDate, input.endDate, input.days, input.reason]
   );
-  if (!row) throw new Error("Imeshindwa kuomba likizo");
+  if (!row) throw new Error("Could not request leave");
   return row;
 }
 

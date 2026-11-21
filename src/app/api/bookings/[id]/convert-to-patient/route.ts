@@ -9,20 +9,20 @@ export async function POST(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const booking = await getBookingById(id);
   if (!booking) {
-    return NextResponse.json({ error: "Booking haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Booking not found." }, { status: 404 });
   }
   if (booking.patient_id) {
     return NextResponse.json(
-      { error: "Booking hii tayari imeunganishwa na mgonjwa." },
+      { error: "This booking is already linked to a patient." },
       { status: 400 }
     );
   }

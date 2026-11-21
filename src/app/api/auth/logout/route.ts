@@ -3,5 +3,5 @@ import { clearSessionCookie } from "@/lib/auth";
 
 export async function POST() {
   await clearSessionCookie();
-  return NextResponse.json({ message: "Umetoka kikamilifu." });
+  return NextResponse.json({ message: "Signed out successfully." });
 }

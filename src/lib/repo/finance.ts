@@ -76,7 +76,7 @@ export async function getFinanceSummary(
     [period]
   );
 
-  if (!row) throw new Error("Imeshindwa kupata muhtasari wa fedha");
+  if (!row) throw new Error("Could not get the finance summary");
 
   return {
     period,

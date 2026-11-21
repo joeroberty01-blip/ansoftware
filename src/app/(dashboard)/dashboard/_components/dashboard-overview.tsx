@@ -227,7 +227,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
                 </Link>
               </div>
               {data.todaySchedule.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna ziara leo.</p>
+                <p className="text-sm text-zinc-500">No visits today.</p>
               ) : (
                 <ul className="flex flex-col gap-3">
                   {data.todaySchedule.map((v) => (
@@ -240,7 +240,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
                           {v.patientName}
                         </p>
                         <p className="text-xs text-zinc-500">
-                          {v.staffName ?? "Hajapangiwa staff"}
+                          {v.staffName ?? "No staff assigned"}
                         </p>
                       </div>
                       <StatusBadge status={v.status} />
@@ -266,7 +266,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
               </div>
               {data.pendingActions.length === 0 ? (
                 <p className="text-sm text-zinc-500">
-                  Hakuna vitendo vinavyosubiri — kila kitu kiko sawa ✓
+                  Nothing waiting for action. All good ✓
                 </p>
               ) : (
                 <ul className="flex flex-col gap-1">
@@ -322,7 +322,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
               </h2>
               {data.staffLeaderboard.length === 0 ? (
                 <p className="text-sm text-zinc-500">
-                  Hakuna ziara zilizokamilika miongoni mwa siku 30 zilizopita.
+                  No completed visits in the last 30 days.
                 </p>
               ) : (
                 <ul className="flex flex-col gap-2">
@@ -352,7 +352,7 @@ export function DashboardOverview({ fullName }: { fullName: string }) {
                 Recent Activity
               </h2>
               {data.recentActivity.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna shughuli za hivi karibuni.</p>
+                <p className="text-sm text-zinc-500">No recent activity.</p>
               ) : (
                 <ul className="flex flex-col gap-2.5">
                   {data.recentActivity.map((a) => (
@@ -523,7 +523,7 @@ function CareTeamDonut({
   ].filter((s) => s.value > 0);
 
   if (total === 0) {
-    return <p className="text-sm text-zinc-500">Hakuna staff bado.</p>;
+    return <p className="text-sm text-zinc-500">No staff yet.</p>;
   }
 
   const radius = 40;

@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 function key(): string {
   const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET haijawekwa");
+  if (!secret) throw new Error("JWT_SECRET is not set");
   return createHmac("sha256", secret).update("password-reset-code").digest("hex");
 }
 

@@ -88,7 +88,7 @@ export function MarPanel({
       const res = await fetch(`/api/patients/${patientId}/mar${qs}`);
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kupakia MAR.");
+        setError(json.error ?? "Could not load the MAR.");
         return;
       }
       setError(null);
@@ -138,7 +138,7 @@ export function MarPanel({
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuhifadhi.");
+        setError(json.error ?? "Could not save.");
         return;
       }
       setEditing(null);
@@ -152,7 +152,7 @@ export function MarPanel({
 
   if (!data) {
     return (
-      <p className="text-sm text-zinc-500">{error ?? "Inapakia MAR..."}</p>
+      <p className="text-sm text-zinc-500">{error ?? "Loading MAR..."}</p>
     );
   }
 
@@ -169,7 +169,7 @@ export function MarPanel({
             Medication Administration Record (MAR)
           </h2>
           <p className="text-xs text-zinc-500">
-            Bonyeza kisanduku kurekodi: Given, Missed au Refused.
+            Tap a box to record: Given, Missed or Refused.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export function MarPanel({
             type="button"
             onClick={() => goTo(shiftDate(data.date, -1))}
             className="rounded border border-zinc-300 px-2 py-1 text-sm hover:bg-zinc-50"
-            aria-label="Siku iliyopita"
+            aria-label="Previous day"
           >
             ‹
           </button>
@@ -193,7 +193,7 @@ export function MarPanel({
             onClick={() => goTo(shiftDate(data.date, 1))}
             disabled={isToday}
             className="rounded border border-zinc-300 px-2 py-1 text-sm hover:bg-zinc-50 disabled:opacity-40"
-            aria-label="Siku inayofuata"
+            aria-label="Next day"
           >
             ›
           </button>
@@ -203,7 +203,7 @@ export function MarPanel({
               onClick={() => goTo(data.today)}
               className="rounded border border-zinc-300 px-2 py-1 text-xs font-medium hover:bg-zinc-50"
             >
-              Leo
+              Today
             </button>
           )}
         </div>
@@ -217,14 +217,14 @@ export function MarPanel({
 
       {data.medications.length === 0 ? (
         <p className="text-sm text-zinc-500">
-          Hakuna dawa zinazotumika siku hii. Ongeza dawa hapa chini.
+          No medications for this day. Add a medication below.
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Dawa</th>
+                <th className="py-2 pr-4">Medications</th>
                 {MAR_SLOTS.map((s) => (
                   <th key={s} className="py-2 pr-4">
                     {MAR_SLOT_LABELS[s]}
@@ -290,7 +290,7 @@ export function MarPanel({
             {editingMed.medication_name} — {MAR_SLOT_LABELS[editing.slot]} ({data.date})
           </p>
           <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-            Saa aliyotumia (hiari)
+            Time taken (optional)
             <input
               type="time"
               value={givenTime}
@@ -299,11 +299,11 @@ export function MarPanel({
             />
           </label>
           <label className="flex min-w-48 flex-1 flex-col gap-1 text-xs font-medium text-zinc-600">
-            Maelezo (hiari)
+            Notes (optional)
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="mf. alikataa kwa sababu ya kichefuchefu"
+              placeholder="e.g. refused because of nausea"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </label>
@@ -338,14 +338,14 @@ export function MarPanel({
               onClick={() => record("PENDING")}
               className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-white disabled:opacity-50"
             >
-              Futa (Pending)
+              Clear (Pending)
             </button>
             <button
               type="button"
               onClick={() => setEditing(null)}
               className="rounded px-3 py-1.5 text-sm text-zinc-500 hover:text-zinc-800"
             >
-              Funga
+              Close
             </button>
           </div>
         </div>
@@ -354,7 +354,7 @@ export function MarPanel({
       {data.history.length > 0 && (
         <div className="mt-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Historia (siku 14 zilizopita)
+            History (last 14 days)
           </p>
           <div className="flex flex-wrap gap-2">
             {data.history.map((h) => (

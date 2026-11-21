@@ -18,19 +18,19 @@ export async function assertPatientAccess(
 
   const staff = await getStaffByUserId(session.id);
   if (!staff) {
-    return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have a staff profile." }, { status: 403 });
   }
 
   if (staff.profession === "ADMIN_STAFF" || staff.is_chief_co) return null;
 
   const patient = await getPatientById(patientId);
   if (!patient) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   if (patient.assigned_staff_id !== staff.id) {
     return NextResponse.json(
-      { error: "Huna ruhusa kwa mgonjwa huyu — hajapangiwa kwako." },
+      { error: "You don't have access to this patient; they aren't assigned to you." },
       { status: 403 }
     );
   }

@@ -4,9 +4,9 @@ export const MAR_SLOTS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 export type MarSlot = (typeof MAR_SLOTS)[number];
 
 export const MAR_SLOT_LABELS: Record<MarSlot, string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
+  MORNING: "Morning",
+  AFTERNOON: "Afternoon",
+  EVENING: "Evening",
 };
 
 export const MAR_STATUSES = ["GIVEN", "MISSED", "REFUSED"] as const;

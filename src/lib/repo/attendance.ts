@@ -8,7 +8,7 @@ const EAT_TODAY = `(now() AT TIME ZONE ${EAT})::date`;
 /**
  * An open shift counts as "still at work" for this long (covers a night
  * shift that crosses midnight). Older open shifts mean the nurse forgot
- * "Naondoka": the next check-in closes them with no hours and no GPS.
+ * "Check out": the next check-in closes them with no hours and no GPS.
  */
 const ACTIVE_WINDOW = `interval '16 hours'`;
 
@@ -89,7 +89,7 @@ export async function getOpenAttendance(staffId: string): Promise<AttendanceWith
   );
 }
 
-/** An open shift too old to be real: the nurse forgot to press "Naondoka". */
+/** An open shift too old to be real: the nurse forgot to press "Check out". */
 export async function getForgottenShift(staffId: string): Promise<AttendanceWithNames | null> {
   return queryOne<AttendanceWithNames>(
     `SELECT ${SELECT_WITH_NAMES} ${FROM_WITH_NAMES}
@@ -149,7 +149,7 @@ export async function checkIn(input: {
 }): Promise<AttendanceRow> {
   return withTransaction(async (client) => {
     // A shift left open from an earlier day is closed with no hours and no
-    // GPS (shown to the admin as "Hakubonyeza Naondoka"); nothing is removed.
+    // GPS (shown to the admin as "Did not check out"); nothing is removed.
     await client.query(
       `UPDATE staff_attendance SET check_out_at = check_in_at
        WHERE staff_id = $1 AND check_out_at IS NULL
@@ -164,7 +164,7 @@ export async function checkIn(input: {
     );
     if (open.rows.length > 0) {
       throw new AttendanceError(
-        `Bado uko kazini${open.rows[0].full_name ? ` kwa ${open.rows[0].full_name}` : ""}. Bonyeza "Naondoka" kwanza.`,
+        `You're still checked in${open.rows[0].full_name ? ` at ${open.rows[0].full_name}` : ""}. Tap "Check out" first.`,
         409
       );
     }
@@ -225,7 +225,7 @@ export async function checkOut(input: {
   accuracyM: number | null;
 }): Promise<AttendanceRow> {
   const open = await getOpenAttendance(input.staffId);
-  if (!open) throw new AttendanceError("Hujaingia kazini bado.", 409);
+  if (!open) throw new AttendanceError("You haven't checked in yet.", 409);
   const distance =
     open.patient_home_lat != null && open.patient_home_lng != null
       ? distanceMeters(
@@ -241,7 +241,7 @@ export async function checkOut(input: {
      RETURNING *`,
     [open.id, input.lat, input.lng, input.accuracyM, distance]
   );
-  if (!row) throw new AttendanceError("Zamu hii tayari imefungwa.", 409);
+  if (!row) throw new AttendanceError("This shift is already closed.", 409);
   return row;
 }
 

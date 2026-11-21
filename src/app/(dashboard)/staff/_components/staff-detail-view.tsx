@@ -132,8 +132,8 @@ function fmt(value: string) {
 }
 
 const MONTH_NAMES = [
-  "Januari", "Februari", "Machi", "Aprili", "Mei", "Juni",
-  "Julai", "Agosti", "Septemba", "Oktoba", "Novemba", "Desemba",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 export function StaffDetailView({
@@ -238,7 +238,7 @@ export function StaffDetailView({
     const fileInput = form.elements.namedItem("file") as HTMLInputElement;
     const file = fileInput.files?.[0];
     if (!file || !docTitle.trim()) {
-      setDocError("Chagua faili na jina la hati.");
+      setDocError("Choose a file and enter the document name.");
       return;
     }
     setDocError(null);
@@ -268,7 +268,7 @@ export function StaffDetailView({
   };
 
   const onDeleteDocument = async (docId: string) => {
-    if (!window.confirm("Futa hati hii?")) return;
+    if (!window.confirm("Delete this document?")) return;
     await fetch(`/api/staff/${staff.id}/documents/${docId}`, { method: "DELETE" });
     await loadDocuments();
   };
@@ -347,7 +347,7 @@ export function StaffDetailView({
   const onDeactivate = async () => {
     if (
       !window.confirm(
-        `Ondoa ${staff.full_name} kwenye timu? Ataondolewa kwenye orodha ya active staff na hataweza kuingia tena. Historia yake ya payroll haitafutwa.`
+        `Remove ${staff.full_name} from the team? They will be removed from the active staff list and won't be able to sign in. Their payroll history is kept.`
       )
     ) {
       return;
@@ -662,7 +662,7 @@ export function StaffDetailView({
   };
 
   const onDeleteDuty = async (dutyId: string) => {
-    if (!window.confirm("Futa jukumu hili?")) return;
+    if (!window.confirm("Delete this duty?")) return;
     setDutyError(null);
     setDutyBusyId(dutyId);
     try {
@@ -694,7 +694,7 @@ export function StaffDetailView({
             />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-200 text-xs text-zinc-500">
-              Hakuna Picha
+              No Photo
             </div>
           )}
           <div>
@@ -720,7 +720,7 @@ export function StaffDetailView({
                 onClick={() => setEditing(true)}
                 className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
-                Hariri
+                Edit
               </button>
             )}
             {(viewerIsAdmin || isOwnProfile) && (
@@ -730,7 +730,7 @@ export function StaffDetailView({
                 rel="noopener noreferrer"
                 className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
-                Pakua ID Card (PDF)
+                Download ID Card (PDF)
               </a>
             )}
             {viewerIsAdmin && (
@@ -838,7 +838,7 @@ export function StaffDetailView({
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Taaluma</label>
+              <label className="text-xs font-medium text-zinc-600">Profession</label>
               <select
                 value={profession}
                 onChange={(e) => setProfession(e.target.value)}
@@ -875,12 +875,12 @@ export function StaffDetailView({
               <span>
                 <span className="font-medium text-zinc-900">Chief C.O (Chief Clinical Officer)</span>
                 <span className="block text-xs text-zinc-500">
-                  Anaweza kurekodi ziara za Part-time na kuona wagonjwa wote.
+                  Can record Part-time visits and see all patients.
                 </span>
               </span>
             </label>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Namba ya Leseni</label>
+              <label className="text-xs font-medium text-zinc-600">Licence Number</label>
               <input
                 value={licenseNumber}
                 onChange={(e) => setLicenseNumber(e.target.value)}
@@ -888,7 +888,7 @@ export function StaffDetailView({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Leseni Inaisha</label>
+              <label className="text-xs font-medium text-zinc-600">Licence Expires</label>
               <input
                 type="date"
                 value={licenseExpiryDate}
@@ -897,7 +897,7 @@ export function StaffDetailView({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Mshahara wa Msingi</label>
+              <label className="text-xs font-medium text-zinc-600">Basic Salary</label>
               <input
                 value={baseSalary}
                 onChange={(e) => setBaseSalary(e.target.value)}
@@ -966,14 +966,14 @@ export function StaffDetailView({
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Hifadhi"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
             >
-              Ghairi
+              Cancel
             </button>
           </div>
         </form>
@@ -981,11 +981,11 @@ export function StaffDetailView({
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
-              <p className="text-xs text-zinc-500">Simu</p>
+              <p className="text-xs text-zinc-500">Phone</p>
               <p className="font-medium">{staff.phone ?? "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Tarehe ya Kuanza</p>
+              <p className="text-xs text-zinc-500">Start Date</p>
               <p className="font-medium">{staff.start_date.slice(0, 10)}</p>
             </div>
             <div>
@@ -993,17 +993,17 @@ export function StaffDetailView({
               <p className="font-medium">{staff.employment_status}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Leseni</p>
+              <p className="text-xs text-zinc-500">Licence</p>
               <p className="font-medium">{staff.license_number ?? "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Leseni Inaisha</p>
+              <p className="text-xs text-zinc-500">Licence Expires</p>
               <p className="font-medium">
                 {staff.license_expiry_date?.slice(0, 10) ?? "-"}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Mshahara wa Msingi</p>
+              <p className="text-xs text-zinc-500">Basic Salary</p>
               <p className="font-medium">{fmt(staff.base_salary)}</p>
             </div>
             <div>
@@ -1012,7 +1012,7 @@ export function StaffDetailView({
             </div>
             <div>
               <p className="text-xs text-zinc-500">Leave Balance</p>
-              <p className="font-medium">{staff.leave_balance_days} siku</p>
+              <p className="font-medium">{staff.leave_balance_days} days</p>
             </div>
           </div>
         </div>
@@ -1254,7 +1254,7 @@ export function StaffDetailView({
               : "text-zinc-500"
           }`}
         >
-          Malipo / Payroll
+          Payroll
         </button>
         <button
           onClick={() => setTab("leave")}
@@ -1334,7 +1334,7 @@ export function StaffDetailView({
                 disabled={generating}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {generating ? "Inatengeneza..." : "Tengeneza Payroll"}
+                {generating ? "Inatengeneza..." : "Create Payroll"}
               </button>
               <label className="col-span-2 flex items-center gap-1.5 text-xs font-medium text-zinc-600 sm:col-span-4">
                 <input
@@ -1343,7 +1343,7 @@ export function StaffDetailView({
                   onChange={(e) => setApplyNssf(e.target.checked)}
                   className="h-3.5 w-3.5 rounded border-zinc-300"
                 />
-                Kata NSSF (10% ya gross pay)
+                Deduct NSSF (10% of gross pay)
               </label>
             </form>
           )}
@@ -1358,14 +1358,14 @@ export function StaffDetailView({
               className="mb-4 grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 sm:grid-cols-2 lg:grid-cols-4"
             >
               <p className="col-span-full text-sm font-semibold text-zinc-900">
-                Thibitisha malipo ya{" "}
+                Confirm payment of{" "}
                 {(() => {
                   const target = payrolls.find((x) => x.id === payFormId);
                   return target
                     ? `${MONTH_NAMES[target.month - 1]} ${target.year} (TZS ${fmt(target.net_pay)})`
-                    : "mshahara";
+                    : "salary";
                 })()}
-                . Kiasi kitaongezwa kwenye Expenses moja kwa moja.
+                . The amount will be added to Expenses automatically.
               </p>
               <select
                 value={payMethod}
@@ -1381,7 +1381,7 @@ export function StaffDetailView({
               <input
                 value={payAccount}
                 onChange={(e) => setPayAccount(e.target.value)}
-                placeholder="Akaunti / namba aliyotumiwa"
+                placeholder="Account / number paid to"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <input
@@ -1389,8 +1389,8 @@ export function StaffDetailView({
                 onChange={(e) => setPayReference(e.target.value)}
                 placeholder={
                   payMethod === "CASH"
-                    ? "Reference (hiari)"
-                    : "Reference / namba ya muamala"
+                    ? "Reference (optional)"
+                    : "Reference / transaction number"
                 }
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
@@ -1400,14 +1400,14 @@ export function StaffDetailView({
                   disabled={payingId === payFormId}
                   className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                 >
-                  {payingId === payFormId ? "Inalipa..." : "Thibitisha Malipo"}
+                  {payingId === payFormId ? "Inalipa..." : "Confirm Payment"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPayFormId(null)}
                   className="rounded border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-white"
                 >
-                  Ghairi
+                  Cancel
                 </button>
               </div>
             </form>
@@ -1415,20 +1415,20 @@ export function StaffDetailView({
           {loadingPayroll ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : payrolls.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna payroll bado.</p>
+            <p className="text-sm text-zinc-500">No payroll yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Mwezi</th>
+                  <th className="py-2 pr-4">Month</th>
                   <th className="py-2 pr-4 text-right">Gross</th>
                   <th className="py-2 pr-4 text-right">NSSF</th>
                   <th className="py-2 pr-4 text-right">PAYE</th>
                   <th className="py-2 pr-4 text-right">Net Pay</th>
                   <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">Tarehe ya Malipo</th>
-                  <th className="py-2 pr-4">Njia / Akaunti</th>
+                  <th className="py-2 pr-4">Payment Date</th>
+                  <th className="py-2 pr-4">Method / Account</th>
                   <th className="py-2 pr-4">Reference</th>
                   {viewerIsAdmin && <th className="py-2 pr-4"></th>}
                 </tr>
@@ -1529,7 +1529,7 @@ export function StaffDetailView({
                 disabled={requesting}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {requesting ? "Inaomba..." : "Omba Likizo"}
+                {requesting ? "Inaomba..." : "Request Leave"}
               </button>
             </form>
           )}
@@ -1541,14 +1541,14 @@ export function StaffDetailView({
           {loadingLeave ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : leaves.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna maombi ya likizo.</p>
+            <p className="text-sm text-zinc-500">No leave requests.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Tarehe</th>
-                  <th className="py-2 pr-4 text-right">Siku</th>
+                  <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4 text-right">Days</th>
                   <th className="py-2 pr-4">Sababu</th>
                   <th className="py-2 pr-4">Status</th>
                   {viewerIsAdmin && <th className="py-2 pr-4"></th>}
@@ -1572,14 +1572,14 @@ export function StaffDetailView({
                               disabled={decidingId === l.id}
                               className="text-xs font-medium text-green-700 underline disabled:opacity-50"
                             >
-                              Idhinisha
+                              Approve
                             </button>
                             <button
                               onClick={() => onDecide(l.id, "REJECTED")}
                               disabled={decidingId === l.id}
                               className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                             >
-                              Kataa
+                              Reject
                             </button>
                           </div>
                         )}
@@ -1604,7 +1604,7 @@ export function StaffDetailView({
               <input
                 value={dutyTitle}
                 onChange={(e) => setDutyTitle(e.target.value)}
-                placeholder="Kichwa cha Jukumu"
+                placeholder="Duty Title"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <input
@@ -1624,7 +1624,7 @@ export function StaffDetailView({
                 disabled={addingDuty}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {addingDuty ? "Adding..." : "Panga Jukumu"}
+                {addingDuty ? "Adding..." : "Assign Duty"}
               </button>
             </form>
           )}
@@ -1636,14 +1636,14 @@ export function StaffDetailView({
           {loadingDuties ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : duties.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna majukumu yaliyopangwa.</p>
+            <p className="text-sm text-zinc-500">No duties assigned.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Jukumu</th>
-                  <th className="py-2 pr-4">Maelezo</th>
+                  <th className="py-2 pr-4">Duty</th>
+                  <th className="py-2 pr-4">Description</th>
                   <th className="py-2 pr-4">Deadline</th>
                   <th className="py-2 pr-4">Status</th>
                   <th className="py-2 pr-4"></th>
@@ -1678,7 +1678,7 @@ export function StaffDetailView({
                           disabled={dutyBusyId === d.id}
                           className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                         >
-                          Futa
+                          Delete
                         </button>
                       )}
                     </td>
@@ -1693,10 +1693,10 @@ export function StaffDetailView({
 
       {tab === "performance" && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-zinc-500">Idadi ya Ziara (Visits) — Mwezi Huu</p>
+          <p className="text-xs text-zinc-500">Visits — This Month</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900">0</p>
           <p className="mt-3 text-sm text-zinc-500">
-            Kipengele hiki kinakuja hivi karibuni.
+            This feature is coming soon.
           </p>
         </div>
       )}

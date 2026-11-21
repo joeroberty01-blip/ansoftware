@@ -56,7 +56,7 @@ export async function createManualReceipt(input: {
         input.issuedById,
       ]
     );
-    if (!row) throw new Error("Imeshindwa kutengeneza risiti");
+    if (!row) throw new Error("Could not create the receipt");
     return row;
   } catch (err) {
     const pgErr = err as { code?: string };

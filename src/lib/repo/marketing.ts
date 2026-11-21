@@ -14,7 +14,7 @@ export async function createPost(input: {
      RETURNING *`,
     [input.title, input.content, input.platform, input.aiGenerated, input.createdById]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza post");
+  if (!row) throw new Error("Could not add the post");
   return row;
 }
 

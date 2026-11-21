@@ -27,7 +27,7 @@ const PLATFORM_OPTIONS: { value: Platform; label: string }[] = [
   { value: "WHATSAPP", label: "WhatsApp" },
   { value: "TIKTOK", label: "TikTok" },
   { value: "X", label: "X (Twitter)" },
-  { value: "OTHER", label: "Nyingine" },
+  { value: "OTHER", label: "Other" },
 ];
 
 type MarketingTab =
@@ -40,7 +40,7 @@ type MarketingTab =
   | "settings";
 
 const TABS: { key: MarketingTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: "posts", label: "Machapisho (Posts)", icon: Send },
+  { key: "posts", label: "Posts", icon: Send },
   { key: "ai", label: "AI Generator", icon: Send },
   { key: "social-reports", label: "Social Media Reports", icon: Users },
   { key: "app", label: "Company App", icon: Smartphone },
@@ -281,7 +281,7 @@ function PostsTab() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuongeza post.");
+        setError(json.error ?? "Could not add the post.");
         return;
       }
       setTitle("");
@@ -295,13 +295,13 @@ function PostsTab() {
   };
 
   const onDelete = async (id: string) => {
-    if (!window.confirm("Futa post hii?")) return;
+    if (!window.confirm("Delete this post?")) return;
     setBusyId(id);
     try {
       const res = await fetch(`/api/marketing/posts/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        setError(json.error ?? "Imeshindwa kufuta.");
+        setError(json.error ?? "Could not delete.");
         return;
       }
       await load();
@@ -390,7 +390,7 @@ function PostsTab() {
         onSubmit={onAdd}
         className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
       >
-        <h2 className="text-sm font-semibold text-zinc-900">Andika Post Mpya</h2>
+        <h2 className="text-sm font-semibold text-zinc-900">Write a New Post</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <input
             value={title}
@@ -414,7 +414,7 @@ function PostsTab() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={4}
-          placeholder="Andika maudhui ya post..."
+          placeholder="Write the post content..."
           className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
         />
         {error && (
@@ -425,7 +425,7 @@ function PostsTab() {
           disabled={submitting}
           className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Saving..." : "Hifadhi Post"}
+          {submitting ? "Saving..." : "Save Post"}
         </button>
       </form>
 
@@ -433,7 +433,7 @@ function PostsTab() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : posts.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna posts bado.</p>
+          <p className="text-sm text-zinc-500">No posts yet.</p>
         ) : (
           <div className="flex flex-col gap-3">
             {posts.map((p) =>
@@ -473,14 +473,14 @@ function PostsTab() {
                       disabled={savingEdit}
                       className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                     >
-                      {savingEdit ? "Saving..." : "Hifadhi"}
+                      {savingEdit ? "Saving..." : "Save"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingId(null)}
                       className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
                     >
-                      Ghairi
+                      Cancel
                     </button>
                   </div>
                 </form>
@@ -506,20 +506,20 @@ function PostsTab() {
                         onClick={() => copyToClipboard(p.content)}
                         className="text-xs font-medium text-brand-blue underline"
                       >
-                        Nakili
+                        Copy
                       </button>
                       <button
                         onClick={() => startEditing(p)}
                         className="text-xs font-medium text-zinc-700 underline"
                       >
-                        Hariri
+                        Edit
                       </button>
                       <button
                         onClick={() => onDelete(p.id)}
                         disabled={busyId === p.id}
                         className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                       >
-                        Futa
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ function AiTab() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kutengeneza post.");
+        setError(json.error ?? "Could not generate the post.");
         setNotConfigured(Boolean(json.notConfigured));
         return;
       }
@@ -610,7 +610,7 @@ function AiTab() {
         className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
       >
         <h2 className="text-sm font-semibold text-zinc-900">
-          Tengeneza Post kwa AI
+          Generate a Post with AI
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input
@@ -648,9 +648,9 @@ function AiTab() {
             <p>{error}</p>
             {notConfigured && (
               <p className="mt-1 text-xs text-red-600">
-                Weka <code className="rounded bg-red-100 px-1">ANTHROPIC_API_KEY</code>{" "}
-                kwenye environment variables za mfumo (Vercel Project Settings →
-                Environment Variables), kisha redeploy.
+                Add <code className="rounded bg-red-100 px-1">ANTHROPIC_API_KEY</code>{" "}
+                to the system&apos;s environment variables (Vercel Project Settings →
+                Environment Variables), then redeploy.
               </p>
             )}
           </div>
@@ -660,7 +660,7 @@ function AiTab() {
           disabled={generating || !topic}
           className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {generating ? "Inatengeneza..." : "Tengeneza"}
+          {generating ? "Inatengeneza..." : "Create"}
         </button>
       </form>
 
@@ -678,18 +678,18 @@ function AiTab() {
               onClick={() => navigator.clipboard?.writeText(result)}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
-              Nakili
+              Copy
             </button>
             <button
               onClick={onSaveAsDraft}
               disabled={saving}
               className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Hifadhi kwenye Machapisho"}
+              {saving ? "Saving..." : "Save to Posts"}
             </button>
             {saved && (
               <span className="self-center text-sm text-green-700">
-                Imehifadhiwa!
+                Saved!
               </span>
             )}
           </div>
@@ -737,7 +737,7 @@ function LinksTab() {
         return;
       }
       setLinks(json.links);
-      setMessage("Links zimehifadhiwa.");
+      setMessage("Links saved.");
     } catch {
       setError("Network error.");
     } finally {
@@ -762,7 +762,7 @@ function LinksTab() {
       className="flex max-w-lg flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
     >
       <h2 className="text-sm font-semibold text-zinc-900">
-        Social Media Links za Kampuni
+        Company Social Media Links
       </h2>
       {FIELDS.map((f) => (
         <div key={f.key} className="flex flex-col gap-1">
@@ -781,7 +781,7 @@ function LinksTab() {
                 rel="noopener noreferrer"
                 className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
-                Fungua
+                Open
               </a>
             )}
           </div>
@@ -800,7 +800,7 @@ function LinksTab() {
         disabled={saving}
         className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
-        {saving ? "Saving..." : "Hifadhi Links"}
+        {saving ? "Saving..." : "Save Links"}
       </button>
     </form>
   );

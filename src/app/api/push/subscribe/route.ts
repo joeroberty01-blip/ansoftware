@@ -13,15 +13,15 @@ const subscriptionSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
 
   const parsed = subscriptionSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Usajili wa arifa si sahihi." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid notification subscription." }, { status: 400 });
   }
   // Push services are always HTTPS; refuse anything else.
   if (!parsed.data.endpoint.startsWith("https://")) {
-    return NextResponse.json({ error: "Usajili wa arifa si sahihi." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid notification subscription." }, { status: 400 });
   }
 
   await savePushSubscription({
@@ -36,11 +36,11 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as { endpoint?: unknown } | null;
   if (typeof body?.endpoint !== "string") {
-    return NextResponse.json({ error: "Endpoint inahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "Endpoint is required." }, { status: 400 });
   }
   await deletePushSubscription(user.id, body.endpoint);
   return NextResponse.json({ ok: true });

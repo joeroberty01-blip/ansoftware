@@ -7,10 +7,10 @@ import { createBooking, getBookingStats, listBookings } from "@/lib/repo/booking
 export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const status = req.nextUrl.searchParams.get("status") ?? undefined;
@@ -25,17 +25,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const body = await req.json();
   const parsed = createBookingSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

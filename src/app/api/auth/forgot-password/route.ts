@@ -14,17 +14,17 @@ export const runtime = "nodejs";
 
 // Same answer whether or not the email exists, so it can't be used to probe accounts.
 const SENT_MESSAGE =
-  "Kama email hii imesajiliwa, tumetuma code ya tarakimu 6. Angalia inbox (na Spam).";
+  "If this email is registered, we've sent a 6-digit code. Check your inbox (and Spam).";
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-/** Step 1 of "Umesahau password?": email a one-time code. */
+/** Step 1 of "Forgot password?": email a one-time code. */
 export async function POST(request: NextRequest) {
   if (!mailConfigured() && process.env.NODE_ENV === "production") {
     return NextResponse.json(
-      { error: "Huduma ya kutuma email haijawekwa bado. Wasiliana na Admin." },
+      { error: "Email sending isn't set up yet. Contact the Admin." },
       { status: 503 }
     );
   }
@@ -33,19 +33,19 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Data sio sahihi" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
   const parsed = forgotPasswordRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
 
   if (!allowFromIp(request, "forgot-request", 10, 15 * 60 * 1000)) {
     return NextResponse.json(
-      { error: "Maombi mengi sana. Jaribu tena baada ya dakika 15." },
+      { error: "Too many requests. Try again in 15 minutes." },
       { status: 429 }
     );
   }
@@ -76,23 +76,23 @@ export async function POST(request: NextRequest) {
     try {
       await sendMail({
         to: user.email,
-        subject: `Afya Nyumbani ERP: code yako ni ${code}`,
+        subject: `Afya Nyumbani ERP: your code is ${code}`,
         text: [
-          `Habari ${user.full_name},`,
+          `Hello ${user.full_name},`,
           "",
-          `Code yako ya kubadilisha password ni: ${code}`,
+          `Your password reset code is: ${code}`,
           "",
-          `Itumie ndani ya dakika ${RESET_CODE_TTL_MINUTES}. Usimpe mtu yeyote code hii.`,
-          "Kama hukuomba kubadilisha password, puuza ujumbe huu; password yako haitabadilika.",
+          `Use it within ${RESET_CODE_TTL_MINUTES} minutes. Don't share this code with anyone.`,
+          "If you didn't ask to reset your password, ignore this message; your password won't change.",
           "",
           "Afya Nyumbani",
         ].join("\n"),
         html: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#18181b">
-<p>Habari ${escapeHtml(user.full_name)},</p>
-<p>Code yako ya kubadilisha password ni:</p>
+<p>Hello ${escapeHtml(user.full_name)},</p>
+<p>Your password reset code is:</p>
 <p style="font-size:28px;font-weight:700;letter-spacing:6px;color:#0d4ea6">${code}</p>
-<p>Itumie ndani ya dakika ${RESET_CODE_TTL_MINUTES}. Usimpe mtu yeyote code hii.</p>
-<p style="color:#71717a">Kama hukuomba kubadilisha password, puuza ujumbe huu; password yako haitabadilika.</p>
+<p>Use it within ${RESET_CODE_TTL_MINUTES} minutes. Don't share this code with anyone.</p>
+<p style="color:#71717a">If you didn't ask to reset your password, ignore this message; your password won't change.</p>
 <p>Afya Nyumbani</p>
 </div>`,
       });
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       await deleteResetCode(codeId).catch(() => undefined);
       console.error("[forgot-password] email failed:", mailError);
       return NextResponse.json(
-        { error: "Imeshindikana kutuma email kwa sasa. Jaribu tena baadaye." },
+        { error: "Could not send the email right now. Please try again later." },
         { status: 502 }
       );
     }
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[forgot-password] unexpected error:", error);
     return NextResponse.json(
-      { error: "Hitilafu ya seva. Jaribu tena baadaye." },
+      { error: "Server error. Please try again later." },
       { status: 500 }
     );
   }

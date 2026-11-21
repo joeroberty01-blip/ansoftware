@@ -49,7 +49,7 @@ export default function InventoryAlertsPage() {
           href="/inventory"
           className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
         >
-          Rudi kwenye Inventory
+          Back to Inventory
         </Link>
       </div>
 
@@ -60,15 +60,15 @@ export default function InventoryAlertsPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : lowStock.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna items chini ya reorder level.</p>
+          <p className="text-sm text-zinc-500">No items below reorder level.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Jina</th>
+                <th className="py-2 pr-4">Name</th>
                 <th className="py-2 pr-4">Category</th>
-                <th className="py-2 pr-4 text-right">Stock ya Sasa</th>
+                <th className="py-2 pr-4 text-right">Current Stock</th>
                 <th className="py-2 pr-4 text-right">Reorder Level</th>
               </tr>
             </thead>
@@ -98,12 +98,12 @@ export default function InventoryAlertsPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-          Zinazokaribia Kuisha (siku 60) ({expiring.length})
+          Expiring Soon (60 days) ({expiring.length})
         </h2>
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : expiring.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna batch zinazokaribia kuisha.</p>
+          <p className="text-sm text-zinc-500">No batches expiring soon.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -111,8 +111,8 @@ export default function InventoryAlertsPage() {
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="py-2 pr-4">Item</th>
                 <th className="py-2 pr-4">Batch</th>
-                <th className="py-2 pr-4 text-right">Idadi</th>
-                <th className="py-2 pr-4">Inaisha</th>
+                <th className="py-2 pr-4 text-right">Quantity</th>
+                <th className="py-2 pr-4">Expires</th>
               </tr>
             </thead>
             <tbody>

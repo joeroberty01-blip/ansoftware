@@ -40,7 +40,7 @@ interface SummaryRow {
 }
 
 const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString("sw-TZ", { hour: "2-digit", minute: "2-digit" });
+  new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 const hours = (m: number | null) =>
   m == null ? "-" : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
 
@@ -56,7 +56,7 @@ function shiftDay(date: string, days: number) {
 
 function Distance({ m, near, hasHome }: { m: number | null; near: number; hasHome: boolean }) {
   if (m == null) {
-    return <span className="text-xs text-zinc-500">{hasHome ? "-" : "Nyumbani hapajawekwa"}</span>;
+    return <span className="text-xs text-zinc-500">{hasHome ? "-" : "Home not set"}</span>;
   }
   const ok = m <= near;
   return (
@@ -92,7 +92,7 @@ export default function AttendancePage() {
       const res = await fetch(url);
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindikana kupakia mahudhurio.");
+        setError(json.error ?? "Could not load attendance.");
         return;
       }
       setNear(json.nearMeters ?? 200);
@@ -105,7 +105,7 @@ export default function AttendancePage() {
         setSummary(json.summary ?? []);
       }
     } catch {
-      setError("Hakuna mtandao. Jaribu tena.");
+      setError("No network connection. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ export default function AttendancePage() {
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(json.error ?? "Imeshindikana kuhifadhi muda.");
+      setError(json.error ?? "Could not save the time.");
       return;
     }
     setSavedShift(json.shiftStart);
@@ -132,7 +132,7 @@ export default function AttendancePage() {
   const setHome = async (r: Row) => {
     if (
       !window.confirm(
-        `Weka mahali pa check-in hii (${r.staff_name}, ${time(r.check_in_at)}) kama nyumbani kwa ${r.patient_name}? Check-in zijazo zitapimwa kutoka hapa.`
+        `Set this check-in's location (${r.staff_name}, ${time(r.check_in_at)}) as ${r.patient_name}'s home? Future check-ins will be measured from here.`
       )
     ) {
       return;
@@ -142,7 +142,7 @@ export default function AttendancePage() {
       const res = await fetch(`/api/attendance/${r.id}/set-home`, { method: "POST" });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? "Imeshindikana.");
+        setError(json.error ?? "Something went wrong.");
         return;
       }
       await load();
@@ -163,9 +163,9 @@ export default function AttendancePage() {
   return (
     <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Mahudhurio ya Staff</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Staff Attendance</h1>
         <p className="text-sm text-zinc-500">
-          Check-in na check-out za staff kwa wagonjwa: saa, mahali (GPS) na selfie.
+          Staff check-ins and check-outs at patients' homes: time, location (GPS) and selfie.
         </p>
       </div>
 
@@ -181,7 +181,7 @@ export default function AttendancePage() {
               view === v ? "bg-brand-blue text-white" : "border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
             }`}
           >
-            {v === "day" ? "Kwa siku" : "Muhtasari wa mwezi"}
+            {v === "day" ? "By day" : "Monthly summary"}
           </button>
         ))}
       </div>
@@ -196,13 +196,13 @@ export default function AttendancePage() {
               onClick={() => setDate((d) => shiftDay(d, -1))}
               className="min-h-9 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-700 hover:bg-zinc-50"
             >
-              ← Jana
+              ← Previous day
             </button>
             <input
               type="date"
               value={date}
               onChange={(e) => e.target.value && setDate(e.target.value)}
-              aria-label="Tarehe"
+              aria-label="Date"
               className="rounded-lg border border-zinc-300 px-2 py-2 text-sm"
             />
             {date < localToday() && (
@@ -211,12 +211,12 @@ export default function AttendancePage() {
                 onClick={() => setDate((d) => shiftDay(d, 1))}
                 className="min-h-9 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-700 hover:bg-zinc-50"
               >
-                Kesho →
+                Next day →
               </button>
             )}
             <span className="mx-1 hidden h-6 w-px bg-zinc-200 sm:block" />
             <label className="flex items-center gap-2 text-sm text-zinc-700">
-              Zamu inaanza
+              Shift starts
               <input
                 type="time"
                 value={shiftStart}
@@ -230,17 +230,17 @@ export default function AttendancePage() {
                 onClick={saveShift}
                 className="min-h-9 rounded-lg bg-brand-blue px-3 text-sm font-semibold text-white hover:bg-brand-blue-dark"
               >
-                Hifadhi
+                Save
               </button>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
-              { label: "Staff walioingia", value: staffIn },
+              { label: "Staff checked in", value: staffIn },
               { label: "Walichelewa", value: late, warn: late > 0 },
-              { label: `Mbali na nyumbani (> m ${near})`, value: away, warn: away > 0 },
-              { label: "Hawajaingia", value: missing.length, warn: missing.length > 0 },
+              { label: `Away from home (> ${near} m)`, value: away, warn: away > 0 },
+              { label: "Not checked in", value: missing.length, warn: missing.length > 0 },
             ].map((c) => (
               <div
                 key={c.label}
@@ -258,14 +258,14 @@ export default function AttendancePage() {
             {loading ? (
               <p className="text-sm text-zinc-500">Loading...</p>
             ) : rows.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hakuna check-in kwa siku hii.</p>
+              <p className="text-sm text-zinc-500">No check-ins for this day.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Staff</th>
-                      <th className="py-2 pr-4">Mgonjwa</th>
+                      <th className="py-2 pr-4">Patient</th>
                       <th className="py-2 pr-4">Aliingia</th>
                       <th className="py-2 pr-4">Umbali</th>
                       <th className="py-2 pr-4">Alitoka</th>
@@ -303,14 +303,14 @@ export default function AttendancePage() {
                         </td>
                         <td className="py-2 pr-4">
                           {r.check_out_at && !r.check_out_lat ? (
-                            <span className="text-xs font-semibold text-amber-700">Hakubonyeza Naondoka</span>
+                            <span className="text-xs font-semibold text-amber-700">Did not check out</span>
                           ) : r.check_out_at ? (
                             <span className="flex flex-col items-start gap-1">
                               {time(r.check_out_at)}
                               <Distance m={r.check_out_distance_m} near={near} hasHome={!!r.patient_home_lat} />
                             </span>
                           ) : (
-                            <span className="text-xs font-semibold text-emerald-700">Bado kazini</span>
+                            <span className="text-xs font-semibold text-emerald-700">Still on shift</span>
                           )}
                         </td>
                         <td className="py-2 pr-4">{hours(r.minutes_worked)}</td>
@@ -339,7 +339,7 @@ export default function AttendancePage() {
                                 disabled={busyId === r.id}
                                 className="text-xs font-semibold text-brand-blue underline disabled:opacity-50"
                               >
-                                Weka hapa kama nyumbani kwa mgonjwa
+                                Set this as the patient's home
                               </button>
                             )}
                         </td>
@@ -354,7 +354,7 @@ export default function AttendancePage() {
           {missing.length > 0 && (
             <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
               <h2 className="text-sm font-semibold text-orange-900">
-                Hawajaingia {date === localToday() ? "leo" : "siku hii"} ({missing.length})
+                Not checked in {date === localToday() ? "today" : "this day"} ({missing.length})
               </h2>
               <p className="mt-1 text-sm text-orange-900">{missing.map((m) => m.full_name).join(", ")}</p>
             </div>
@@ -367,23 +367,23 @@ export default function AttendancePage() {
               type="month"
               value={month}
               onChange={(e) => e.target.value && setMonth(e.target.value)}
-              aria-label="Mwezi"
+              aria-label="Month"
               className="rounded-lg border border-zinc-300 px-2 py-2 text-sm"
             />
             <ListToolbar
-              filename={`mahudhurio-${month}`}
+              filename={`attendance-${month}`}
               columns={[
                 { key: "full_name", label: "Staff" },
-                { key: "staff_number", label: "Namba" },
-                { key: "days", label: "Siku" },
-                { key: "shifts", label: "Zamu" },
+                { key: "staff_number", label: "Number" },
+                { key: "days", label: "Days" },
+                { key: "shifts", label: "Shifts" },
                 { key: "hours", label: "Masaa" },
-                { key: "minutes_worked", label: "Dakika" },
-                { key: "late_days", label: "Siku alizochelewa" },
-                { key: "late_minutes", label: "Dakika za kuchelewa" },
-                { key: "away_check_ins", label: "Check-in mbali na nyumbani" },
-                { key: "no_home_check_ins", label: "Check-in bila nyumbani kuwekwa" },
-                { key: "open_shifts", label: "Zamu hazijafungwa" },
+                { key: "minutes_worked", label: "Minutes" },
+                { key: "late_days", label: "Late days" },
+                { key: "late_minutes", label: "Minutes late" },
+                { key: "away_check_ins", label: "Check-ins away from home" },
+                { key: "no_home_check_ins", label: "Check-ins with no home set" },
+                { key: "open_shifts", label: "Shifts not closed" },
               ]}
               rows={csvRows}
             />
@@ -392,18 +392,18 @@ export default function AttendancePage() {
             {loading ? (
               <p className="text-sm text-zinc-500">Loading...</p>
             ) : summary.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hakuna mahudhurio kwa mwezi huu.</p>
+              <p className="text-sm text-zinc-500">No attendance this month.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Staff</th>
-                      <th className="py-2 pr-4">Siku</th>
+                      <th className="py-2 pr-4">Days</th>
                       <th className="py-2 pr-4">Masaa</th>
                       <th className="py-2 pr-4">Alichelewa</th>
-                      <th className="py-2 pr-4">Mbali na nyumbani</th>
-                      <th className="py-2 pr-4">Hazijafungwa</th>
+                      <th className="py-2 pr-4">Away from home</th>
+                      <th className="py-2 pr-4">Not closed</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -416,7 +416,7 @@ export default function AttendancePage() {
                         <td className="py-2 pr-4">{s.days}</td>
                         <td className="py-2 pr-4">{hours(s.minutes_worked)}</td>
                         <td className="py-2 pr-4">
-                          {s.late_days > 0 ? `siku ${s.late_days} (dk ${s.late_minutes})` : "-"}
+                          {s.late_days > 0 ? `${s.late_days} days (${s.late_minutes} min)` : "-"}
                         </td>
                         <td className="py-2 pr-4">{s.away_check_ins > 0 ? s.away_check_ins : "-"}</td>
                         <td className="py-2 pr-4">{s.open_shifts > 0 ? s.open_shifts : "-"}</td>

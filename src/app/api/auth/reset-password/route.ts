@@ -13,27 +13,27 @@ import { resetPasswordSchema } from "@/lib/validation/auth";
 
 export const runtime = "nodejs";
 
-const INVALID = "Code sio sahihi au imeisha muda. Omba code mpya.";
+const INVALID = "The code is wrong or has expired. Request a new code.";
 
-/** Step 2 of "Umesahau password?": check the emailed code and set the new password. */
+/** Step 2 of "Forgot password?": check the emailed code and set the new password. */
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Data sio sahihi" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
   const parsed = resetPasswordSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
 
   if (!allowFromIp(request, "forgot-verify", 20, 15 * 60 * 1000)) {
     return NextResponse.json(
-      { error: "Majaribio mengi sana. Jaribu tena baada ya dakika 15." },
+      { error: "Too many attempts. Try again in 15 minutes." },
       { status: 429 }
     );
   }
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
         {
           error:
             left > 0
-              ? `Code sio sahihi. Umebakiza majaribio ${left}.`
-              : "Code sio sahihi. Majaribio yamekwisha, omba code mpya.",
+              ? `Wrong code. ${left} attempts left.`
+              : "Wrong code. No attempts left; request a new code.",
         },
         { status: 400 }
       );
@@ -87,12 +87,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: "Password imebadilishwa. Sasa unaweza kuingia.",
+      message: "Password changed. You can now sign in.",
     });
   } catch (error) {
     console.error("[reset-password] unexpected error:", error);
     return NextResponse.json(
-      { error: "Hitilafu ya seva. Jaribu tena baadaye." },
+      { error: "Server error. Please try again later." },
       { status: 500 }
     );
   }

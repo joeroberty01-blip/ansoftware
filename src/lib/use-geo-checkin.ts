@@ -22,7 +22,7 @@ export function useGeoCheckIn() {
   const captureLocation = useCallback(() => {
     setError(null);
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setError("Kifaa/kivinjari hiki hakiunga mkono GPS.");
+      setError("This device/browser doesn't support GPS.");
       return;
     }
     setChecking(true);
@@ -38,8 +38,8 @@ export function useGeoCheckIn() {
       (err) => {
         setError(
           err.code === err.PERMISSION_DENIED
-            ? "Umekataa ruhusa ya eneo (GPS). Ruhusu eneo kwenye mipangilio ya kivinjari kisha jaribu tena."
-            : "Imeshindwa kupata eneo. Hakikisha GPS/Location imewashwa kisha jaribu tena."
+            ? "Location (GPS) permission was denied. Allow location in the browser settings, then try again."
+            : "Could not get your location. Make sure GPS/Location is on, then try again."
         );
         setChecking(false);
       },

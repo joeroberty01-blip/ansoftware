@@ -29,7 +29,7 @@ export default function NewInventoryItemPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuongeza item.");
+        setError(json.error ?? "Could not add the item.");
         return;
       }
       router.push(`/inventory/${json.item.id}`);
@@ -43,13 +43,13 @@ export default function NewInventoryItemPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-        Ongeza Item Mpya
+        Add New Item
       </h1>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Jina la Item
+            Item Name
           </label>
           <input
             value={name}
@@ -72,7 +72,7 @@ export default function NewInventoryItemPage() {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Unit (e.g. vidonge, chupa, vipande)
+            Unit (e.g. tablets, bottles, pieces)
           </label>
           <input
             value={unit}
@@ -103,7 +103,7 @@ export default function NewInventoryItemPage() {
           disabled={submitting}
           className="mt-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Adding..." : "Ongeza Item"}
+          {submitting ? "Adding..." : "Add Item"}
         </button>
       </form>
     </div>

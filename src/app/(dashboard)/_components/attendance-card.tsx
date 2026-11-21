@@ -35,7 +35,7 @@ interface Position {
 }
 
 const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString("sw-TZ", { hour: "2-digit", minute: "2-digit" });
+  new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 const hours = (minutes: number | null) =>
   minutes == null ? "-" : `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
@@ -65,12 +65,12 @@ function readPosition(options: PositionOptions): Promise<Position> {
  */
 async function getPosition(): Promise<Position> {
   if (typeof navigator === "undefined" || !navigator.geolocation) {
-    throw new GeoError("unsupported", "Kivinjari hiki hakina GPS. Fungua ERP kwenye Google Chrome.");
+    throw new GeoError("unsupported", "This browser has no GPS. Open the ERP in Google Chrome.");
   }
   const denied = () =>
     new GeoError(
       "denied",
-      "Simu imezuia Location kwa ERP. Location ya simu kuwashwa haitoshi: fuata hatua zilizo hapa chini."
+      "Your phone is blocking location for the ERP. Turning on the phone's Location is not enough: follow the steps below."
     );
   try {
     return await readPosition({ enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
@@ -85,7 +85,7 @@ async function getPosition(): Promise<Position> {
     if (e?.code === 1) throw denied();
     throw new GeoError(
       "unavailable",
-      "Simu imeshindwa kupata mahali. Hakikisha Location imewashwa, toka nje au karibu na dirisha, kisha bonyeza tena."
+      "The phone couldn't get your location. Make sure Location is on, go outside or near a window, then tap again."
     );
   }
 }
@@ -114,46 +114,46 @@ function GpsHelp({ kind }: { kind: GeoProblem }) {
   if (kind === "unavailable") return null;
   return (
     <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-      <p className="font-bold">Jinsi ya kuruhusu Location kwa ERP</p>
+      <p className="font-bold">How to allow location for the ERP</p>
       {inAppBrowser() ? (
         <div className="mt-2 space-y-2">
           <p>
-            Umefungua ERP ndani ya WhatsApp/Facebook. Humo GPS haifanyi kazi. Fungua ERP kwenye{" "}
-            <b>Google Chrome</b>{isIphone() ? " au Safari" : ""}: bonyeza vitone 3 (⋮) juu kulia, chagua
-            &quot;Open in Chrome / Fungua kwenye kivinjari&quot;.
+            You opened the ERP inside WhatsApp/Facebook, where GPS doesn't work. Open the ERP in{" "}
+            <b>Google Chrome</b>{isIphone() ? " or Safari" : ""}: tap the 3 dots (⋮) at the top right and choose
+            &quot;Open in Chrome&quot; (or &quot;Open in browser&quot;).
           </p>
           <button
             type="button"
             onClick={copyLink}
             className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-semibold"
           >
-            {copied ? "Link imenakiliwa ✓ Ibandike kwenye Chrome" : "Nakili link ya ERP"}
+            {copied ? "Link copied ✓ Paste it in Chrome" : "Copy the ERP link"}
           </button>
         </div>
       ) : isIphone() ? (
         <ol className="mt-2 list-decimal space-y-1 pl-5">
-          <li>Fungua <b>Settings</b> (Mipangilio) ya iPhone.</li>
-          <li><b>Privacy &amp; Security</b> → <b>Location Services</b> → hakikisha iko ON.</li>
-          <li>Shuka chini, chagua <b>Safari Websites</b> (au Chrome) → <b>While Using the App</b>.</li>
-          <li>Rudi kwenye ERP, funga ukurasa uufungue upya, bonyeza <b>Pata mahali</b>, kisha <b>Allow</b>.</li>
+          <li>Open the iPhone <b>Settings</b>.</li>
+          <li><b>Privacy &amp; Security</b> → <b>Location Services</b> → make sure it is ON.</li>
+          <li>Scroll down, choose <b>Safari Websites</b> (or Chrome) → <b>While Using the App</b>.</li>
+          <li>Go back to the ERP, close and reopen the page, tap <b>Get location</b>, then <b>Allow</b>.</li>
         </ol>
       ) : (
         <ol className="mt-2 list-decimal space-y-1 pl-5">
           <li>
-            Kwenye Chrome, gusa <b>alama ya kufuli 🔒</b> (au ⓘ) kushoto mwa anwani ya ERP juu.
+            In Chrome, tap the <b>lock icon 🔒</b> (or ⓘ) to the left of the ERP address at the top.
           </li>
           <li>
-            Chagua <b>Permissions / Ruhusa</b> → <b>Location</b> → <b>Allow / Ruhusu</b>. Ukiona &quot;Reset
-            permissions&quot;, ibonyeze.
+            Choose <b>Permissions</b> → <b>Location</b> → <b>Allow</b>. If you see &quot;Reset
+            permissions&quot;, tap it.
           </li>
           <li>
-            Bado? Fungua <b>Settings</b> ya simu → <b>Apps</b> → <b>Chrome</b> → <b>Permissions</b> →{" "}
-            <b>Location</b> → <b>Allow only while using the app</b>, na washa <b>Use precise location</b>.
+            Still not working? Open the phone <b>Settings</b> → <b>Apps</b> → <b>Chrome</b> → <b>Permissions</b> →{" "}
+            <b>Location</b> → <b>Allow only while using the app</b>, and turn on <b>Use precise location</b>.
           </li>
           <li>
-            Kama umeweka ERP kama app kwenye skrini, fanya hatua hizo hizo kwa app hiyo (Settings → Apps).
+            If you installed the ERP as an app on your home screen, do the same steps for that app (Settings → Apps).
           </li>
-          <li>Rudi kwenye ERP, <b>refresh</b> ukurasa, bonyeza <b>Pata mahali</b>, kisha <b>Allow</b>.</li>
+          <li>Go back to the ERP, <b>refresh</b> the page, tap <b>Get location</b>, then <b>Allow</b>.</li>
         </ol>
       )}
     </div>
@@ -169,7 +169,7 @@ async function shrinkSelfie(file: File): Promise<Blob> {
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.72));
-  if (!blob) throw new Error("Imeshindikana kusoma picha.");
+  if (!blob) throw new Error("Could not read the photo.");
   return blob;
 }
 
@@ -177,7 +177,7 @@ function DistanceBadge({ distance, hasHome }: { distance: number | null; hasHome
   if (distance == null) {
     return (
       <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
-        {hasHome ? "Umbali haujulikani" : "Nyumbani kwa mgonjwa bado hapajawekwa"}
+        {hasHome ? "Distance unknown" : "Patient's home not set yet"}
       </span>
     );
   }
@@ -188,12 +188,12 @@ function DistanceBadge({ distance, hasHome }: { distance: number | null; hasHome
         near ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-800"
       }`}
     >
-      {near ? "✓" : "⚠"} {formatDistance(distance)} {near ? "kutoka nyumbani kwa mgonjwa" : "mbali na nyumbani kwa mgonjwa"}
+      {near ? "✓" : "⚠"} {formatDistance(distance)} {near ? "from the patient's home" : "away from the patient's home"}
     </span>
   );
 }
 
-/** "Nimefika kazini" / "Naondoka" for field staff: selfie + GPS on arrival, GPS on leaving. */
+/** "Check in" / "Check out" for field staff: selfie + GPS on arrival, GPS on leaving. */
 export function AttendanceCard() {
   const router = useRouter();
   const [data, setData] = useState<MeResponse | null>(null);
@@ -269,13 +269,13 @@ export function AttendanceCard() {
       const res = await fetch("/api/attendance/check-in", { method: "POST", body: form });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? "Imeshindikana kuingia kazini.");
+        setError(json.error ?? "Check-in failed.");
         return;
       }
       setSelfie(null);
       setSelfieUrl(null);
       setPosition(null);
-      setMessage("Umeingia kazini. Sasa unaweza kujaza ripoti ya leo.");
+      setMessage("You're checked in. You can now fill in today's report.");
       await load();
       router.refresh();
     } finally {
@@ -296,10 +296,10 @@ export function AttendanceCard() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? "Imeshindikana kutoka kazini.");
+        setError(json.error ?? "Check-out failed.");
         return;
       }
-      setMessage("Umetoka kazini. Asante!");
+      setMessage("You're checked out. Thank you!");
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -320,32 +320,32 @@ export function AttendanceCard() {
       className="scroll-mt-20 rounded-2xl border border-brand-blue/20 bg-white p-4 shadow-sm sm:p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold text-zinc-900">Mahudhurio ya Leo</h2>
-        <span className="text-xs text-zinc-500">Zamu inaanza saa {data.shiftStart}</span>
+        <h2 className="text-base font-semibold text-zinc-900">Today's Attendance</h2>
+        <span className="text-xs text-zinc-500">Shift starts at {data.shiftStart}</span>
       </div>
 
       {!open && forgotten && (
         <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Zamu yako ya{" "}
-          {new Date(forgotten.check_in_at).toLocaleDateString("sw-TZ", { day: "numeric", month: "short" })}{" "}
-          saa {time(forgotten.check_in_at)}
-          {forgotten.patient_name ? ` kwa ${forgotten.patient_name}` : ""} haikufungwa (hukubonyeza
-          &quot;Naondoka&quot;). Ukiingia kazini sasa, itafungwa bila saa za kazi. Kumbuka kubonyeza
-          &quot;Naondoka&quot; ukimaliza zamu.
+          Your shift on{" "}
+          {new Date(forgotten.check_in_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}{" "}
+          at {time(forgotten.check_in_at)}
+          {forgotten.patient_name ? ` at ${forgotten.patient_name}` : ""} was never closed (you didn&apos;t tap
+          &quot;Check out&quot;). If you check in now, it will be closed with no hours. Remember to tap
+          &quot;Check out&quot; when your shift ends.
         </p>
       )}
 
       {open ? (
         <div className="mt-3 rounded-xl bg-emerald-50 p-3">
           <p className="text-sm font-semibold text-emerald-900">
-            Uko kazini tangu {time(open.check_in_at)}
-            {open.patient_name ? ` kwa ${open.patient_name}` : ""}
+            Checked in since {time(open.check_in_at)}
+            {open.patient_name ? ` at ${open.patient_name}` : ""}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <DistanceBadge distance={open.check_in_distance_m} hasHome={!!open.patient_home_lat} />
             {open.late_minutes > 0 && (
               <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                Umechelewa dakika {open.late_minutes}
+                {open.late_minutes} min late
               </span>
             )}
           </div>
@@ -355,7 +355,7 @@ export function AttendanceCard() {
                 href={`/patients/${open.patient_id}/daily/${data.date}`}
                 className="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue-dark"
               >
-                Jaza ripoti ya leo
+                Fill in today's report
               </Link>
             )}
             <button
@@ -364,24 +364,24 @@ export function AttendanceCard() {
               disabled={busy}
               className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
             >
-              {busy ? "Inapata mahali..." : "Naondoka"}
+              {busy ? "Getting location..." : "Check out"}
             </button>
           </div>
         </div>
       ) : patients.length === 0 ? (
         <p className="mt-3 text-sm text-zinc-600">
-          Hujapangiwa mgonjwa yeyote bado. Wasiliana na Admin akupangie mgonjwa.
+          You haven't been assigned any patient yet. Ask the Admin to assign you a patient.
         </p>
       ) : (
         <div className="mt-3 flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-            Umefika kwa mgonjwa gani?
+            Which patient have you arrived at?
             <select
               value={patientId}
               onChange={(e) => setPatientId(e.target.value)}
               className="rounded-lg border border-zinc-300 px-3 py-2.5 text-base sm:text-sm"
             >
-              <option value="">-- chagua mgonjwa --</option>
+              <option value="">-- select patient --</option>
               {patients.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.full_name}
@@ -402,13 +402,13 @@ export function AttendanceCard() {
                 </span>
               )}
               <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-800">{selfieUrl ? "Selfie imepigwa ✓" : "Piga selfie"}</p>
+                <p className="text-sm font-medium text-zinc-800">{selfieUrl ? "Selfie taken ✓" : "Take a selfie"}</p>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   className="mt-1 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
                 >
-                  {selfieUrl ? "Piga tena" : "Fungua kamera"}
+                  {selfieUrl ? "Retake" : "Open camera"}
                 </button>
                 <input
                   ref={fileRef}
@@ -434,7 +434,7 @@ export function AttendanceCard() {
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-zinc-800">
-                  {position ? `Mahali pamepatikana (usahihi ~m ${Math.round(position.accuracy)})` : "Pata mahali (GPS)"}
+                  {position ? `Location found (accuracy ~${Math.round(position.accuracy)} m)` : "Get location (GPS)"}
                 </p>
                 <button
                   type="button"
@@ -442,7 +442,7 @@ export function AttendanceCard() {
                   disabled={locating}
                   className="mt-1 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
                 >
-                  {locating ? "Inatafuta..." : position ? "Pata tena" : "Pata mahali"}
+                  {locating ? "Searching..." : position ? "Get again" : "Get location"}
                 </button>
               </div>
             </div>
@@ -454,7 +454,7 @@ export function AttendanceCard() {
             disabled={busy || !patientId || !selfie || !position}
             className="rounded-lg bg-brand-blue px-4 py-3 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {busy ? "Inahifadhi..." : "Nimefika kazini"}
+            {busy ? "Inahifadhi..." : "Check in"}
           </button>
         </div>
       )}
@@ -468,7 +468,7 @@ export function AttendanceCard() {
           {today.map((s) => (
             <li key={s.id} className="flex flex-wrap justify-between gap-2">
               <span>
-                {s.patient_name ?? "-"}: {time(s.check_in_at)} – {s.check_out_at ? time(s.check_out_at) : "bado kazini"}
+                {s.patient_name ?? "-"}: {time(s.check_in_at)} – {s.check_out_at ? time(s.check_out_at) : "still checked in"}
               </span>
               <span>{hours(s.minutes_worked)}</span>
             </li>

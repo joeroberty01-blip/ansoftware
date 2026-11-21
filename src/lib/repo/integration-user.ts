@@ -51,6 +51,6 @@ export async function ensureIntegrationUser(): Promise<UserRow> {
   // ON CONFLICT hapo juu ni kwa ajili ya maombi mawili yanayofika kwa
   // wakati mmoja: booking mbili za kwanza kabisa zingejaribu
   // kumtengeneza mtumiaji yuleyule, na moja ingeshindwa.
-  if (!created) throw new Error("Imeshindwa kuandaa mtumiaji wa muunganisho");
+  if (!created) throw new Error("Could not prepare the integration user");
   return created;
 }

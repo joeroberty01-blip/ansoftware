@@ -15,13 +15,13 @@ export default async function ManualReceiptPrintPage(
 ) {
   const viewer = await getCurrentUser();
   if (!viewer || !(await userCanAccessBilling(viewer))) {
-    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+    return <div className="p-6 text-sm text-zinc-500">You don't have permission.</div>;
   }
   const { id } = await props.params;
   const receipt = await getManualReceiptById(id);
 
   if (!receipt) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const issuedAt = new Date(receipt.issued_at)
@@ -46,12 +46,12 @@ export default async function ManualReceiptPrintPage(
       <p className="text-center text-[10px] text-zinc-600">
         Dar es Salaam, Tanzania
       </p>
-      <p className="text-center text-[10px] text-zinc-600">RISITI</p>
+      <p className="text-center text-[10px] text-zinc-600">RECEIPT</p>
 
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
       <div className="flex justify-between">
-        <span>Namba</span>
+        <span>Number</span>
         <span>{receipt.receipt_number}</span>
       </div>
       <div className="flex justify-between">
@@ -60,16 +60,16 @@ export default async function ManualReceiptPrintPage(
       </div>
       {receipt.phone && (
         <div className="flex justify-between">
-          <span>Simu</span>
+          <span>Phone</span>
           <span>{receipt.phone}</span>
         </div>
       )}
       <div className="flex justify-between">
-        <span>Tarehe</span>
+        <span>Date</span>
         <span>{issuedAt}</span>
       </div>
       <div className="flex justify-between">
-        <span>Njia</span>
+        <span>Method</span>
         <span>{receipt.method}</span>
       </div>
       {receipt.reference && (
@@ -85,7 +85,7 @@ export default async function ManualReceiptPrintPage(
 
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
-      <p className="text-center text-zinc-600">Kiasi</p>
+      <p className="text-center text-zinc-600">Amount</p>
       <p className="my-1 text-center text-base font-bold">
         TZS {fmt(receipt.amount)}
       </p>
@@ -94,7 +94,7 @@ export default async function ManualReceiptPrintPage(
         <>
           <div className="my-2 border-b border-dashed border-zinc-900" />
           <p className="text-[10px]">
-            <span className="font-bold">Maelezo: </span>
+            <span className="font-bold">Notes: </span>
             {receipt.description}
           </p>
         </>
@@ -103,7 +103,7 @@ export default async function ManualReceiptPrintPage(
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
       <p className="text-center text-[10px] text-zinc-600">
-        Asante kwa kutumia huduma zetu
+        Thank you for using our services
       </p>
       <p className="text-center text-[10px] text-zinc-600">Afya Nyumbani ERP</p>
     </div>

@@ -85,19 +85,19 @@ export function hasVitalsAlert(v: VitalsSet): boolean {
 export function vitalsAlertReasons(v: VitalsSet): string[] {
   const reasons: string[] = [];
   if (bpStatus(v.blood_pressure) === "warning") {
-    reasons.push(`Blood Pressure ${v.blood_pressure} mmHg iko nje ya kawaida`);
+    reasons.push(`Blood pressure ${v.blood_pressure} mmHg is outside the normal range`);
   }
   if (temperatureStatus(v.temperature) === "warning") {
-    reasons.push(`Joto la mwili ${v.temperature}°C liko nje ya kawaida`);
+    reasons.push(`Body temperature ${v.temperature}°C is outside the normal range`);
   }
   if (pulseStatus(v.pulse) === "warning") {
-    reasons.push(`Mapigo ya moyo ${v.pulse} bpm yako nje ya kawaida`);
+    reasons.push(`Heart rate ${v.pulse} bpm is outside the normal range`);
   }
   if (glucoseStatus(v.blood_glucose) === "warning") {
-    reasons.push(`Sukari ${v.blood_glucose} mmol/L iko nje ya kawaida`);
+    reasons.push(`Blood glucose ${v.blood_glucose} mmol/L is outside the normal range`);
   }
   if (spo2Status(v.spo2) === "warning") {
-    reasons.push(`Oksijeni (SpO₂) ${v.spo2}% iko chini ya kawaida`);
+    reasons.push(`Oxygen (SpO₂) ${v.spo2}% is below normal`);
   }
   return reasons;
 }

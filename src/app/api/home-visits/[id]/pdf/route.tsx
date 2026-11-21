@@ -13,20 +13,20 @@ export async function GET(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const { id } = await ctx.params;
   const visit = await getHomeVisitById(id);
   if (!visit) {
-    return NextResponse.json({ error: "Ripoti haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Report not found." }, { status: 404 });
   }
   const denied = await assertPatientAccess(session, visit.patient_id);
   if (denied) return denied;
 
   const patient = await getPatientById(visit.patient_id);
   if (!patient) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   const date = new Date(visit.visit_date).toISOString().slice(0, 10);
@@ -43,7 +43,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Ripoti_${safeName}_${date}.pdf"`,
+      "Content-Disposition": `attachment; filename="Report_${safeName}_${date}.pdf"`,
     },
   });
 }

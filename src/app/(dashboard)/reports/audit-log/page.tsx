@@ -21,12 +21,12 @@ interface Actor {
 }
 
 const CSV_COLUMNS = [
-  { key: "created_at", label: "Tarehe/Muda" },
-  { key: "user_name", label: "Mtumiaji" },
+  { key: "created_at", label: "Date/Time" },
+  { key: "user_name", label: "User" },
   { key: "action", label: "Kitendo" },
   { key: "entity", label: "Entity" },
   { key: "entity_id", label: "Entity ID" },
-  { key: "amount", label: "Kiasi" },
+  { key: "amount", label: "Amount" },
 ];
 
 function fmtAmount(value: string | null) {
@@ -109,7 +109,7 @@ export default function AuditLogPage() {
             Audit Log
           </h1>
           <p className="mt-0.5 text-sm text-zinc-500">
-            Historia ya kila tendo la fedha/mfumo lililofanyika — nani, lini, na kiasi gani.
+            History of every finance/system action: who, when and how much.
           </p>
         </div>
         <div className="print:hidden">
@@ -118,7 +118,7 @@ export default function AuditLogPage() {
             onClick={onDownloadAll}
             className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
           >
-            Andaa CSV ya Yote Yanayolingana
+            Export CSV of All Matches
           </button>
           {allLogs.length > 0 && (
             <span className="ml-2 inline-block">
@@ -133,14 +133,14 @@ export default function AuditLogPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 print:hidden">
-        <label className="text-xs text-zinc-500">Kutoka</label>
+        <label className="text-xs text-zinc-500">From</label>
         <input
           type="date"
           value={from}
           onChange={(e) => setFrom(e.target.value)}
           className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
         />
-        <label className="text-xs text-zinc-500">Hadi</label>
+        <label className="text-xs text-zinc-500">To</label>
         <input
           type="date"
           value={to}
@@ -152,7 +152,7 @@ export default function AuditLogPage() {
           onChange={(e) => setUserId(e.target.value)}
           className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
         >
-          <option value="">Watumiaji Wote</option>
+          <option value="">All Users</option>
           {actors.map((a) => (
             <option key={a.id} value={a.id}>
               {a.full_name}
@@ -164,7 +164,7 @@ export default function AuditLogPage() {
           onChange={(e) => setEntity(e.target.value)}
           className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
         >
-          <option value="">Entity Zote</option>
+          <option value="">All Entities</option>
           {entities.map((e) => (
             <option key={e} value={e}>
               {e}
@@ -177,18 +177,18 @@ export default function AuditLogPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : logs.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna rekodi zinazolingana.</p>
+          <p className="text-sm text-zinc-500">No matching records.</p>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                    <th className="py-2 pr-4">Tarehe/Muda</th>
-                    <th className="py-2 pr-4">Mtumiaji</th>
+                    <th className="py-2 pr-4">Date/Time</th>
+                    <th className="py-2 pr-4">User</th>
                     <th className="py-2 pr-4">Kitendo</th>
                     <th className="py-2 pr-4">Entity</th>
-                    <th className="py-2 pr-4 text-right">Kiasi</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,7 +210,7 @@ export default function AuditLogPage() {
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500 print:hidden">
               <span>
-                Ukurasa {page} kati ya {totalPages} ({total} jumla)
+                Page {page} of {totalPages} ({total} total)
               </span>
               <div className="flex items-center gap-1">
                 <button

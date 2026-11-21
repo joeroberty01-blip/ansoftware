@@ -9,7 +9,7 @@ const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7; // 7 days
 function getSecretKey() {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error("JWT_SECRET haijawekwa kwenye .env");
+    throw new Error("JWT_SECRET is not set in .env");
   }
   return new TextEncoder().encode(secret);
 }

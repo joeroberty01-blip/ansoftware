@@ -36,13 +36,13 @@ export default function LoginPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setServerError(json.error ?? "Imeshindwa kuingia. Jaribu tena.");
+        setServerError(json.error ?? "Sign-in failed. Please try again.");
         return;
       }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setServerError("Network error. Jaribu tena.");
+      setServerError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -68,7 +68,7 @@ export default function LoginPage() {
         >
           <div
             role="tablist"
-            aria-label="Ingia kama"
+            aria-label="Sign in as"
             className="grid grid-cols-2 gap-1 rounded-xl bg-zinc-100 p-1"
           >
             {(["ADMIN", "STAFF"] as const).map((r) => (
@@ -115,7 +115,7 @@ export default function LoginPage() {
               href="/forgot-password"
               className="text-sm font-semibold text-brand-blue hover:text-brand-blue-dark"
             >
-              Umesahau password?
+              Forgot password?
             </Link>
           </div>
 
@@ -136,12 +136,12 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          Huna akaunti?{" "}
+          Don't have an account?{" "}
           <Link
             href="/register"
             className="font-semibold text-brand-blue hover:text-brand-blue-dark"
           >
-            Jisajili
+            Register
           </Link>
         </p>
       </div>

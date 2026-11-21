@@ -16,13 +16,13 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Ruhusa hairuhusiwi." },
+      { error: "You don't have permission to do this." },
       { status: 403 }
     );
   }
@@ -32,18 +32,18 @@ export async function POST(
   const parsed = decisionSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
 
   const target = await findUserById(id);
   if (!target || target.role !== "STAFF") {
-    return NextResponse.json({ error: "Staff hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
   }
   if (target.status !== "PENDING") {
     return NextResponse.json(
-      { error: "Akaunti hii tayari imeamuliwa." },
+      { error: "This account has already been decided." },
       { status: 400 }
     );
   }
@@ -60,8 +60,8 @@ export async function POST(
   return NextResponse.json({
     message:
       parsed.data.decision === "APPROVED"
-        ? "Staff ameidhinishwa."
-        : "Staff amekataliwa.",
+        ? "Staff member approved."
+        : "Staff member rejected.",
     user: { id: updated?.id, status: updated?.status },
   });
 }

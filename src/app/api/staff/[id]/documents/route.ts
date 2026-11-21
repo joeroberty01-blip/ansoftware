@@ -22,7 +22,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -31,7 +31,7 @@ export async function GET(
   if (session.role !== "ADMIN") {
     const own = await getStaffById(id);
     if (!own || own.user_id !== session.id) {
-      return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+      return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
     }
   }
 
@@ -46,18 +46,18 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const staff = await getStaffById(id);
   if (!staff) {
-    return NextResponse.json({ error: "Staff hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
   }
 
   const formData = await req.formData();
@@ -66,21 +66,21 @@ export async function POST(
   const documentType = String(formData.get("documentType") ?? "").trim();
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Faili inahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "A file is required." }, { status: 400 });
   }
   if (!title) {
-    return NextResponse.json({ error: "Jina la hati linahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "Document name is required." }, { status: 400 });
   }
 
   const ext = ALLOWED_TYPES[file.type];
   if (!ext) {
     return NextResponse.json(
-      { error: "Aina ya faili inayoruhusiwa: JPEG, PNG, WEBP, PDF." },
+      { error: "Allowed file types: JPEG, PNG, WEBP, PDF." },
       { status: 400 }
     );
   }
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "Faili isizidi 10MB." }, { status: 400 });
+    return NextResponse.json({ error: "File must not exceed 10MB." }, { status: 400 });
   }
 
   const filename = `${id}-${randomUUID()}.${ext}`;

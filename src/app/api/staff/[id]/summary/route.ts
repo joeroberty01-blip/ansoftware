@@ -9,7 +9,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -18,7 +18,7 @@ export async function GET(
   if (session.role !== "ADMIN") {
     const own = await getStaffById(id);
     if (!own || own.user_id !== session.id) {
-      return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+      return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
     }
   }
 

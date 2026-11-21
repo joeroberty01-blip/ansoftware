@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Afya Nyumbani ERP",
     short_name: "Afya ERP",
-    description: "Mfumo wa Afya Nyumbani: ziara, wagonjwa, fedha na arifa.",
+    description: "Afya Nyumbani system: visits, patients, finance and notifications.",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",

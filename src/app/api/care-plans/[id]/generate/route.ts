@@ -4,10 +4,10 @@ import { getCarePlanById, generateVisitsForCarePlan } from "@/lib/repo/care-plan
 import { assertPatientAccess } from "@/lib/patient-access";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Care plan haikupatikana." },
+  NOT_FOUND: { status: 404, message: "Care plan not found." },
   NOT_ACTIVE: {
     status: 400,
-    message: "Care plan hii si ACTIVE — haiwezi kutengeneza ziara.",
+    message: "This care plan is not ACTIVE, so it can't create visits.",
   },
 };
 
@@ -17,13 +17,13 @@ export async function POST(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const { id } = await ctx.params;
   const plan = await getCarePlanById(id);
   if (!plan) {
-    return NextResponse.json({ error: "Care plan haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Care plan not found." }, { status: 404 });
   }
   const denied = await assertPatientAccess(session, plan.patient_id);
   if (denied) return denied;

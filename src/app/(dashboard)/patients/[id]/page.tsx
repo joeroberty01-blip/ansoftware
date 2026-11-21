@@ -58,9 +58,9 @@ import {
 
 const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 const VISIT_SESSION_LABELS: Record<(typeof VISIT_SESSIONS)[number], string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
+  MORNING: "Morning",
+  AFTERNOON: "Afternoon",
+  EVENING: "Evening",
 };
 
 function InfoField({
@@ -125,7 +125,7 @@ function localToday(): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
-const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function weekdayOf(date: string): string {
   return WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()] ?? "";
@@ -135,16 +135,16 @@ function weekdayOf(date: string): string {
 function VisitEntryBody({ v }: { v: HomeVisit }) {
   const chips: { label: string; value: string | null; status: "normal" | "warning" | null }[] = [
     { label: "BP", value: v.blood_pressure ? `${v.blood_pressure} mmHg` : null, status: bpStatus(v.blood_pressure) },
-    { label: "Joto", value: v.temperature ? `${v.temperature} °C` : null, status: temperatureStatus(v.temperature) },
+    { label: "Temp", value: v.temperature ? `${v.temperature} °C` : null, status: temperatureStatus(v.temperature) },
     { label: "Pulse", value: v.pulse != null ? `${v.pulse} bpm` : null, status: pulseStatus(v.pulse) },
-    { label: "Sukari", value: v.blood_glucose ? `${v.blood_glucose} mmol/L` : null, status: glucoseStatus(v.blood_glucose) },
+    { label: "Glucose", value: v.blood_glucose ? `${v.blood_glucose} mmol/L` : null, status: glucoseStatus(v.blood_glucose) },
     { label: "SpO₂", value: v.spo2 != null ? `${v.spo2}%` : null, status: spo2Status(v.spo2) },
-    { label: "Uzito", value: v.weight ? `${v.weight} kg` : null, status: null },
+    { label: "Weight", value: v.weight ? `${v.weight} kg` : null, status: null },
   ];
   const textBlocks = [
-    { label: "Chakula (Food Intake)", value: v.food_intake },
-    { label: "Matibabu / Procedures", value: v.treatment_notes },
-    { label: "Maendeleo ya Mgonjwa / Maelezo", value: v.notes },
+    { label: "Food Intake", value: v.food_intake },
+    { label: "Treatment / Procedures", value: v.treatment_notes },
+    { label: "Patient Progress / Notes", value: v.notes },
   ];
   return (
     <div>
@@ -160,7 +160,7 @@ function VisitEntryBody({ v }: { v: HomeVisit }) {
           {v.location ? ` · ${v.location}` : ""}
         </span>
         <Link href={`/home-visits/${v.id}`} className="ml-auto font-semibold text-brand-blue underline">
-          Fungua
+          Open
         </Link>
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -180,7 +180,7 @@ function VisitEntryBody({ v }: { v: HomeVisit }) {
             </span>
           ))}
         {chips.every((c) => !c.value) && (
-          <span className="text-xs text-zinc-400">Hakuna vitals zilizorekodiwa.</span>
+          <span className="text-xs text-zinc-400">No vitals recorded.</span>
         )}
       </div>
       <dl className="mt-2 flex flex-col gap-2">
@@ -419,7 +419,7 @@ interface CarePlan {
   created_at: string;
 }
 
-const WEEKDAY_LABELS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+const WEEKDAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 interface Medication {
   id: string;
@@ -488,7 +488,7 @@ export default function PatientDetailPage() {
   const onDeletePatient = async () => {
     if (
       !window.confirm(
-        "Delete mgonjwa huyu KABISA? Hii itafuta pia dawa, documents, na home visits zote za mgonjwa huyu. Hatua hii haiwezi kutenduliwa."
+        "Permanently delete this patient? This also deletes all of this patient's medications, documents and home visits. This cannot be undone."
       )
     ) {
       return;
@@ -815,7 +815,7 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setCpError(json.error ?? "Imeshindwa kutengeneza care plan.");
+        setCpError(json.error ?? "Could not create the care plan.");
         return;
       }
       setCpEndDate("");
@@ -838,11 +838,11 @@ export default function PatientDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setCpMessage(json.error ?? "Imeshindwa kutengeneza ziara.");
+        setCpMessage(json.error ?? "Could not create the visits.");
         return;
       }
       setCpMessage(
-        `Ziara ${json.created} mpya zimetengenezwa (${json.skipped} zilikuwepo tayari).`
+        `${json.created} new visits created (${json.skipped} already existed).`
       );
       await loadHomeVisits();
     } finally {
@@ -903,7 +903,7 @@ export default function PatientDetailPage() {
         className="flex w-fit items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"
       >
         <ArrowLeft className="h-4 w-4" />
-        Rudi kwa Wagonjwa
+        Back to Patients
       </Link>
       <div className="relative overflow-hidden rounded-xl border border-zinc-200 bg-gradient-to-br from-brand-blue-light via-white to-white p-5 shadow-sm">
         <Heart
@@ -965,7 +965,7 @@ export default function PatientDetailPage() {
                   className="flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                  Hariri
+                  Edit
                 </button>
               )}
               <Link
@@ -974,7 +974,7 @@ export default function PatientDetailPage() {
                 className="flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
               >
                 <Printer className="h-3.5 w-3.5" />
-                Print Ripoti (kwa Familia)
+                Print Report (for Family)
               </Link>
               {isAdmin && !editing && (
                 <button
@@ -1011,7 +1011,7 @@ export default function PatientDetailPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
               <label className="text-xs font-medium text-zinc-600">
-                Name Kamili
+                Full Name
               </label>
               <input
                 value={editFullName}
@@ -1021,7 +1021,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Date ya Kuzaliwa
+                Date of Birth
               </label>
               <input
                 type="date"
@@ -1032,14 +1032,14 @@ export default function PatientDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Jinsia
+                Gender
               </label>
               <select
                 value={editGender}
                 onChange={(e) => setEditGender(e.target.value)}
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               >
-                <option value="">-- chagua --</option>
+                <option value="">-- select --</option>
                 <option value="MALE">Male</option>
                 <option value="FEMALE">Female</option>
                 <option value="OTHER">Other</option>
@@ -1116,7 +1116,7 @@ export default function PatientDetailPage() {
                   onChange={(e) => setEditAssignedStaffId(e.target.value)}
                   className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 >
-                  <option value="">-- hakuna --</option>
+                  <option value="">-- none --</option>
                   {staffOptions.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.full_name}
@@ -1150,7 +1150,7 @@ export default function PatientDetailPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Notes Mengine
+              Other Notes
             </label>
             <textarea
               value={editNotes}
@@ -1179,7 +1179,7 @@ export default function PatientDetailPage() {
               onClick={() => setEditing(false)}
               className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
             >
-              Ghairi
+              Cancel
             </button>
           </div>
         </form>
@@ -1316,7 +1316,7 @@ export default function PatientDetailPage() {
                   <div className="flex items-center gap-2">
                     <CalendarClock className="h-4 w-4 text-brand-blue" />
                     <h2 className="text-sm font-semibold text-zinc-900">
-                      Historia ya Ziara
+                      Visit History
                     </h2>
                   </div>
                   <Link
@@ -1324,13 +1324,13 @@ export default function PatientDetailPage() {
                     className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
                   >
                     <ClipboardPlus className="h-3.5 w-3.5" />
-                    Ripoti ya Leo
+                    Today's Report
                   </Link>
                 </div>
 
                 {recentVisits.length === 0 ? (
                   <p className="py-6 text-center text-sm text-zinc-500">
-                    Hakuna ziara zilizorekodiwa bado.
+                    No visits recorded yet.
                   </p>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -1347,7 +1347,7 @@ export default function PatientDetailPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-zinc-900">
-                            Ziara ya Afya Nyumbani
+                            Afya Nyumbani Visit
                           </p>
                           <p className="truncate text-xs text-zinc-500">
                             Nurse: {v.staff_name ?? "-"}
@@ -1362,7 +1362,7 @@ export default function PatientDetailPage() {
                             href={`/home-visits/${v.id}`}
                             className="rounded border border-zinc-300 px-2 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-50"
                           >
-                            Tazama
+                            View
                           </Link>
                         </div>
                       </div>
@@ -1375,7 +1375,7 @@ export default function PatientDetailPage() {
                     onClick={() => setTab("homeVisits")}
                     className="mt-3 w-full text-center text-xs font-medium text-brand-blue hover:underline"
                   >
-                    Tazama Ziara Zote →
+                    View All Visits →
                   </button>
                 )}
               </div>
@@ -1385,19 +1385,19 @@ export default function PatientDetailPage() {
                   <div className="flex items-center gap-2">
                     <Pill className="h-4 w-4 text-brand-blue" />
                     <h2 className="text-sm font-semibold text-zinc-900">
-                      Dawa Anazotumia Sasa
+                      Current Medications
                     </h2>
                   </div>
                   <button
                     onClick={() => setTab("medications")}
                     className="text-xs font-medium text-brand-blue hover:underline"
                   >
-                    Tazama Zote
+                    View All
                   </button>
                 </div>
                 {activeMedications.length === 0 ? (
                   <p className="py-4 text-center text-sm text-zinc-500">
-                    Hakuna dawa zinazotumika sasa.
+                    No current medications.
                   </p>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -1422,7 +1422,7 @@ export default function PatientDetailPage() {
                 <div className="mb-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-brand-blue" />
                   <h2 className="text-sm font-semibold text-zinc-900">
-                    Mwenendo wa Vitals
+                    Vitals Trend
                   </h2>
                 </div>
                 <VitalsChartTabs visits={homeVisits} />
@@ -1433,7 +1433,7 @@ export default function PatientDetailPage() {
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-900">
                   <CalendarClock className="h-4 w-4 text-brand-blue" />
-                  Ziara Inayofuata
+                  Next Visit
                 </h2>
                 {upcomingVisit ? (
                   <div>
@@ -1452,12 +1452,12 @@ export default function PatientDetailPage() {
 
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-                  Vitendo vya Haraka
+                  Quick Actions
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
                   <QuickActionButton
                     icon={ClipboardPlus}
-                    label="Ripoti ya Leo"
+                    label="Today's Report"
                     onClick={() => router.push(dailyHref(localToday()))}
                   />
                   <QuickActionButton
@@ -1496,7 +1496,7 @@ export default function PatientDetailPage() {
                     onClick={() => setTab("documents")}
                     className="text-xs font-medium text-brand-blue hover:underline"
                   >
-                    Tazama Zote
+                    View All
                   </button>
                 </div>
                 {documents.length === 0 ? (
@@ -1528,8 +1528,8 @@ export default function PatientDetailPage() {
           <div className="flex items-start gap-2 rounded-lg bg-brand-blue-light/60 px-3 py-2.5 text-xs text-brand-blue">
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
             <p>
-              Vidokezo: Kila ziara inasaidia kufuatilia maendeleo ya mgonjwa na
-              kuboresha huduma zinazotolewa.
+              Tip: every visit helps track the patient's progress and
+              improve the care we give.
             </p>
           </div>
         </div>
@@ -1575,7 +1575,7 @@ export default function PatientDetailPage() {
             </button>
             <div className="col-span-full flex flex-wrap items-center gap-4 text-sm">
               <span className="text-xs font-medium text-zinc-600">
-                Anatumia dawa wakati gani:
+                When the medication is taken:
               </span>
               {MAR_SLOTS.map((slot) => (
                 <label key={slot} className="flex items-center gap-1.5">
@@ -1606,7 +1606,7 @@ export default function PatientDetailPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Dawa</th>
+                  <th className="py-2 pr-4">Medications</th>
                   <th className="py-2 pr-4">Dosage</th>
                   <th className="py-2 pr-4">Frequency</th>
                   <th className="py-2 pr-4">Nyakati</th>
@@ -1624,7 +1624,7 @@ export default function PatientDetailPage() {
                         ? MAR_SLOTS.filter((x) => m.schedule_slots.includes(x))
                             .map((x) => MAR_SLOT_LABELS[x])
                             .join(", ")
-                        : "Zote"}
+                        : "All"}
                     </td>
                     <td className="py-2 pr-4">
                       {m.start_date?.slice(0, 10) ?? "-"}
@@ -1655,7 +1655,7 @@ export default function PatientDetailPage() {
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             >
               <option value="LAB_RESULT">Lab Result</option>
-              <option value="ID_PHOTO">Kitambulisho (ID)</option>
+              <option value="ID_PHOTO">ID Document</option>
               <option value="CONSENT_FORM">Consent Form</option>
               <option value="PRESCRIPTION">Prescription</option>
               <option value="REFERRAL">Referral</option>
@@ -1716,13 +1716,13 @@ export default function PatientDetailPage() {
                             rel="noreferrer"
                             className="font-medium text-brand-blue underline"
                           >
-                            Fungua
+                            Open
                           </a>
                           <a
                             href={`/api/patients/${id}/documents/${d.id}/file?download=1`}
                             className="font-medium text-brand-blue underline"
                           >
-                            Pakua
+                            Download
                           </a>
                         </span>
                       ) : (
@@ -1746,10 +1746,10 @@ export default function PatientDetailPage() {
               </span>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-900">
-                  Historia ya Ziara
+                  Visit History
                 </h2>
                 <p className="text-xs text-zinc-500">
-                  Angalia na simamia historia ya ziara za mgonjwa nyumbani.
+                  View and manage the patient's home visit history.
                 </p>
               </div>
             </div>
@@ -1758,13 +1758,13 @@ export default function PatientDetailPage() {
               className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
             >
               <ClipboardPlus className="h-4 w-4" />
-              Ripoti ya Leo
+              Today's Report
             </Link>
           </div>
 
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-zinc-500">
-              Vitals za Leo:
+              Today's Vitals:
             </span>
             {VISIT_SESSIONS.map((session) => {
               const done = todaySessionsDone.has(session);
@@ -1785,15 +1785,15 @@ export default function PatientDetailPage() {
 
 
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 print:hidden">
-            <span className="text-xs font-semibold text-zinc-600">Pakua ripoti:</span>
-            <label className="text-xs text-zinc-500">Kutoka</label>
+            <span className="text-xs font-semibold text-zinc-600">Download report:</span>
+            <label className="text-xs text-zinc-500">From</label>
             <input
               type="date"
               value={reportFrom}
               onChange={(e) => setReportFrom(e.target.value)}
               className="rounded border border-zinc-300 px-2 py-1 text-xs"
             />
-            <label className="text-xs text-zinc-500">Hadi</label>
+            <label className="text-xs text-zinc-500">To</label>
             <input
               type="date"
               value={reportTo}
@@ -1807,7 +1807,7 @@ export default function PatientDetailPage() {
               }).toString()}`}
               className="rounded-lg bg-brand-blue px-3 py-1 text-xs font-semibold text-white hover:bg-brand-blue-dark"
             >
-              Pakua PDF
+              Download PDF
             </a>
             <button
               type="button"
@@ -1822,27 +1822,27 @@ export default function PatientDetailPage() {
                     visit_date: v.visit_date.slice(0, 10),
                     visit_type: v.visit_type === "PART_TIME" ? "Part-time" : "Full-time",
                   }));
-                downloadCsv(`ripoti-za-ziara-${patient?.full_name ?? "mgonjwa"}`, [
-                  { key: "visit_date", label: "Tarehe" },
-                  { key: "visit_session", label: "Muda" },
-                  { key: "visit_type", label: "Aina" },
+                downloadCsv(`visit-reports-${patient?.full_name ?? "patient"}`, [
+                  { key: "visit_date", label: "Date" },
+                  { key: "visit_session", label: "Session" },
+                  { key: "visit_type", label: "Type" },
                   { key: "status", label: "Status" },
                   { key: "staff_name", label: "Nesi" },
-                  { key: "location", label: "Mahali" },
+                  { key: "location", label: "Location" },
                   { key: "blood_pressure", label: "BP" },
-                  { key: "temperature", label: "Joto (°C)" },
+                  { key: "temperature", label: "Temp (°C)" },
                   { key: "pulse", label: "Pulse" },
-                  { key: "blood_glucose", label: "Sukari" },
+                  { key: "blood_glucose", label: "Glucose" },
                   { key: "spo2", label: "SpO2 (%)" },
-                  { key: "weight", label: "Uzito (kg)" },
-                  { key: "food_intake", label: "Chakula" },
-                  { key: "treatment_notes", label: "Matibabu / Procedures" },
-                  { key: "notes", label: "Maendeleo / Maelezo" },
+                  { key: "weight", label: "Weight (kg)" },
+                  { key: "food_intake", label: "Food Intake" },
+                  { key: "treatment_notes", label: "Treatment / Procedures" },
+                  { key: "notes", label: "Progress / Notes" },
                 ], rows);
               }}
               className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-zinc-100"
             >
-              Pakua CSV
+              Download CSV
             </button>
           </div>
 
@@ -1853,10 +1853,10 @@ export default function PatientDetailPage() {
                 <ClipboardPlus className="h-8 w-8" />
               </span>
               <p className="text-sm font-semibold text-zinc-900">
-                Hakuna ziara/ripoti zilizorekodiwa bado kwa mgonjwa huyu.
+                No visits/reports recorded yet for this patient.
               </p>
               <p className="max-w-sm text-xs text-zinc-500">
-                Anza kwa kuongeza ripoti mpya ya ziara ya mgonjwa nyumbani.
+                Start by adding a new home visit report.
               </p>
               {(
                 <Link
@@ -1864,7 +1864,7 @@ export default function PatientDetailPage() {
                   className="mt-1 flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
                 >
                   <ClipboardPlus className="h-4 w-4" />
-                  Andika Ripoti ya Kwanza
+                  Write the First Report
                 </Link>
               )}
             </div>
@@ -1903,18 +1903,18 @@ export default function PatientDetailPage() {
                         </h3>
                         {isToday && (
                           <span className="rounded-full bg-brand-blue-light px-2 py-0.5 text-[11px] font-semibold text-brand-blue">
-                            Leo
+                            Today
                           </span>
                         )}
                         <Link
                           href={dailyHref(day.date)}
                           className="text-xs font-semibold text-brand-blue underline"
                         >
-                          Fungua ripoti ya siku
+                          Open the day's report
                         </Link>
                         {alert && (
                           <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
-                            Vitals nje ya kawaida
+                            Vitals outside normal range
                           </span>
                         )}
                       </div>
@@ -1954,7 +1954,7 @@ export default function PatientDetailPage() {
                                   href={dailyHref(day.date, slot.session)}
                                   className="rounded-md border border-brand-blue/40 px-2 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blue-light"
                                 >
-                                  Jaza {slot.label.toLowerCase()}
+                                  Fill in {slot.label.toLowerCase()}
                                 </Link>
                               )}
                             </div>
@@ -1977,8 +1977,8 @@ export default function PatientDetailPage() {
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-brand-blue-light/60 px-3 py-2.5 text-xs text-brand-blue">
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
             <p>
-              Vidokezo: Kila ziara inasaidia kufuatilia maendeleo ya mgonjwa na
-              kuboresha huduma zinazotolewa.
+              Tip: every visit helps track the patient's progress and
+              improve the care we give.
             </p>
           </div>
         </div>
@@ -1993,11 +1993,11 @@ export default function PatientDetailPage() {
               </span>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-900">
-                  Care Plan (Ratiba ya Kudumu)
+                  Care Plan (Recurring Schedule)
                 </h2>
                 <p className="text-xs text-zinc-500">
-                  Panga ziara za kila siku/wiki kiotomatiki badala ya kuongeza
-                  moja moja.
+                  Schedule daily/weekly visits automatically instead of adding
+                  them one by one.
                 </p>
               </div>
             </div>
@@ -2010,7 +2010,7 @@ export default function PatientDetailPage() {
               }`}
             >
               <CalendarClock className="h-4 w-4" />
-              {showCarePlanForm ? "Close" : "Care Plan Mpya"}
+              {showCarePlanForm ? "Close" : "New Care Plan"}
             </button>
           </div>
 
@@ -2037,20 +2037,20 @@ export default function PatientDetailPage() {
                     }
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   >
-                    <option value="DAILY">Kila Siku</option>
-                    <option value="WEEKLY">Siku Maalum za Wiki</option>
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Specific Days of the Week</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
-                    Staff (hiari)
+                    Staff (optional)
                   </label>
                   <select
                     value={cpStaffId}
                     onChange={(e) => setCpStaffId(e.target.value)}
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   >
-                    <option value="">-- chagua staff --</option>
+                    <option value="">-- select staff --</option>
                     {staffOptions.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.full_name}
@@ -2060,7 +2060,7 @@ export default function PatientDetailPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
-                    Anza Tarehe
+                    Start Date
                   </label>
                   <input
                     type="date"
@@ -2071,7 +2071,7 @@ export default function PatientDetailPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
-                    Mwisho Tarehe
+                    End Date
                   </label>
                   <input
                     type="date"
@@ -2085,7 +2085,7 @@ export default function PatientDetailPage() {
               {cpFrequency === "WEEKLY" && (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">
-                    Siku za Wiki
+                    Days of the Week
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {WEEKDAY_LABELS.map((label, i) => (
@@ -2108,7 +2108,7 @@ export default function PatientDetailPage() {
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
-                  Muda wa Ziara (Sessions)
+                  Visit Sessions
                 </label>
                 <div className="flex flex-wrap gap-1.5">
                   {VISIT_SESSIONS.map((session) => (
@@ -2130,7 +2130,7 @@ export default function PatientDetailPage() {
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">
-                  Maelezo (hiari)
+                  Notes (optional)
                 </label>
                 <textarea
                   value={cpNotes}
@@ -2151,14 +2151,14 @@ export default function PatientDetailPage() {
                 disabled={cpSubmitting || !cpEndDate || cpSessions.length === 0}
                 className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {cpSubmitting ? "Inatengeneza..." : "Tengeneza Care Plan"}
+                {cpSubmitting ? "Inatengeneza..." : "Create Care Plan"}
               </button>
             </form>
           )}
 
           {carePlans.length === 0 ? (
             <p className="text-sm text-zinc-500">
-              Hakuna care plan bado kwa mgonjwa huyu.
+              No care plan yet for this patient.
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -2167,7 +2167,7 @@ export default function PatientDetailPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-zinc-900">
-                        {cp.frequency === "DAILY" ? "Kila Siku" : "Siku Maalum"} —{" "}
+                        {cp.frequency === "DAILY" ? "Daily" : "Specific Days"} —{" "}
                         {cp.sessions
                           .map(
                             (s) =>
@@ -2178,7 +2178,7 @@ export default function PatientDetailPage() {
                           .join(", ")}
                       </p>
                       <p className="text-xs text-zinc-500">
-                        {cp.start_date.slice(0, 10)} hadi{" "}
+                        {cp.start_date.slice(0, 10)} to{" "}
                         {cp.end_date.slice(0, 10)}
                         {cp.staff_name ? ` · ${cp.staff_name}` : ""}
                         {cp.frequency === "WEEKLY" && cp.weekdays
@@ -2212,7 +2212,7 @@ export default function PatientDetailPage() {
                           disabled={cpBusyId === cp.id}
                           className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
                         >
-                          {cpBusyId === cp.id ? "Inatengeneza..." : "Tengeneza Ziara"}
+                          {cpBusyId === cp.id ? "Inatengeneza..." : "Create Visits"}
                         </button>
                         <button
                           type="button"
@@ -2220,7 +2220,7 @@ export default function PatientDetailPage() {
                           disabled={cpBusyId === cp.id}
                           className="rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
                         >
-                          Simamisha
+                          Pause
                         </button>
                       </>
                     )}
@@ -2231,7 +2231,7 @@ export default function PatientDetailPage() {
                         disabled={cpBusyId === cp.id}
                         className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
                       >
-                        Anzisha Tena
+                        Resume
                       </button>
                     )}
                     {cp.status !== "ENDED" && (
@@ -2241,7 +2241,7 @@ export default function PatientDetailPage() {
                         disabled={cpBusyId === cp.id}
                         className="rounded border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                       >
-                        Maliza
+                        End
                       </button>
                     )}
                   </div>

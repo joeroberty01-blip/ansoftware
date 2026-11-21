@@ -9,29 +9,29 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   const existing = await getExpenseById(id);
   if (!existing) {
-    return NextResponse.json({ error: "Expense haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Expense not found." }, { status: 404 });
   }
   if (existing.status !== "PENDING") {
     return NextResponse.json(
-      { error: "Ombi hili tayari limeshughulikiwa." },
+      { error: "This request has already been handled." },
       { status: 400 }
     );
   }
 
   const body = await req.json();
   if (body.status !== "APPROVED" && body.status !== "REJECTED") {
-    return NextResponse.json({ error: "Status si sahihi." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
   const expense = await setExpenseStatus(id, body.status);

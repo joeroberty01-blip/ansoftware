@@ -21,7 +21,7 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -32,25 +32,25 @@ export async function POST(
 
   const patient = await getPatientById(id);
   if (!patient) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   const formData = await req.formData();
   const file = formData.get("photo");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Picha inahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "A photo is required." }, { status: 400 });
   }
 
   const ext = ALLOWED_TYPES[file.type];
   if (!ext) {
     return NextResponse.json(
-      { error: "Aina ya picha inayoruhusiwa: JPEG, PNG, WEBP." },
+      { error: "Allowed image types: JPEG, PNG, WEBP." },
       { status: 400 }
     );
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json(
-      { error: "Picha isizidi 5MB." },
+      { error: "Photo must not exceed 5MB." },
       { status: 400 }
     );
   }

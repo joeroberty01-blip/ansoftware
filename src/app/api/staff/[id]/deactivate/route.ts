@@ -9,25 +9,25 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
   if (id === session.id) {
     return NextResponse.json(
-      { error: "Huwezi kuzima akaunti yako mwenyewe." },
+      { error: "You can't deactivate your own account." },
       { status: 400 }
     );
   }
 
   const staff = await deactivateStaff(id);
   if (!staff) {
-    return NextResponse.json({ error: "Staff hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
   }
 
   return NextResponse.json({ staff });

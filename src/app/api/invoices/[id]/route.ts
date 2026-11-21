@@ -10,7 +10,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -21,7 +21,7 @@ export async function GET(
   const invoice = await getInvoiceDetail(id);
   if (!invoice) {
     return NextResponse.json(
-      { error: "Invoice/Quotation haikupatikana." },
+      { error: "Invoice/Quotation not found." },
       { status: 404 }
     );
   }

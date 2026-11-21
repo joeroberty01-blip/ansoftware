@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const existing = await findUserByEmail(body.email ?? "");
   if (existing) {
     return NextResponse.json(
-      { error: "Barua pepe hii tayari imesajiliwa." },
+      { error: "This email is already registered." },
       { status: 400 }
     );
   }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const parsed = adminSignupSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid data" },
         { status: 400 }
       );
     }
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     if (adminSecretCode !== process.env.ADMIN_SIGNUP_SECRET) {
       return NextResponse.json(
-        { error: "Admin secret code sio sahihi." },
+        { error: "The Admin secret code is incorrect." },
         { status: 403 }
       );
     }
@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       message:
         existingAdmins === 0
-          ? "Admin wa kwanza ametengenezwa kikamilifu."
-          : "Admin mpya ametengenezwa kikamilifu.",
+          ? "First Admin created successfully."
+          : "New Admin created successfully.",
       user: { id: user.id, role: user.role },
     });
   }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const parsed = staffSignupSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid data" },
         { status: 400 }
       );
     }
@@ -96,13 +96,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       message:
-        "Umesajiliwa kikamilifu. Akaunti yako inasubiri idhini ya Admin kabla hujaweza kuingia.",
+        "Registration successful. Your account needs Admin approval before you can sign in.",
       user: { id: result.id, status: result.status },
     });
   }
 
   return NextResponse.json(
-    { error: "accountType lazima iwe ADMIN au STAFF" },
+    { error: "accountType must be ADMIN or STAFF" },
     { status: 400 }
   );
 }

@@ -25,7 +25,7 @@ export async function createExpense(input: {
       input.status ?? null,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza expense");
+  if (!row) throw new Error("Could not add the expense");
 
   await logAudit({
     userId: input.createdById,

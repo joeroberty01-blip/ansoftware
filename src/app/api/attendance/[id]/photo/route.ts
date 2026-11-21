@@ -7,22 +7,22 @@ import { getAttendanceById, getAttendancePhoto } from "@/lib/repo/attendance";
 export async function GET(_req: Request, ctx: RouteContext<"/api/attendance/[id]/photo">) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   const { id } = await ctx.params;
   const attendance = await getAttendanceById(id);
   if (!attendance) {
-    return NextResponse.json({ error: "Haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   if (session.role !== "ADMIN") {
     const staff = await getStaffByUserId(session.id);
     if (!staff || staff.id !== attendance.staff_id) {
-      return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+      return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
     }
   }
   const photo = await getAttendancePhoto(id);
   if (!photo) {
-    return NextResponse.json({ error: "Hakuna picha." }, { status: 404 });
+    return NextResponse.json({ error: "No photo." }, { status: 404 });
   }
   return new NextResponse(new Uint8Array(photo.data), {
     headers: {

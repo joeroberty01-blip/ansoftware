@@ -36,15 +36,15 @@ interface Overview {
 const ALL_TIME_DAYS = 36500;
 
 const DAYS_OPTIONS = [
-  { value: 7, label: "Wiki 1" },
-  { value: 30, label: "Siku 30" },
-  { value: 90, label: "Siku 90" },
-  { value: 365, label: "Mwaka 1" },
-  { value: ALL_TIME_DAYS, label: "Muda Wote" },
+  { value: 7, label: "1 Week" },
+  { value: 30, label: "30 Days" },
+  { value: 90, label: "90 Days" },
+  { value: 365, label: "1 Year" },
+  { value: ALL_TIME_DAYS, label: "All Time" },
 ];
 
 function periodLabel(days: number) {
-  return days >= ALL_TIME_DAYS ? "Muda Wote" : `Siku ${days} Zilizopita`;
+  return days >= ALL_TIME_DAYS ? "All Time" : `Last ${days} Days`;
 }
 
 function fmtMoney(value: string) {
@@ -97,13 +97,13 @@ export default function ReportsPage() {
       .then(async (r) => {
         const json = await r.json().catch(() => ({}));
         if (!r.ok || !json.overview) {
-          throw new Error(json.error ?? "Ripoti hazikupakia.");
+          throw new Error(json.error ?? "Reports failed to load.");
         }
         setData(json.overview);
       })
       .catch((err: Error) => {
         setData(null);
-        setError(err.message || "Ripoti hazikupakia.");
+        setError(err.message || "Reports failed to load.");
       })
       .finally(() => setLoading(false));
   }, [days, attempt]);
@@ -148,7 +148,7 @@ export default function ReportsPage() {
             onClick={() => setAttempt((n) => n + 1)}
             className="rounded-lg border border-red-300 bg-white px-4 py-2 font-semibold text-red-700 hover:bg-red-100"
           >
-            Jaribu tena
+            Try again
           </button>
         </div>
       ) : loading || !data ? (
@@ -157,12 +157,12 @@ export default function ReportsPage() {
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {[
-              { label: "Wagonjwa Wote", value: data.patientsCount },
-              { label: "Wapya Mwezi Huu", value: data.newPatientsThisMonth },
-              { label: "Wagonjwa Active", value: data.activePatientsCount },
-              { label: "Mapato (Mwezi)", value: `TZS ${fmtMoney(data.income)}` },
-              { label: "Matumizi (Mwezi)", value: `TZS ${fmtMoney(data.expenses)}` },
-              { label: "Net Profit (Mwezi)", value: `TZS ${fmtMoney(data.netProfit)}` },
+              { label: "All Patients", value: data.patientsCount },
+              { label: "New This Month", value: data.newPatientsThisMonth },
+              { label: "Active Patients", value: data.activePatientsCount },
+              { label: "Income (Month)", value: `TZS ${fmtMoney(data.income)}` },
+              { label: "Expenses (Month)", value: `TZS ${fmtMoney(data.expenses)}` },
+              { label: "Net Profit (Month)", value: `TZS ${fmtMoney(data.netProfit)}` },
             ].map((card) => (
               <div
                 key={card.label}
@@ -178,25 +178,25 @@ export default function ReportsPage() {
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <SectionCard
-              title="Wagonjwa kwa Jinsia (Gender)"
+              title="Patients by Gender"
               download={{
-                filename: "wagonjwa-kwa-jinsia",
+                filename: "patients-by-gender",
                 columns: [
-                  { key: "gender", label: "Jinsia" },
-                  { key: "count", label: "Idadi" },
+                  { key: "gender", label: "Gender" },
+                  { key: "count", label: "Quantity" },
                 ],
                 rows: data.genderBreakdown,
               }}
             >
               {data.genderBreakdown.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna data.</p>
+                <p className="text-sm text-zinc-500">No data.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
                   <tbody>
                     {data.genderBreakdown.map((g) => (
                       <tr key={g.gender ?? "unknown"} className="border-b border-zinc-100 last:border-0">
-                        <td className="py-1.5">{g.gender ?? "Haijawekwa"}</td>
+                        <td className="py-1.5">{g.gender ?? "Not set"}</td>
                         <td className="py-1.5 text-right font-medium">{g.count}</td>
                       </tr>
                     ))}
@@ -217,7 +217,7 @@ export default function ReportsPage() {
                     </td>
                   </tr>
                   <tr className="border-b border-zinc-100">
-                    <td className="py-1.5">Likizoni (On Leave)</td>
+                    <td className="py-1.5">On Leave</td>
                     <td className="py-1.5 text-right font-medium">
                       {data.staffStatusCounts.onLeave}
                     </td>
@@ -241,25 +241,25 @@ export default function ReportsPage() {
           </div>
 
           <SectionCard
-            title="Wagonjwa kwa Nurse (Patient Load per Nurse)"
+            title="Patient Load per Nurse"
             download={{
-              filename: "wagonjwa-kwa-nurse",
+              filename: "patients-per-nurse",
               columns: [
                 { key: "staffName", label: "Nurse" },
-                { key: "patientCount", label: "Idadi ya Wagonjwa" },
+                { key: "patientCount", label: "Number of Patients" },
               ],
               rows: data.patientsPerNurse,
             }}
           >
             {data.patientsPerNurse.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hakuna staff active.</p>
+              <p className="text-sm text-zinc-500">No active staff.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Nurse</th>
-                    <th className="py-2 pr-4 text-right">Idadi ya Wagonjwa</th>
+                    <th className="py-2 pr-4 text-right">Number of Patients</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -284,13 +284,13 @@ export default function ReportsPage() {
                 filename: "home-visits-status",
                 columns: [
                   { key: "status", label: "Status" },
-                  { key: "count", label: "Idadi" },
+                  { key: "count", label: "Quantity" },
                 ],
                 rows: data.visitStatusBreakdown,
               }}
             >
               {data.visitStatusBreakdown.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna ziara katika kipindi hiki.</p>
+                <p className="text-sm text-zinc-500">No visits in this period.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -308,25 +308,25 @@ export default function ReportsPage() {
             </SectionCard>
 
             <SectionCard
-              title={`Staff Leaderboard (Ziara Zilizokamilika, ${periodLabel(data.days)})`}
+              title={`Staff Leaderboard (Completed Visits, ${periodLabel(data.days)})`}
               download={{
                 filename: "staff-leaderboard",
                 columns: [
                   { key: "staffName", label: "Nurse" },
-                  { key: "completedCount", label: "Ziara Zilizokamilika" },
+                  { key: "completedCount", label: "Completed Visits" },
                 ],
                 rows: data.staffLeaderboard,
               }}
             >
               {data.staffLeaderboard.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna data kwa kipindi hiki.</p>
+                <p className="text-sm text-zinc-500">No data for this period.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Nurse</th>
-                      <th className="py-2 pr-4 text-right">Ziara Zilizokamilika</th>
+                      <th className="py-2 pr-4 text-right">Completed Visits</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -346,25 +346,25 @@ export default function ReportsPage() {
           </div>
 
           <SectionCard
-            title="Leseni Zinazokaribia Kuisha (siku 90)"
+            title="Licences Expiring Soon (90 days)"
             download={{
-              filename: "leseni-zinazokaribia-kuisha",
+              filename: "licences-expiring-soon",
               columns: [
                 { key: "staffName", label: "Nurse" },
-                { key: "expiryDate", label: "Leseni Inaisha" },
+                { key: "expiryDate", label: "Licence Expires" },
               ],
               rows: data.expiringLicenses,
             }}
           >
             {data.expiringLicenses.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hakuna leseni zinazokaribia kuisha.</p>
+              <p className="text-sm text-zinc-500">No licences expiring soon.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Nurse</th>
-                    <th className="py-2 pr-4">Leseni Inaisha</th>
+                    <th className="py-2 pr-4">Licence Expires</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -384,9 +384,9 @@ export default function ReportsPage() {
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <SectionCard
-              title="Stock Chini ya Reorder Level"
+              title="Stock Below Reorder Level"
               download={{
-                filename: "stock-chini-ya-reorder",
+                filename: "stock-below-reorder",
                 columns: [
                   { key: "name", label: "Item" },
                   { key: "currentStock", label: "Stock" },
@@ -396,7 +396,7 @@ export default function ReportsPage() {
               }}
             >
               {data.lowStockItems.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna item chini ya reorder level.</p>
+                <p className="text-sm text-zinc-500">No items below reorder level.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -424,20 +424,20 @@ export default function ReportsPage() {
             </SectionCard>
 
             <SectionCard
-              title="Batches Zinazokaribia Kuisha (siku 90)"
+              title="Batches Expiring Soon (90 days)"
               download={{
-                filename: "batches-zinazokaribia-kuisha",
+                filename: "batches-expiring-soon",
                 columns: [
                   { key: "itemName", label: "Item" },
                   { key: "batchNumber", label: "Batch" },
-                  { key: "expiryDate", label: "Inaisha" },
+                  { key: "expiryDate", label: "Expires" },
                   { key: "quantity", label: "Qty" },
                 ],
                 rows: data.expiringBatches,
               }}
             >
               {data.expiringBatches.length === 0 ? (
-                <p className="text-sm text-zinc-500">Hakuna batch zinazokaribia kuisha.</p>
+                <p className="text-sm text-zinc-500">No batches expiring soon.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -445,7 +445,7 @@ export default function ReportsPage() {
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Item</th>
                       <th className="py-2 pr-4">Batch</th>
-                      <th className="py-2 pr-4">Inaisha</th>
+                      <th className="py-2 pr-4">Expires</th>
                       <th className="py-2 pr-4 text-right">Qty</th>
                     </tr>
                   </thead>

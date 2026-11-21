@@ -4,14 +4,14 @@ import { decideLeaveRequestSchema } from "@/lib/validation/leave";
 import { decideLeaveRequest } from "@/lib/repo/leave";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Ombi la likizo halikupatikana." },
+  NOT_FOUND: { status: 404, message: "Leave request not found." },
   ALREADY_DECIDED: {
     status: 400,
-    message: "Ombi hili tayari limeamuliwa.",
+    message: "This request has already been decided.",
   },
   INSUFFICIENT_BALANCE: {
     status: 400,
-    message: "Staff huyu hana siku za kutosha za likizo kwa ombi hili.",
+    message: "This staff member doesn't have enough leave days for this request.",
   },
 };
 
@@ -22,12 +22,12 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
@@ -35,7 +35,7 @@ export async function PATCH(
   const parsed = decideLeaveRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

@@ -18,14 +18,14 @@ import { calculateAge, relativeDays } from "@/lib/date-utils";
 
 const CSV_COLUMNS = [
   { key: "patient_number", label: "Patient ID" },
-  { key: "full_name", label: "Jina" },
-  { key: "age", label: "Umri" },
-  { key: "gender", label: "Jinsia" },
-  { key: "phone", label: "Simu" },
+  { key: "full_name", label: "Name" },
+  { key: "age", label: "Age" },
+  { key: "gender", label: "Gender" },
+  { key: "phone", label: "Phone" },
   { key: "blood_type", label: "Blood Type" },
   { key: "chronic_conditions", label: "Chronic Conditions" },
-  { key: "assigned_staff_name", label: "Nurse Aliyepangiwa" },
-  { key: "last_visit_date", label: "Ziara ya Mwisho" },
+  { key: "assigned_staff_name", label: "Assigned Nurse" },
+  { key: "last_visit_date", label: "Last Visit" },
   { key: "status", label: "Status" },
 ];
 
@@ -317,7 +317,7 @@ export default function PatientsListPage() {
   const onDelete = async (p: Patient) => {
     if (
       !window.confirm(
-        `Futa mgonjwa "${p.full_name}" KABISA? Hii itafuta pia dawa, documents, na home visits zake zote.`
+        `Permanently delete patient "${p.full_name}"? This also deletes all their medications, documents and home visits.`
       )
     ) {
       return;
@@ -327,7 +327,7 @@ export default function PatientsListPage() {
       const res = await fetch(`/api/patients/${p.id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error ?? "Imeshindwa kufuta.");
+        alert(json.error ?? "Could not delete.");
         return;
       }
       await load();
@@ -380,7 +380,7 @@ export default function PatientsListPage() {
               className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
             >
               <UserPlus className="h-4 w-4" />
-              Ongeza Mgonjwa Mpya
+              Add New Patient
             </Link>
           )}
         </div>
@@ -388,7 +388,7 @@ export default function PatientsListPage() {
 
       {!isAdmin && (
         <p className="rounded-lg bg-brand-blue-light/40 px-3 py-2 text-sm text-brand-blue print:hidden">
-          Unaona wagonjwa waliopangiwa kwako pekee.
+          You only see patients assigned to you.
         </p>
       )}
 
@@ -427,7 +427,7 @@ export default function PatientsListPage() {
                     onChange={(e) => setStatusFilter(e.target.value as "ALL" | PatientStatus)}
                     className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                   >
-                    <option value="ALL">Zote</option>
+                    <option value="ALL">All</option>
                     <option value="ACTIVE">Active</option>
                     <option value="PENDING">Pending</option>
                     <option value="INACTIVE">Inactive</option>
@@ -441,7 +441,7 @@ export default function PatientsListPage() {
                       onChange={(e) => setNurseFilter(e.target.value)}
                       className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                     >
-                      <option value="ALL">Zote</option>
+                      <option value="ALL">All</option>
                       <option value="UNASSIGNED">Haijapangiwa</option>
                       {staffOptions.map((s) => (
                         <option key={s.id} value={s.id}>
@@ -460,7 +460,7 @@ export default function PatientsListPage() {
                     }}
                     className="mt-3 text-xs font-medium text-brand-blue hover:underline"
                   >
-                    Futa filters
+                    Clear filters
                   </button>
                 )}
               </div>
@@ -487,7 +487,7 @@ export default function PatientsListPage() {
         {loading ? (
           <p className="p-5 text-sm text-zinc-500">Loading...</p>
         ) : sorted.length === 0 ? (
-          <p className="p-5 text-sm text-zinc-500">Hakuna wagonjwa wanaolingana.</p>
+          <p className="p-5 text-sm text-zinc-500">No matching patients.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -642,7 +642,7 @@ export default function PatientsListPage() {
                       <td className="py-2.5 pr-4">
                         <div className="text-zinc-700">{p.last_visit_date?.slice(0, 10) ?? "-"}</div>
                         <div className="text-xs text-zinc-400">
-                          {p.last_visit_date ? relativeDays(p.last_visit_date) : "Hajapata ziara"}
+                          {p.last_visit_date ? relativeDays(p.last_visit_date) : "No visits yet"}
                         </div>
                       </td>
                       <td className="py-2.5 pr-4">
@@ -672,7 +672,7 @@ export default function PatientsListPage() {
                                   className="block px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50"
                                   onClick={() => setOpenMenuId(null)}
                                 >
-                                  Fungua
+                                  Open
                                 </Link>
                                 <button
                                   type="button"
@@ -680,7 +680,7 @@ export default function PatientsListPage() {
                                   disabled={deletingId === p.id}
                                   className="block w-full px-3 py-1.5 text-left text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
                                 >
-                                  {deletingId === p.id ? "Deleting..." : "Futa"}
+                                  {deletingId === p.id ? "Deleting..." : "Delete"}
                                 </button>
                               </div>
                             </>
@@ -722,7 +722,7 @@ export default function PatientsListPage() {
                             onChange={(e) => setAssignStaffId(e.target.value)}
                             className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
                           >
-                            <option value="">-- chagua nurse --</option>
+                            <option value="">-- select nurse --</option>
                             {staffOptions.map((s) => (
                               <option key={s.id} value={s.id}>
                                 {s.full_name}
@@ -735,7 +735,7 @@ export default function PatientsListPage() {
                             disabled={!assignStaffId || assigning}
                             className="mt-2 w-full rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-50"
                           >
-                            {assigning ? "Assigning..." : "Panga"}
+                            {assigning ? "Assigning..." : "Assign"}
                           </button>
                         </div>
                       </>
@@ -754,7 +754,7 @@ export default function PatientsListPage() {
                     className="flex items-center gap-1 text-xs font-medium text-zinc-400 hover:text-zinc-600"
                   >
                     <X className="h-3.5 w-3.5" />
-                    Ghairi
+                    Cancel
                   </button>
                 </>
               ) : (

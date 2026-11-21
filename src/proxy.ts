@@ -84,7 +84,7 @@ export async function proxy(request: NextRequest) {
   if (!session) {
     if (isApi) {
       return NextResponse.json(
-        { error: "Unahitaji kuingia kwanza." },
+        { error: "Please sign in first." },
         { status: 401 }
       );
     }
@@ -105,7 +105,7 @@ export async function proxy(request: NextRequest) {
   ) {
     if (isApi) {
       return NextResponse.json(
-        { error: "Ruhusa hairuhusiwi." },
+        { error: "You don't have permission to do this." },
         { status: 403 }
       );
     }

@@ -76,7 +76,7 @@ export default function RegisterPage() {
         </div>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          Una akaunti tayari?{" "}
+          Already have an account?{" "}
           <Link href="/login" className="font-semibold text-brand-blue hover:text-brand-blue-dark">
             Sign in
           </Link>
@@ -110,13 +110,13 @@ function AdminForm() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setServerError(json.error ?? "Imeshindwa kusajili. Jaribu tena.");
+        setServerError(json.error ?? "Registration failed. Please try again.");
         return;
       }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setServerError("Network error. Jaribu tena.");
+      setServerError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -231,12 +231,12 @@ function StaffForm() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setServerError(json.error ?? "Imeshindwa kusajili. Jaribu tena.");
+        setServerError(json.error ?? "Registration failed. Please try again.");
         return;
       }
       setRegistered(true);
     } catch {
-      setServerError("Network error. Jaribu tena.");
+      setServerError("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -246,13 +246,13 @@ function StaffForm() {
     return (
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Umesajiliwa, inasubiri idhini ya Admin.
+          Registered. Waiting for Admin approval.
         </p>
         <Link
           href="/login"
           className="w-full rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-brand-blue/25"
         >
-          Rudi kwenye Login
+          Back to Login
         </Link>
       </div>
     );
@@ -268,7 +268,7 @@ function StaffForm() {
         id="staff-fullName"
         icon={User}
         label="Full name"
-        placeholder="Jina lako"
+        placeholder="Your name"
         error={errors.fullName?.message}
         {...register("fullName")}
       />
@@ -306,7 +306,7 @@ function StaffForm() {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="staff-profession" className="text-sm font-medium text-zinc-700">
-          Taaluma
+          Profession
         </label>
         <select
           id="staff-profession"

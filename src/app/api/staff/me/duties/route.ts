@@ -7,14 +7,14 @@ export async function GET() {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
 
   const staff = await getStaffByUserId(session.id);
   if (!staff) {
-    return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 404 });
+    return NextResponse.json({ error: "You don't have a staff profile." }, { status: 404 });
   }
 
   const duties = await listDutiesForStaff(staff.id);

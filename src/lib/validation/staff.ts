@@ -10,18 +10,18 @@ export const PROFESSIONS = ["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF", "ACCOUNTANT
 export const EMPLOYMENT_STATUSES = ["ACTIVE", "INACTIVE", "TERMINATED"] as const;
 
 export const createStaffSchema = z.object({
-  fullName: z.string().trim().min(2, "Jina linahitajika"),
-  email: z.string().trim().email("Barua pepe sio sahihi"),
-  phone: z.string().trim().min(9, "Namba ya simu sio sahihi"),
-  password: z.string().min(8, "Password iwe angalau herufi 8"),
+  fullName: z.string().trim().min(2, "Name is required"),
+  email: z.string().trim().email("Invalid email address"),
+  phone: z.string().trim().min(9, "Invalid phone number"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   profession: z.enum(PROFESSIONS),
-  baseSalary: decimalString("Mshahara wa msingi sio sahihi"),
-  allowances: decimalString("Allowances sio sahihi").default("0"),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi"),
+  baseSalary: decimalString("Invalid basic salary"),
+  allowances: decimalString("Invalid allowances").default("0"),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
   licenseNumber: z.string().trim().max(100).optional().or(z.literal("")),
   licenseExpiryDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date")
     .optional()
     .or(z.literal("")),
 });
@@ -33,15 +33,15 @@ export const updateStaffSchema = z.object({
   licenseNumber: z.string().trim().max(100).optional().or(z.literal("")),
   licenseExpiryDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date")
     .optional()
     .or(z.literal("")),
   employmentStatus: z.enum(EMPLOYMENT_STATUSES).optional(),
-  baseSalary: decimalString("Mshahara wa msingi sio sahihi").optional(),
-  allowances: decimalString("Allowances sio sahihi").optional(),
+  baseSalary: decimalString("Invalid basic salary").optional(),
+  allowances: decimalString("Invalid allowances").optional(),
   startDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date")
     .optional(),
   highestEducation: z.string().trim().max(200).optional().or(z.literal("")),
   specialization: z.string().trim().max(200).optional().or(z.literal("")),

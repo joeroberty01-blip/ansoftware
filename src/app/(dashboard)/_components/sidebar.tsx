@@ -39,7 +39,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Patients", href: "/patients", icon: HeartPulse, area: "clinical", group: "main" },
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, area: "clinical", group: "main" },
   {
-    label: "Mahudhurio",
+    label: "Attendance",
     href: "/attendance",
     icon: UserCheck,
     hideForStaff: true,

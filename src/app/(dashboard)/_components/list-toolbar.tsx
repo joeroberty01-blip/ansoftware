@@ -18,7 +18,7 @@ export function ListToolbar({
         onClick={() => downloadCsv(filename, columns, rows)}
         className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
       >
-        Pakua CSV
+        Download CSV
       </button>
       <button
         type="button"

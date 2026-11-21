@@ -73,16 +73,16 @@ interface Overview {
 }
 
 const SESSION_LABELS: Record<string, string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
+  MORNING: "Morning",
+  AFTERNOON: "Afternoon",
+  EVENING: "Evening",
 };
 
 const EXPENSE_CATEGORIES = [
-  { value: "USAFIRI", label: "Usafiri (Transport)" },
-  { value: "VIFAA", label: "Vifaa (Supplies)" },
-  { value: "UENDESHAJI", label: "Uendeshaji (Operations)" },
-  { value: "MENGINEYO", label: "Mengineyo (Other)" },
+  { value: "USAFIRI", label: "Transport" },
+  { value: "VIFAA", label: "Supplies" },
+  { value: "UENDESHAJI", label: "Operations" },
+  { value: "MENGINEYO", label: "Other" },
 ];
 
 function fmt(value: string) {
@@ -245,13 +245,13 @@ export function StaffPortalDashboard() {
             <div className="min-w-0 flex-1">
               <h2 className="text-base font-semibold text-red-800">
                 {data.missedVisitsCount === 1
-                  ? "Una ziara 1 uliyokosa"
-                  : `Una ziara ${data.missedVisitsCount} ulizokosa`}
+                  ? "You have 1 missed visit"
+                  : `You have ${data.missedVisitsCount} missed visits`}
               </h2>
               <p className="mt-0.5 text-sm text-red-700">
-                Tarehe ya ziara hizi imepita na bado hazijarekodiwa. Fungua kila moja:
-                kama ulifanya ziara, andika ripoti na uiweke Completed; kama haikufanyika,
-                andika sababu au mjulishe Admin.
+                These visits are past their date and haven't been recorded. Open each one:
+                if you did the visit, write the report and mark it Completed; if it didn't happen,
+                write the reason or tell the Admin.
               </p>
               <ul className="mt-3 flex flex-col gap-2">
                 {data.missedVisits.map((v) => (
@@ -264,7 +264,7 @@ export function StaffPortalDashboard() {
                       <span className="text-zinc-600">
                         {String(v.visit_date).slice(0, 10)}
                         {v.visit_session ? ` · ${SESSION_LABELS[v.visit_session] ?? v.visit_session}` : ""}
-                        <span className="ml-2 font-semibold text-red-700">Fungua →</span>
+                        <span className="ml-2 font-semibold text-red-700">Open →</span>
                       </span>
                     </Link>
                   </li>
@@ -272,7 +272,7 @@ export function StaffPortalDashboard() {
               </ul>
               {data.missedVisitsCount > data.missedVisits.length && (
                 <Link href="/home-visits" className="mt-2 inline-block text-sm font-semibold text-red-700">
-                  Ona zote ({data.missedVisitsCount}) →
+                  See all ({data.missedVisitsCount}) →
                 </Link>
               )}
             </div>

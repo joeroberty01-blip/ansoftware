@@ -1,44 +1,44 @@
 import { z } from "zod";
 
 export const adminSignupSchema = z.object({
-  fullName: z.string().min(2, "Jina linahitajika"),
-  email: z.string().email("Barua pepe sio sahihi"),
-  phone: z.string().min(9, "Namba ya simu sio sahihi"),
-  password: z.string().min(8, "Password iwe angalau herufi 8"),
-  adminSecretCode: z.string().min(1, "Admin secret code inahitajika"),
+  fullName: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(9, "Invalid phone number"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  adminSecretCode: z.string().min(1, "Admin secret code is required"),
 });
 
 export const staffSignupSchema = z.object({
-  fullName: z.string().min(2, "Jina linahitajika"),
-  email: z.string().email("Barua pepe sio sahihi"),
-  phone: z.string().min(9, "Namba ya simu sio sahihi"),
-  password: z.string().min(8, "Password iwe angalau herufi 8"),
+  fullName: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(9, "Invalid phone number"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   profession: z.enum(["NURSE", "DOCTOR", "CHW", "ADMIN_STAFF", "ACCOUNTANT"]),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Barua pepe sio sahihi"),
-  password: z.string().min(1, "Password inahitajika"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
   // Which sign-in tab the user used. Optional so API clients keep working.
   role: z.enum(["ADMIN", "STAFF"]).optional(),
 });
 
 export const forgotPasswordRequestSchema = z.object({
-  email: z.string().trim().email("Barua pepe sio sahihi"),
+  email: z.string().trim().email("Invalid email address"),
 });
 
 export const resetPasswordSchema = z
   .object({
-    email: z.string().trim().email("Barua pepe sio sahihi"),
+    email: z.string().trim().email("Invalid email address"),
     code: z
       .string()
       .trim()
-      .regex(/^\d{6}$/, "Weka code ya tarakimu 6 uliyotumiwa kwa email"),
-    newPassword: z.string().min(8, "Password iwe angalau herufi 8"),
-    confirmPassword: z.string().min(1, "Rudia password mpya"),
+      .regex(/^\d{6}$/, "Enter the 6-digit code we emailed you"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Repeat new password"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Password hazifanani",
+    message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 

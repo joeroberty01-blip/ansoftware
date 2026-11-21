@@ -23,7 +23,7 @@ export async function GET(
   const payment = await getPaymentWithContext(id, paymentId);
   if (!payment) {
     return NextResponse.json(
-      { error: "Malipo hayakupatikana." },
+      { error: "Payment not found." },
       { status: 404 }
     );
   }
@@ -34,7 +34,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `${download ? "attachment" : "inline"}; filename="risiti-${payment.receipt_number}.pdf"`,
+      "Content-Disposition": `${download ? "attachment" : "inline"}; filename="receipt-${payment.receipt_number}.pdf"`,
     },
   });
 }

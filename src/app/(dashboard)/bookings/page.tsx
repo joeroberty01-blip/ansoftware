@@ -7,13 +7,13 @@ import { ListToolbar } from "../_components/list-toolbar";
 import { BOOKING_SOURCE_LABELS, type BookingSource } from "@/lib/validation/bookings";
 
 const CSV_COLUMNS = [
-  { key: "created_at", label: "Tarehe" },
-  { key: "full_name", label: "Jina" },
-  { key: "phone", label: "Simu" },
-  { key: "service_type", label: "Huduma" },
-  { key: "source", label: "Chanzo" },
-  { key: "source_detail", label: "Maelezo ya chanzo" },
-  { key: "next_follow_up_date", label: "Fuatilia" },
+  { key: "created_at", label: "Date" },
+  { key: "full_name", label: "Name" },
+  { key: "phone", label: "Phone" },
+  { key: "service_type", label: "Service" },
+  { key: "source", label: "Source" },
+  { key: "source_detail", label: "Source details" },
+  { key: "next_follow_up_date", label: "Follow up" },
   { key: "staff_name", label: "Staff" },
   { key: "status", label: "Status" },
 ];
@@ -42,11 +42,11 @@ interface Stats {
 }
 
 const STATUS_OPTIONS = [
-  { value: "", label: "Zote" },
-  { value: "NEW", label: "Mpya" },
+  { value: "", label: "All" },
+  { value: "NEW", label: "New" },
   { value: "ASSIGNED", label: "Imepangiwa" },
   { value: "COMPLETED", label: "Imekamilika" },
-  { value: "CANCELLED", label: "Imeghairiwa" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
 
 const STATUS_BADGES: Record<string, string> = {
@@ -70,10 +70,10 @@ function FollowUpCell({ date, status }: { date: string | null; status: string })
   const day = date.slice(0, 10);
   const today = todayLocal();
   if (day < today) {
-    return <span className="font-semibold text-red-700">{day} (imechelewa)</span>;
+    return <span className="font-semibold text-red-700">{day} (overdue)</span>;
   }
   if (day === today) {
-    return <span className="font-semibold text-orange-700">Leo</span>;
+    return <span className="font-semibold text-orange-700">Today</span>;
   }
   return <>{day}</>;
 }
@@ -117,7 +117,7 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Bookings</h1>
           <p className="text-sm text-zinc-500">
-            Maombi ya huduma: fuatilia kila moja mpaka liwe mgonjwa au lifungwe.
+            Service requests: follow up each one until it becomes a patient or is closed.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -126,7 +126,7 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
             href="/bookings/new"
             className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
-            Booking Mpya
+            New Booking
           </Link>
         </div>
       </div>
@@ -142,21 +142,21 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
                 : "border-zinc-200 bg-white hover:bg-zinc-50"
             }`}
           >
-            <p className="text-xs font-medium text-zinc-600">Wa kufuatilia leo</p>
+            <p className="text-xs font-medium text-zinc-600">Due for follow-up today</p>
             <p className="mt-1 text-2xl font-bold text-zinc-900">{dueTotal}</p>
             {stats.overdue > 0 && (
-              <p className="text-xs font-semibold text-red-700">{stats.overdue} wamechelewa</p>
+              <p className="text-xs font-semibold text-red-700">{stats.overdue} overdue</p>
             )}
           </button>
           <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-zinc-600">Maombi mwezi huu</p>
+            <p className="text-xs font-medium text-zinc-600">Requests this month</p>
             <p className="mt-1 text-2xl font-bold text-zinc-900">{stats.thisMonth}</p>
-            <p className="text-xs text-zinc-500">Lengo: 17</p>
+            <p className="text-xs text-zinc-500">Target: 17</p>
           </div>
           <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-zinc-600">Wamekuwa wagonjwa</p>
+            <p className="text-xs font-medium text-zinc-600">Became patients</p>
             <p className="mt-1 text-2xl font-bold text-zinc-900">{stats.convertedThisMonth}</p>
-            <p className="text-xs text-zinc-500">mwezi huu</p>
+            <p className="text-xs text-zinc-500">this month</p>
           </div>
           <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
             <p className="text-xs font-medium text-zinc-600">Wanaokubali</p>
@@ -165,7 +165,7 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
                 ? `${Math.round((stats.convertedThisMonth / stats.thisMonth) * 100)}%`
                 : "-"}
             </p>
-            <p className="text-xs text-zinc-500">Lengo: 30%</p>
+            <p className="text-xs text-zinc-500">Target: 30%</p>
           </div>
         </div>
       )}
@@ -173,14 +173,14 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
       {stats && stats.bySource.length > 0 && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
           <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-            Maombi yanatoka wapi (mwezi huu)
+            Where requests come from (this month)
           </h2>
           <table className="w-full text-left text-sm" data-keep-table>
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Chanzo</th>
-                <th className="py-2 pr-4 text-right">Maombi</th>
-                <th className="py-2 text-right">Wagonjwa</th>
+                <th className="py-2 pr-4">Source</th>
+                <th className="py-2 pr-4 text-right">Requests</th>
+                <th className="py-2 text-right">Patients</th>
               </tr>
             </thead>
             <tbody>
@@ -200,7 +200,7 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          aria-label="Chuja kwa status"
+          aria-label="Filter by status"
           className="w-full rounded border border-zinc-300 px-2 py-2 text-sm sm:max-w-xs"
         >
           {STATUS_OPTIONS.map((o) => (
@@ -216,7 +216,7 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
             onChange={(e) => toggleDue(e.target.checked)}
             className="h-4 w-4"
           />
-          Wa kufuatilia leo tu
+          Due for follow-up today only
         </label>
       </div>
 
@@ -225,19 +225,19 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : bookings.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            {dueOnly ? "Hakuna ombi la kufuatilia leo." : "Hakuna bookings bado."}
+            {dueOnly ? "No requests to follow up today." : "No bookings yet."}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Tarehe</th>
-                  <th className="py-2 pr-4">Jina</th>
-                  <th className="py-2 pr-4">Simu</th>
-                  <th className="py-2 pr-4">Huduma</th>
-                  <th className="py-2 pr-4">Chanzo</th>
-                  <th className="py-2 pr-4">Fuatilia</th>
+                  <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">Phone</th>
+                  <th className="py-2 pr-4">Service</th>
+                  <th className="py-2 pr-4">Source</th>
+                  <th className="py-2 pr-4">Follow up</th>
                   <th className="py-2 pr-4">Status</th>
                 </tr>
               </thead>

@@ -14,7 +14,7 @@ export async function createDuty(input: {
      RETURNING *`,
     [input.staffId, input.title, input.description, input.dueDate, input.assignedById]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza jukumu");
+  if (!row) throw new Error("Could not add the duty");
   return row;
 }
 

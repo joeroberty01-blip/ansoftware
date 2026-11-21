@@ -18,9 +18,9 @@ interface StaffOption {
 
 const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 const VISIT_SESSION_LABELS: Record<(typeof VISIT_SESSIONS)[number], string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
+  MORNING: "Morning",
+  AFTERNOON: "Afternoon",
+  EVENING: "Evening",
 };
 
 function defaultSessionForNow(): (typeof VISIT_SESSIONS)[number] {
@@ -108,7 +108,7 @@ export function NewHomeVisitForm({
     setError(null);
     setExistingId(null);
     if (!patientId) {
-      setError("Chagua mgonjwa.");
+      setError("Select a patient.");
       return;
     }
     setSubmitting(true);
@@ -140,7 +140,7 @@ export function NewHomeVisitForm({
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kurekodi ziara.");
+        setError(json.error ?? "Could not record the visit.");
         setExistingId(typeof json.existingId === "string" ? json.existingId : null);
         return;
       }
@@ -156,14 +156,14 @@ export function NewHomeVisitForm({
   return (
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-        Rekodi Home Visit
+        Record Home Visit
       </h1>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Mgonjwa
+              Patient
             </label>
             <select
               value={patientId}
@@ -175,7 +175,7 @@ export function NewHomeVisitForm({
               }}
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             >
-              <option value="">-- chagua mgonjwa --</option>
+              <option value="">-- select patient --</option>
               {patients.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.full_name}
@@ -186,12 +186,12 @@ export function NewHomeVisitForm({
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Location (mahali pa ziara)
+              Location (visit location)
             </label>
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Anwani ya ziara"
+              placeholder="Visit address"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>
@@ -211,7 +211,7 @@ export function NewHomeVisitForm({
                 onChange={(e) => setStaffId(e.target.value)}
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               >
-                <option value="">-- chagua staff --</option>
+                <option value="">-- select staff --</option>
                 {staffOptions.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.full_name}
@@ -220,7 +220,7 @@ export function NewHomeVisitForm({
               </select>
             ) : (
               <input
-                value={ownStaffName ?? "Huna wasifu wa Staff"}
+                value={ownStaffName ?? "You don't have a staff profile"}
                 disabled
                 className="rounded border border-zinc-300 bg-zinc-100 px-2 py-1.5 text-sm text-zinc-600"
               />
@@ -229,7 +229,7 @@ export function NewHomeVisitForm({
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Tarehe ya Ziara
+              Visit Date
             </label>
             <input
               type="date"
@@ -241,7 +241,7 @@ export function NewHomeVisitForm({
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Muda (Session)
+              Session
             </label>
             <select
               value={visitSession}
@@ -263,7 +263,7 @@ export function NewHomeVisitForm({
           {canRecordPartTime && (
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Aina ya Ziara
+                Visit Type
               </label>
               <select
                 value={visitType}
@@ -339,7 +339,7 @@ export function NewHomeVisitForm({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Sukari / Blood Glucose
+              Blood Glucose
             </label>
             <input
               value={bloodGlucose}
@@ -363,7 +363,7 @@ export function NewHomeVisitForm({
           </div>
           <div className="flex flex-col gap-1 sm:col-span-3">
             <label className="text-xs font-medium text-zinc-600">
-              Chakula / Ulishaji (Food Intake)
+              Food Intake
             </label>
             <input
               value={foodIntake}
@@ -376,7 +376,7 @@ export function NewHomeVisitForm({
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Maelezo ya Matibabu (Treatment Notes)
+            Treatment Notes
           </label>
           <textarea
             value={treatmentNotes}
@@ -387,7 +387,7 @@ export function NewHomeVisitForm({
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Maelezo Mengine (hiari)
+            Other Notes (optional)
           </label>
           <textarea
             value={notes}
@@ -407,7 +407,7 @@ export function NewHomeVisitForm({
                   href={`/patients/${patientId}/daily/${visitDate}#${visitSession}`}
                   className="font-semibold underline"
                 >
-                  Fungua ripoti ya siku hiyo
+                  Open that day's report
                 </a>
               </>
             )}
@@ -419,7 +419,7 @@ export function NewHomeVisitForm({
           disabled={submitting}
           className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inarekodi..." : "Rekodi Ziara"}
+          {submitting ? "Recording..." : "Record Visit"}
         </button>
       </form>
     </div>

@@ -16,32 +16,32 @@ export const BOOKING_SOURCES = [
 export type BookingSource = (typeof BOOKING_SOURCES)[number];
 
 export const BOOKING_SOURCE_LABELS: Record<BookingSource, string> = {
-  HOSPITAL: "Hospitali",
-  DOCTOR: "Daktari / physio",
+  HOSPITAL: "Hospital",
+  DOCTOR: "Doctor / physio",
   DIASPORA: "Diaspora",
-  SOCIAL: "Mitandao ya kijamii",
-  CLIENT_REFERRAL: "Mteja wetu",
-  COMMUNITY: "Jamii / kanisa / msikiti",
-  WEBSITE: "Tovuti / app",
-  OTHER: "Nyingine",
+  SOCIAL: "Social media",
+  CLIENT_REFERRAL: "Existing client",
+  COMMUNITY: "Community / church / mosque",
+  WEBSITE: "Website / app",
+  OTHER: "Other",
 };
 
 export const FOLLOW_UP_CHANNELS = ["CALL", "WHATSAPP", "VISIT", "OTHER"] as const;
 export type FollowUpChannel = (typeof FOLLOW_UP_CHANNELS)[number];
 
 export const FOLLOW_UP_CHANNEL_LABELS: Record<FollowUpChannel, string> = {
-  CALL: "Simu",
+  CALL: "Phone",
   WHATSAPP: "WhatsApp",
-  VISIT: "Ziara / tathmini",
-  OTHER: "Nyingine",
+  VISIT: "Visit / assessment",
+  OTHER: "Other",
 };
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi");
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date");
 
 export const createBookingSchema = z.object({
-  fullName: z.string().trim().min(1, "Jina linahitajika").max(200),
-  phone: z.string().trim().min(6, "Namba ya simu si sahihi").max(30),
-  serviceType: z.string().trim().min(1, "Aina ya huduma inahitajika").max(200),
+  fullName: z.string().trim().min(1, "Name is required").max(200),
+  phone: z.string().trim().min(6, "Invalid phone number").max(30),
+  serviceType: z.string().trim().min(1, "Service type is required").max(200),
   preferredDate: isoDate.optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   source: z.enum(BOOKING_SOURCES).optional(),
@@ -66,7 +66,7 @@ export type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
 
 export const createFollowUpSchema = z.object({
   channel: z.enum(FOLLOW_UP_CHANNELS),
-  note: z.string().trim().min(2, "Andika kilichozungumzwa").max(1000),
+  note: z.string().trim().min(2, "Write what was discussed").max(1000),
   /** "" or null = no further follow-up needed. */
   nextFollowUpDate: isoDate.nullable().optional().or(z.literal("")),
   status: z.enum(BOOKING_STATUSES).optional(),

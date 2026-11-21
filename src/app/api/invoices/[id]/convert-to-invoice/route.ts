@@ -4,15 +4,15 @@ import { assertBillingAccess } from "@/lib/permissions";
 import { convertToPayableDocument } from "@/lib/repo/invoices";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Hati haikupatikana." },
+  NOT_FOUND: { status: 404, message: "Document not found." },
   NOT_CONVERTIBLE: {
     status: 400,
     message:
-      "Hati hii haiwezi kugeuzwa (Quotation pekee inageuka Invoice, Proforma pekee inageuka Tax Invoice).",
+      "This document can't be converted (only a Quotation becomes an Invoice, and only a Proforma becomes a Tax Invoice).",
   },
   ALREADY_CONVERTED: {
     status: 400,
-    message: "Hati hii tayari imegeuzwa.",
+    message: "This document has already been converted.",
   },
 };
 
@@ -23,7 +23,7 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }

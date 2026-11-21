@@ -10,7 +10,7 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -20,14 +20,14 @@ export async function PATCH(
   const parsed = updatePostSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
 
   const post = await updatePost(id, parsed.data);
   if (!post) {
-    return NextResponse.json({ error: "Post haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
 
   return NextResponse.json({ post });
@@ -40,7 +40,7 @@ export async function DELETE(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -48,7 +48,7 @@ export async function DELETE(
   const { id } = await ctx.params;
   const deleted = await deletePost(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Post haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true });

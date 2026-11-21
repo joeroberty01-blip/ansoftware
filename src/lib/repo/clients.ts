@@ -14,7 +14,7 @@ export async function createClient(input: {
      RETURNING *`,
     [input.name, input.phone, input.email, input.type, input.address]
   );
-  if (!row) throw new Error("Imeshindwa kutengeneza client");
+  if (!row) throw new Error("Could not create the client");
   return row;
 }
 

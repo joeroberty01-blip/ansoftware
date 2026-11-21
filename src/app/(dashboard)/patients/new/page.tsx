@@ -51,7 +51,7 @@ export default function NewPatientPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuongeza mgonjwa.");
+        setError(json.error ?? "Could not add the patient.");
         return;
       }
       router.push(`/patients/${json.patient.id}`);
@@ -70,10 +70,10 @@ export default function NewPatientPage() {
     return (
       <div className="flex flex-col gap-3 p-6">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-          Ongeza Mgonjwa Mpya
+          Add New Patient
         </h1>
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          Huna ruhusa ya kusajili mgonjwa mpya. Wasiliana na Admin.
+          You don't have permission to register a new patient. Contact the Admin.
         </p>
       </div>
     );
@@ -82,14 +82,14 @@ export default function NewPatientPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-        Ongeza Mgonjwa Mpya
+        Add New Patient
       </h1>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Jina Kamili
+              Full Name
             </label>
             <input
               value={fullName}
@@ -99,7 +99,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Tarehe ya Kuzaliwa
+              Date of Birth
             </label>
             <input
               type="date"
@@ -109,7 +109,7 @@ export default function NewPatientPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-zinc-600">Jinsia</label>
+            <label className="text-xs font-medium text-zinc-600">Gender</label>
             <select
               value={gender}
               onChange={(e) => setGender(e.target.value)}
@@ -122,7 +122,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Namba ya Simu
+              Phone Number
             </label>
             <input
               value={phone}
@@ -132,7 +132,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Email (hiari)
+              Email (optional)
             </label>
             <input
               value={email}
@@ -143,7 +143,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Blood Type (hiari)
+              Blood Type (optional)
             </label>
             <input
               value={bloodType}
@@ -154,7 +154,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-xs font-medium text-zinc-600">
-              Anwani
+              Address
             </label>
             <input
               value={address}
@@ -164,7 +164,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Jina la Emergency Contact
+              Emergency Contact Name
             </label>
             <input
               value={emergencyContactName}
@@ -174,7 +174,7 @@ export default function NewPatientPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Simu ya Emergency Contact
+              Emergency Contact Phone
             </label>
             <input
               value={emergencyContactPhone}
@@ -186,7 +186,7 @@ export default function NewPatientPage() {
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Mzio (Allergies)
+            Allergies
           </label>
           <textarea
             value={allergies}
@@ -197,7 +197,7 @@ export default function NewPatientPage() {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Magonjwa Sugu (Chronic Conditions)
+            Chronic Conditions
           </label>
           <textarea
             value={chronicConditions}
@@ -218,7 +218,7 @@ export default function NewPatientPage() {
           disabled={submitting}
           className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Adding..." : "Ongeza Mgonjwa"}
+          {submitting ? "Adding..." : "Add Patient"}
         </button>
       </form>
     </div>

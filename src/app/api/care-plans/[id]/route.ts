@@ -11,13 +11,13 @@ export async function GET(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const { id } = await ctx.params;
   const carePlan = await getCarePlanById(id);
   if (!carePlan) {
-    return NextResponse.json({ error: "Care plan haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Care plan not found." }, { status: 404 });
   }
   const denied = await assertPatientAccess(session, carePlan.patient_id);
   if (denied) return denied;
@@ -31,13 +31,13 @@ export async function PATCH(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const { id } = await ctx.params;
   const existing = await getCarePlanById(id);
   if (!existing) {
-    return NextResponse.json({ error: "Care plan haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Care plan not found." }, { status: 404 });
   }
   const denied = await assertPatientAccess(session, existing.patient_id);
   if (denied) return denied;
@@ -46,7 +46,7 @@ export async function PATCH(
   const parsed = updateCarePlanSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

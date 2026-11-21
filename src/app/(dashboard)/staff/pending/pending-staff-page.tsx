@@ -56,13 +56,13 @@ export default function PendingStaffPage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-          Staff Wanaosubiri Idhini
+          Staff Awaiting Approval
         </h1>
         <Link
           href="/staff"
           className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
         >
-          Rudi kwenye Staff
+          Back to Staff
         </Link>
       </div>
 
@@ -77,16 +77,16 @@ export default function PendingStaffPage() {
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : pending.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            Hakuna staff wanaosubiri idhini.
+            No staff awaiting approval.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Jina</th>
+                <th className="py-2 pr-4">Name</th>
                 <th className="py-2 pr-4">Email</th>
-                <th className="py-2 pr-4">Simu</th>
+                <th className="py-2 pr-4">Phone</th>
                 <th className="py-2 pr-4">Aliomba</th>
                 <th className="py-2 pr-4"></th>
               </tr>
@@ -105,14 +105,14 @@ export default function PendingStaffPage() {
                         disabled={decidingId === p.id}
                         className="rounded bg-brand-blue px-3 py-1 text-xs font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                       >
-                        Idhinisha
+                        Approve
                       </button>
                       <button
                         onClick={() => onDecide(p.id, "REJECTED")}
                         disabled={decidingId === p.id}
                         className="rounded border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
                       >
-                        Kataa
+                        Reject
                       </button>
                     </div>
                   </td>

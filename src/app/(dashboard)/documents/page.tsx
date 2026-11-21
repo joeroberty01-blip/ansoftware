@@ -6,17 +6,17 @@ import { ListToolbar } from "../_components/list-toolbar";
 import { compressImageForUpload } from "@/lib/compress-image";
 
 const CSV_COLUMNS = [
-  { key: "patient_name", label: "Mgonjwa" },
-  { key: "title", label: "Jina" },
-  { key: "document_type", label: "Aina" },
-  { key: "notes", label: "Maelezo" },
+  { key: "patient_name", label: "Patient" },
+  { key: "title", label: "Name" },
+  { key: "document_type", label: "Type" },
+  { key: "notes", label: "Description" },
   { key: "uploaded_by_name", label: "Aliyepakia" },
-  { key: "created_at", label: "Tarehe" },
+  { key: "created_at", label: "Date" },
 ];
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   LAB_RESULT: "Lab Result",
-  ID_PHOTO: "Kitambulisho (ID)",
+  ID_PHOTO: "ID Document",
   CONSENT_FORM: "Consent Form",
   PRESCRIPTION: "Prescription",
   REFERRAL: "Referral",
@@ -87,11 +87,11 @@ export default function DocumentsPage() {
     e.preventDefault();
     setError(null);
     if (!patientId) {
-      setError("Chagua mgonjwa.");
+      setError("Select a patient.");
       return;
     }
     if (!title.trim()) {
-      setError("Jaza jina la document.");
+      setError("Enter the document name.");
       return;
     }
     setSubmitting(true);
@@ -107,7 +107,7 @@ export default function DocumentsPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kuongeza document.");
+        setError(json.error ?? "Could not add the document.");
         return;
       }
       setTitle("");
@@ -134,7 +134,7 @@ export default function DocumentsPage() {
             onClick={() => setShowAdd((v) => !v)}
             className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
           >
-            {showAdd ? "Funga" : "Ongeza Document"}
+            {showAdd ? "Close" : "Add Document"}
           </button>
         </div>
       </div>
@@ -143,14 +143,14 @@ export default function DocumentsPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tafuta kwa jina la mgonjwa au document..."
+          placeholder="Search by patient or document name..."
           className="w-full max-w-sm rounded border border-zinc-300 px-2 py-1.5 text-sm"
         />
         <button
           type="submit"
           className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
         >
-          Tafuta
+          Search
         </button>
       </form>
 
@@ -164,7 +164,7 @@ export default function DocumentsPage() {
             onChange={(e) => setPatientId(e.target.value)}
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           >
-            <option value="">-- chagua mgonjwa --</option>
+            <option value="">-- select patient --</option>
             {patients.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.full_name}
@@ -174,7 +174,7 @@ export default function DocumentsPage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Jina la Document"
+            placeholder="Document Name"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
           <select
@@ -183,7 +183,7 @@ export default function DocumentsPage() {
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           >
             <option value="LAB_RESULT">Lab Result</option>
-            <option value="ID_PHOTO">Kitambulisho (ID)</option>
+            <option value="ID_PHOTO">ID Document</option>
             <option value="CONSENT_FORM">Consent Form</option>
             <option value="PRESCRIPTION">Prescription</option>
             <option value="REFERRAL">Referral</option>
@@ -212,7 +212,7 @@ export default function DocumentsPage() {
             disabled={submitting}
             className="col-span-full self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {submitting ? "Inapakia..." : "Hifadhi Document"}
+            {submitting ? "Loading..." : "Save Document"}
           </button>
         </form>
       )}
@@ -221,19 +221,19 @@ export default function DocumentsPage() {
         {loading ? (
           <p className="text-sm text-zinc-500">Loading...</p>
         ) : documents.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna documents bado.</p>
+          <p className="text-sm text-zinc-500">No documents yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  <th className="py-2 pr-4">Mgonjwa</th>
-                  <th className="py-2 pr-4">Jina</th>
-                  <th className="py-2 pr-4">Aina</th>
-                  <th className="py-2 pr-4">Maelezo</th>
+                  <th className="py-2 pr-4">Patient</th>
+                  <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">Type</th>
+                  <th className="py-2 pr-4">Description</th>
                   <th className="py-2 pr-4">Aliyepakia</th>
-                  <th className="py-2 pr-4">Tarehe</th>
-                  <th className="py-2 pr-4">Faili</th>
+                  <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4">File</th>
                 </tr>
               </thead>
               <tbody>
@@ -263,13 +263,13 @@ export default function DocumentsPage() {
                             rel="noreferrer"
                             className="font-medium text-brand-blue underline"
                           >
-                            Fungua
+                            Open
                           </a>
                           <a
                             href={`/api/patients/${d.patient_id}/documents/${d.id}/file?download=1`}
                             className="font-medium text-brand-blue underline"
                           >
-                            Pakua
+                            Download
                           </a>
                         </span>
                       ) : (

@@ -21,7 +21,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -41,7 +41,7 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -65,13 +65,13 @@ export async function POST(
     if (upload instanceof File && upload.size > 0) {
       if (!ALLOWED_MIME_TYPES.has(upload.type)) {
         return NextResponse.json(
-          { error: "Aina ya faili inayoruhusiwa: JPEG, PNG, WEBP, PDF." },
+          { error: "Allowed file types: JPEG, PNG, WEBP, PDF." },
           { status: 400 }
         );
       }
       if (upload.size > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { error: "Faili isizidi 4MB." },
+          { error: "File must not exceed 4MB." },
           { status: 400 }
         );
       }
@@ -88,7 +88,7 @@ export async function POST(
   const parsed = addDocumentSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

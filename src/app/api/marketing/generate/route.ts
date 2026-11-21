@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "AI generator haijawekwa. Admin anahitaji kuweka ANTHROPIC_API_KEY kwenye environment variables.",
+          "The AI generator isn't set up. The Admin needs to add ANTHROPIC_API_KEY to the environment variables.",
         notConfigured: true,
       },
       { status: 503 }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const parsed = generatePostSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -70,7 +70,7 @@ Andika kwa Kiswahili, kifupi (maneno 40-90), na maliza na call-to-action inayofa
     if (!res.ok) {
       const errText = await res.text();
       return NextResponse.json(
-        { error: `AI generator imeshindwa: ${errText.slice(0, 200)}` },
+        { error: `AI generator failed: ${errText.slice(0, 200)}` },
         { status: 502 }
       );
     }
@@ -81,7 +81,7 @@ Andika kwa Kiswahili, kifupi (maneno 40-90), na maliza na call-to-action inayofa
 
     if (!content) {
       return NextResponse.json(
-        { error: "AI haikutoa jibu. Jaribu tena." },
+        { error: "The AI gave no answer. Please try again." },
         { status: 502 }
       );
     }
@@ -89,7 +89,7 @@ Andika kwa Kiswahili, kifupi (maneno 40-90), na maliza na call-to-action inayofa
     return NextResponse.json({ content });
   } catch {
     return NextResponse.json(
-      { error: "Imeshindwa kuwasiliana na AI generator." },
+      { error: "Could not reach the AI generator." },
       { status: 502 }
     );
   }

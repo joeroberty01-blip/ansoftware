@@ -12,7 +12,7 @@ export async function GET() {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const parsed = createManualReceiptSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
   } catch (err) {
     if (err instanceof DuplicateReceiptNumberError) {
       return NextResponse.json(
-        { error: "Namba hii ya risiti tayari ipo. Tumia namba nyingine." },
+        { error: "This receipt number already exists. Use another number." },
         { status: 400 }
       );
     }

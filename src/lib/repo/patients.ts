@@ -53,7 +53,7 @@ export async function createPatient(input: {
       input.createdById,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza mgonjwa");
+  if (!row) throw new Error("Could not add the patient");
   return row;
 }
 
@@ -253,7 +253,7 @@ export async function addMedication(input: {
       input.scheduleSlots,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza dawa");
+  if (!row) throw new Error("Could not add the medication");
   return row;
 }
 
@@ -292,7 +292,7 @@ export async function addDocument(input: {
       ]
     );
     const row = res.rows[0];
-    if (!row) throw new Error("Imeshindwa kuongeza document");
+    if (!row) throw new Error("Could not add the document");
     if (input.file) {
       await client.query(
         `INSERT INTO patient_document_files (document_id, data) VALUES ($1, $2)`,

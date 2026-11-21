@@ -128,14 +128,14 @@ export default function ClientBillingDetailPage() {
   };
 
   const onDeleteClient = async () => {
-    if (!window.confirm(`Futa client "${client?.name}" KABISA?`)) return;
+    if (!window.confirm(`Permanently delete client "${client?.name}"?`)) return;
     setDeleteError(null);
     setDeleting(true);
     try {
       const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        setDeleteError(json.error ?? "Imeshindwa kufuta.");
+        setDeleteError(json.error ?? "Could not delete.");
         setDeleting(false);
         return;
       }
@@ -150,7 +150,7 @@ export default function ClientBillingDetailPage() {
     return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!client) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
@@ -171,14 +171,14 @@ export default function ClientBillingDetailPage() {
               onClick={startEditing}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
-              Hariri
+              Edit
             </button>
             <button
               onClick={onDeleteClient}
               disabled={deleting}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {deleting ? "Deleting..." : "Futa"}
+              {deleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function ClientBillingDetailPage() {
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Jina</label>
+              <label className="text-xs font-medium text-zinc-600">Name</label>
               <input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
@@ -204,7 +204,7 @@ export default function ClientBillingDetailPage() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Aina</label>
+              <label className="text-xs font-medium text-zinc-600">Type</label>
               <select
                 value={editType}
                 onChange={(e) => setEditType(e.target.value)}
@@ -218,7 +218,7 @@ export default function ClientBillingDetailPage() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Simu</label>
+              <label className="text-xs font-medium text-zinc-600">Phone</label>
               <input
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
@@ -236,7 +236,7 @@ export default function ClientBillingDetailPage() {
               />
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2">
-              <label className="text-xs font-medium text-zinc-600">Anwani</label>
+              <label className="text-xs font-medium text-zinc-600">Address</label>
               <input
                 value={editAddress}
                 onChange={(e) => setEditAddress(e.target.value)}
@@ -255,14 +255,14 @@ export default function ClientBillingDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Hifadhi"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
             >
-              Ghairi
+              Cancel
             </button>
           </div>
         </form>
@@ -270,15 +270,15 @@ export default function ClientBillingDetailPage() {
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
-              <p className="text-xs text-zinc-500">Anwani</p>
+              <p className="text-xs text-zinc-500">Address</p>
               <p className="font-medium">{client.address ?? "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Idadi ya Hati</p>
+              <p className="text-xs text-zinc-500">Number of Documents</p>
               <p className="font-medium">{invoices.length}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Jumla Aliyolipa</p>
+              <p className="text-xs text-zinc-500">Total Paid</p>
               <p className="font-medium">{fmt(String(totalPaid))}</p>
             </div>
           </div>
@@ -287,19 +287,19 @@ export default function ClientBillingDetailPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-          Hati (Quotations/Invoices)
+          Documents (Quotations/Invoices)
         </h2>
         {invoices.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna hati bado.</p>
+          <p className="text-sm text-zinc-500">No documents yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Namba</th>
-                <th className="py-2 pr-4">Aina</th>
-                <th className="py-2 pr-4">Tarehe</th>
-                <th className="py-2 pr-4 text-right">Jumla</th>
+                <th className="py-2 pr-4">Number</th>
+                <th className="py-2 pr-4">Type</th>
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2 pr-4 text-right">Total</th>
                 <th className="py-2 pr-4">Status</th>
               </tr>
             </thead>
@@ -332,22 +332,22 @@ export default function ClientBillingDetailPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-          Historia ya Malipo
+          Payment History
         </h2>
         {payments.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna malipo bado.</p>
+          <p className="text-sm text-zinc-500">No payments yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Tarehe</th>
-                <th className="py-2 pr-4">Risiti Na.</th>
-                <th className="py-2 pr-4">Hati</th>
-                <th className="py-2 pr-4">Njia</th>
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2 pr-4">Receipt No.</th>
+                <th className="py-2 pr-4">Document</th>
+                <th className="py-2 pr-4">Method</th>
                 <th className="py-2 pr-4">Kumbukumbu</th>
-                <th className="py-2 pr-4 text-right">Kiasi</th>
-                <th className="py-2 pr-4 text-right">Salio</th>
+                <th className="py-2 pr-4 text-right">Amount</th>
+                <th className="py-2 pr-4 text-right">Balance</th>
                 <th className="py-2 pr-4"></th>
               </tr>
             </thead>

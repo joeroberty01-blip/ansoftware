@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   if (session.role !== "ADMIN") {
     const ownStaff = await getStaffByUserId(session.id);
     if (!ownStaff) {
-      return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 404 });
+      return NextResponse.json({ error: "You don't have a staff profile." }, { status: 404 });
     }
     staffId = ownStaff.id;
   }
@@ -34,21 +34,21 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
 
   const ownStaff = await getStaffByUserId(session.id);
   if (!ownStaff) {
-    return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 404 });
+    return NextResponse.json({ error: "You don't have a staff profile." }, { status: 404 });
   }
 
   const body = await req.json();
   const parsed = createLeaveRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   const days = differenceInCalendarDays(end, start) + 1;
   if (days < 1) {
     return NextResponse.json(
-      { error: "Tarehe ya kumaliza lazima iwe baada ya tarehe ya kuanza." },
+      { error: "The end date must be after the start date." },
       { status: 400 }
     );
   }

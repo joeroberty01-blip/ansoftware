@@ -17,14 +17,14 @@ export function GeoCheckInButton({
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-medium text-zinc-600">
-        GPS Check-in (hiari)
+        GPS Check-in (optional)
       </label>
       {checkIn ? (
         <div className="flex items-center gap-2 rounded border border-green-200 bg-green-50 px-2 py-1.5 text-xs text-green-700">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
           <span>
-            Eneo limethibitishwa ({checkIn.lat.toFixed(5)},{" "}
-            {checkIn.lng.toFixed(5)}, usahihi ~{Math.round(checkIn.accuracy)}m)
+            Location confirmed ({checkIn.lat.toFixed(5)},{" "}
+            {checkIn.lng.toFixed(5)}, accuracy ~{Math.round(checkIn.accuracy)}m)
           </span>
         </div>
       ) : (
@@ -39,7 +39,7 @@ export function GeoCheckInButton({
           ) : (
             <MapPin className="h-3.5 w-3.5" />
           )}
-          {checking ? "Inatafuta eneo..." : "Check-in kwa GPS"}
+          {checking ? "Finding location..." : "GPS check-in"}
         </button>
       )}
       {error && <p className="text-[11px] text-red-600">{error}</p>}

@@ -118,7 +118,7 @@ export async function paySalary(
        RETURNING id`,
       [
         payroll.net_pay,
-        `Mshahara wa ${payroll.staff_name} — ${monthLabel}`,
+        `Salary for ${payroll.staff_name} — ${monthLabel}`,
         paidById,
       ]
     );

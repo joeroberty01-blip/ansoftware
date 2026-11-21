@@ -36,14 +36,14 @@ export default function InventoryItemDetailPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const onDeleteItem = async () => {
-    if (!window.confirm(`Futa item "${item?.name}" KABISA?`)) return;
+    if (!window.confirm(`Permanently delete item "${item?.name}"?`)) return;
     setDeleteError(null);
     setDeletingItem(true);
     try {
       const res = await fetch(`/api/inventory/items/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        setDeleteError(json.error ?? "Imeshindwa kufuta item.");
+        setDeleteError(json.error ?? "Could not delete the item.");
         setDeletingItem(false);
         return;
       }
@@ -141,7 +141,7 @@ export default function InventoryItemDetailPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kurekodi movement.");
+        setError(json.error ?? "Could not record the movement.");
         return;
       }
       setQuantity("");
@@ -160,7 +160,7 @@ export default function InventoryItemDetailPage() {
     return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!item) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   return (
@@ -178,14 +178,14 @@ export default function InventoryItemDetailPage() {
               onClick={startEditing}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
-              Hariri
+              Edit
             </button>
             <button
               onClick={onDeleteItem}
               disabled={deletingItem}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {deletingItem ? "Deleting..." : "Futa"}
+              {deletingItem ? "Deleting..." : "Delete"}
             </button>
           </div>
         )}
@@ -204,7 +204,7 @@ export default function InventoryItemDetailPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Jina la Item
+                Item Name
               </label>
               <input
                 value={editName}
@@ -255,14 +255,14 @@ export default function InventoryItemDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Hifadhi"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
             >
-              Ghairi
+              Cancel
             </button>
           </div>
         </form>
@@ -270,7 +270,7 @@ export default function InventoryItemDetailPage() {
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
-              <p className="text-xs text-zinc-500">Stock ya Sasa</p>
+              <p className="text-xs text-zinc-500">Current Stock</p>
               <p className="text-lg font-semibold text-zinc-900">
                 {item.current_stock}
               </p>
@@ -286,7 +286,7 @@ export default function InventoryItemDetailPage() {
                   item.is_low_stock ? "text-amber-700" : "text-zinc-900"
                 }`}
               >
-                {item.is_low_stock ? "Stock Chini" : "Sawa"}
+                {item.is_low_stock ? "Low Stock" : "Sawa"}
               </p>
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function InventoryItemDetailPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-          Rekodi Movement (Stock In/Out)
+          Record Movement (Stock In/Out)
         </h2>
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <div className="flex gap-4">
@@ -305,7 +305,7 @@ export default function InventoryItemDetailPage() {
                 checked={movementType === "IN"}
                 onChange={() => setMovementType("IN")}
               />
-              Stock IN (kuongeza)
+              Stock IN (add)
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -313,7 +313,7 @@ export default function InventoryItemDetailPage() {
                 checked={movementType === "OUT"}
                 onChange={() => setMovementType("OUT")}
               />
-              Stock OUT (kutoa)
+              Stock OUT (remove)
             </label>
           </div>
 
@@ -321,7 +321,7 @@ export default function InventoryItemDetailPage() {
             <input
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Idadi"
+              placeholder="Quantity"
               inputMode="numeric"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
@@ -330,7 +330,7 @@ export default function InventoryItemDetailPage() {
                 <input
                   value={batchNumber}
                   onChange={(e) => setBatchNumber(e.target.value)}
-                  placeholder="Batch Number (hiari)"
+                  placeholder="Batch Number (optional)"
                   className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 />
                 <input
@@ -345,7 +345,7 @@ export default function InventoryItemDetailPage() {
             <input
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              placeholder="Reference (hiari)"
+              placeholder="Reference (optional)"
               className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
             />
           </div>
@@ -361,25 +361,25 @@ export default function InventoryItemDetailPage() {
             disabled={submitting}
             className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {submitting ? "Inarekodi..." : "Rekodi Movement"}
+            {submitting ? "Recording..." : "Record Movement"}
           </button>
         </form>
       </div>
 
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">
-          Historia ya Movements
+          Movement History
         </h2>
         {movements.length === 0 ? (
-          <p className="text-sm text-zinc-500">Hakuna movements bado.</p>
+          <p className="text-sm text-zinc-500">No movements yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="py-2 pr-4">Tarehe</th>
-                <th className="py-2 pr-4">Aina</th>
-                <th className="py-2 pr-4 text-right">Idadi</th>
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2 pr-4">Type</th>
+                <th className="py-2 pr-4 text-right">Quantity</th>
                 <th className="py-2 pr-4">Batch</th>
                 <th className="py-2 pr-4">Expiry</th>
                 <th className="py-2 pr-4">Reference</th>

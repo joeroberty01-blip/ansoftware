@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/reports", label: "Ripoti za Uendeshaji" },
-  { href: "/reports/financial-statements", label: "Taarifa za Fedha" },
+  { href: "/reports", label: "Operations Reports" },
+  { href: "/reports/financial-statements", label: "Financial Statements" },
   { href: "/reports/audit-log", label: "Audit Log" },
 ];
 

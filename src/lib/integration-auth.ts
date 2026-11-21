@@ -41,18 +41,18 @@ export function checkIntegrationKey(req: Request): IntegrationAuth {
 
   // Bila ufunguo kwenye environment, mlango huu umefungwa kabisa —
   // hauruhusu chochote. Ni muhimu isirudishe 401 hapa: 401 ingemaanisha
-  // "ufunguo wako si sahihi", na ukweli ni kwamba huduma haijawekwa.
+  // "your key is invalid", na ukweli ni kwamba huduma haijawekwa.
   if (!expected) {
     return {
       ok: false,
       status: 503,
-      error: "Muunganisho haujawekwa kwenye server hii.",
+      error: "The integration isn't set up on this server.",
     };
   }
 
   const given = req.headers.get(HEADER);
   if (!given || !equals(given, expected)) {
-    return { ok: false, status: 401, error: "Ufunguo si sahihi." };
+    return { ok: false, status: 401, error: "Invalid key." };
   }
 
   return { ok: true };

@@ -15,13 +15,13 @@ export default async function ReceiptPrintPage(
 ) {
   const viewer = await getCurrentUser();
   if (!viewer || !(await userCanAccessBilling(viewer))) {
-    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+    return <div className="p-6 text-sm text-zinc-500">You don't have permission.</div>;
   }
   const { invoiceId, paymentId } = await props.params;
   const payment = await getPaymentWithContext(invoiceId, paymentId);
 
   if (!payment) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const paidAt = new Date(payment.paid_at)
@@ -45,16 +45,16 @@ export default async function ReceiptPrintPage(
       <p className="text-center text-[10px] text-zinc-600">
         Dar es Salaam, Tanzania
       </p>
-      <p className="text-center text-[10px] text-zinc-600">RISITI YA MALIPO</p>
+      <p className="text-center text-[10px] text-zinc-600">PAYMENT RECEIPT</p>
 
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
       <div className="flex justify-between font-bold">
-        <span>Risiti Na.</span>
+        <span>Receipt No.</span>
         <span>{payment.receipt_number}</span>
       </div>
       <div className="flex justify-between">
-        <span>Hati</span>
+        <span>Document</span>
         <span>{payment.document_number}</span>
       </div>
       <div className="flex justify-between">
@@ -62,11 +62,11 @@ export default async function ReceiptPrintPage(
         <span>{payment.client_name}</span>
       </div>
       <div className="flex justify-between">
-        <span>Tarehe</span>
+        <span>Date</span>
         <span>{paidAt}</span>
       </div>
       <div className="flex justify-between">
-        <span>Njia</span>
+        <span>Method</span>
         <span>{payment.method}</span>
       </div>
       {payment.reference && (
@@ -82,7 +82,7 @@ export default async function ReceiptPrintPage(
 
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
-      <p className="text-center text-zinc-600">Kiasi Kilicholipwa</p>
+      <p className="text-center text-zinc-600">Amount Paid</p>
       <p className="my-1 text-center text-base font-bold">
         TZS {fmt(payment.amount)}
       </p>
@@ -90,20 +90,20 @@ export default async function ReceiptPrintPage(
       <div className="my-2 border-b border-dashed border-zinc-900" />
 
       <div className="flex justify-between">
-        <span>Jumla ya Hati</span>
+        <span>Document Total</span>
         <span>{fmt(payment.total_amount)}</span>
       </div>
       <div className="flex justify-between">
-        <span>Imelipwa Yote</span>
+        <span>Paid in Full</span>
         <span>{fmt(payment.paid_to_date)}</span>
       </div>
       <div className="flex justify-between font-bold">
-        <span>Salio</span>
+        <span>Balance</span>
         <span>{fmt(payment.balance_after)}</span>
       </div>
 
       <p className="mt-3 text-center text-[10px] text-zinc-600">
-        Asante kwa kutumia huduma zetu
+        Thank you for using our services
       </p>
       <p className="text-center text-[10px] text-zinc-600">Afya Nyumbani ERP</p>
     </div>

@@ -17,7 +17,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -47,7 +47,7 @@ export async function PUT(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -60,7 +60,7 @@ export async function PUT(
   const parsed = recordMarSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -68,7 +68,7 @@ export async function PUT(
   const d = parsed.data;
   if (d.date > (await clinicToday())) {
     return NextResponse.json(
-      { error: "Huwezi kurekodi dawa ya siku ijayo." },
+      { error: "You can't record medication for a future day." },
       { status: 400 }
     );
   }
@@ -87,7 +87,7 @@ export async function PUT(
   } catch (err) {
     if (err instanceof Error && err.message === "MEDICATION_NOT_FOUND") {
       return NextResponse.json(
-        { error: "Dawa hii haipo kwa siku/muda huu." },
+        { error: "This medication isn't scheduled for this day/session." },
         { status: 404 }
       );
     }

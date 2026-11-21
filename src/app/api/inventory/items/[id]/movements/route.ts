@@ -4,10 +4,10 @@ import { recordMovementSchema } from "@/lib/validation/inventory";
 import { recordStockMovement } from "@/lib/repo/inventory";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Item haikupatikana." },
+  NOT_FOUND: { status: 404, message: "Item not found." },
   INSUFFICIENT_STOCK: {
     status: 400,
-    message: "Kiasi kinachotolewa ni zaidi ya stock iliyopo.",
+    message: "The quantity issued is more than the stock available.",
   },
 };
 
@@ -18,7 +18,7 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -28,7 +28,7 @@ export async function POST(
   const parsed = recordMovementSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

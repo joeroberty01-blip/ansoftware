@@ -25,7 +25,7 @@ export async function GET(
   const invoice = await getInvoiceDetail(id);
   if (!invoice) {
     return NextResponse.json(
-      { error: "Invoice/Quotation haikupatikana." },
+      { error: "Invoice/Quotation not found." },
       { status: 404 }
     );
   }

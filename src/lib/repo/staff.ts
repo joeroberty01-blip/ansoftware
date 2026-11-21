@@ -21,7 +21,7 @@ export async function createStaffProfile(input: {
      RETURNING *`,
     [input.userId, input.profession, input.baseSalary, input.startDate]
   );
-  if (!row) throw new Error("Imeshindwa kutengeneza wasifu wa staff");
+  if (!row) throw new Error("Could not create the staff profile");
   return row;
 }
 

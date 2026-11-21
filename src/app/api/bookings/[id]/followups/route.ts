@@ -13,10 +13,10 @@ import { createFollowUpSchema } from "@/lib/validation/bookings";
 async function requireAdmin() {
   const session = await getCurrentUser();
   if (!session) {
-    return { error: NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 }) };
+    return { error: NextResponse.json({ error: "Please sign in first." }, { status: 401 }) };
   }
   if (session.role !== "ADMIN") {
-    return { error: NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 }) };
+    return { error: NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 }) };
   }
   return { session };
 }
@@ -48,19 +48,19 @@ export async function POST(
   const { id } = await ctx.params;
   const existing = await getBookingById(id);
   if (!existing) {
-    return NextResponse.json({ error: "Booking haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Booking not found." }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Data sio sahihi" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
   const parsed = createFollowUpSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

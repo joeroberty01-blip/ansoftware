@@ -64,7 +64,7 @@ export default async function DashboardLayout({
   }
 
   // Field staff who have not checked in today see a red reminder at the top
-  // of every page until they press "Nimefika kazini". Office staff and the
+  // of every page until they press "Check in". Office staff and the
   // accountant are not tied to a patient's home.
   let attendanceReminder: { shiftStart: string; lateNow: boolean } | null = null;
   if (

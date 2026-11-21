@@ -4,8 +4,8 @@ import { paySalary } from "@/lib/repo/payroll";
 import { paySalarySchema } from "@/lib/validation/payroll";
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  NOT_FOUND: { status: 404, message: "Payroll haikupatikana." },
-  ALREADY_PAID: { status: 400, message: "Payroll hii tayari imelipwa." },
+  NOT_FOUND: { status: 404, message: "Payroll not found." },
+  ALREADY_PAID: { status: 400, message: "This payroll is already paid." },
 };
 
 export async function POST(
@@ -15,12 +15,12 @@ export async function POST(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
   if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Ruhusa hairuhusiwi." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
   }
 
   const { id } = await ctx.params;
@@ -29,7 +29,7 @@ export async function POST(
   const parsed = paySalarySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

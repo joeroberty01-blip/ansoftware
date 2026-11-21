@@ -11,20 +11,20 @@ const schema = z.object({
   accuracy: z.number().nonnegative().optional(),
 });
 
-/** "Naondoka": closes the open shift with GPS. */
+/** "Check out": closes the open shift with GPS. */
 export async function POST(req: Request) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
   const staff = await getStaffByUserId(session.id);
   if (!staff) {
-    return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 403 });
+    return NextResponse.json({ error: "You don't have a staff profile." }, { status: 403 });
   }
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Mahali (GPS) hapajapatikana. Washa location kwenye simu, kisha jaribu tena." },
+      { error: "Location (GPS) not found. Turn on location on your phone, then try again." },
       { status: 400 }
     );
   }
@@ -48,6 +48,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
     console.error("[attendance] check-out failed:", err);
-    return NextResponse.json({ error: "Imeshindikana. Jaribu tena." }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

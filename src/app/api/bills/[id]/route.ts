@@ -9,7 +9,7 @@ async function requireAdmin() {
     return {
       session: null,
       response: NextResponse.json(
-        { error: "Unahitaji kuingia kwanza." },
+        { error: "Please sign in first." },
         { status: 401 }
       ),
     };
@@ -18,7 +18,7 @@ async function requireAdmin() {
     return {
       session: null,
       response: NextResponse.json(
-        { error: "Ruhusa hairuhusiwi." },
+        { error: "You don't have permission to do this." },
         { status: 403 }
       ),
     };
@@ -38,7 +38,7 @@ export async function PATCH(
   const parsed = updateBillSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -53,7 +53,7 @@ export async function PATCH(
   });
 
   if (!bill) {
-    return NextResponse.json({ error: "Bill haikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Bill not found." }, { status: 404 });
   }
 
   return NextResponse.json({ bill });
@@ -73,11 +73,11 @@ export async function DELETE(
   } catch (err) {
     const code = err instanceof Error ? err.message : "";
     if (code === "NOT_FOUND") {
-      return NextResponse.json({ error: "Bill haikupatikana." }, { status: 404 });
+      return NextResponse.json({ error: "Bill not found." }, { status: 404 });
     }
     if (code === "ALREADY_PAID") {
       return NextResponse.json(
-        { error: "Bill hii tayari imelipwa, haiwezi kufutwa." },
+        { error: "This bill is already paid and can't be deleted." },
         { status: 400 }
       );
     }

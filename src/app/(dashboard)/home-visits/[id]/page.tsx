@@ -6,9 +6,9 @@ import { hasVitalsAlert, vitalsAlertReasons } from "@/lib/vitals";
 
 const VISIT_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 const VISIT_SESSION_LABELS: Record<string, string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
+  MORNING: "Morning",
+  AFTERNOON: "Afternoon",
+  EVENING: "Evening",
 };
 
 interface Visit {
@@ -124,7 +124,7 @@ export default function HomeVisitDetailPage() {
   };
 
   const onDelete = async () => {
-    if (!window.confirm("Futa home visit hii? Hatua hii haiwezi kutenduliwa.")) {
+    if (!window.confirm("Delete this home visit? This cannot be undone.")) {
       return;
     }
     setDeleting(true);
@@ -132,7 +132,7 @@ export default function HomeVisitDetailPage() {
       const res = await fetch(`/api/home-visits/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        setError(json.error ?? "Imeshindwa kufuta.");
+        setError(json.error ?? "Could not delete.");
         setDeleting(false);
         return;
       }
@@ -147,7 +147,7 @@ export default function HomeVisitDetailPage() {
     return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   }
   if (!visit) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   return (
@@ -171,7 +171,7 @@ export default function HomeVisitDetailPage() {
             }`}
             className="mt-1 inline-block text-sm font-semibold text-brand-blue underline"
           >
-            Fungua ripoti nzima ya siku hii (Asubuhi, Mchana, Jioni)
+            Open the full report for this day (Morning, Afternoon, Evening)
           </a>
         </div>
         {!editing && (
@@ -180,20 +180,20 @@ export default function HomeVisitDetailPage() {
               href={`/api/home-visits/${id}/pdf`}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
-              Pakua PDF
+              Download PDF
             </a>
             <button
               onClick={() => setEditing(true)}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50"
             >
-              Hariri
+              Edit
             </button>
             <button
               onClick={onDelete}
               disabled={deleting}
               className="rounded border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
-              {deleting ? "Deleting..." : "Futa"}
+              {deleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         )}
@@ -221,14 +221,14 @@ export default function HomeVisitDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Muda (Session)
+                Session
               </label>
               <select
                 value={visitSession}
                 onChange={(e) => setVisitSession(e.target.value)}
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               >
-                <option value="">-- hakuna --</option>
+                <option value="">-- none --</option>
                 {VISIT_SESSIONS.map((session) => (
                   <option key={session} value={session}>
                     {VISIT_SESSION_LABELS[session]}
@@ -238,12 +238,12 @@ export default function HomeVisitDetailPage() {
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className="text-xs font-medium text-zinc-600">
-                Location (mahali pa ziara)
+                Location (visit location)
               </label>
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Anwani ya ziara"
+                placeholder="Visit address"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -292,7 +292,7 @@ export default function HomeVisitDetailPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Sukari / Blood Glucose
+                Blood Glucose
               </label>
               <input
                 value={bloodGlucose}
@@ -316,7 +316,7 @@ export default function HomeVisitDetailPage() {
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className="text-xs font-medium text-zinc-600">
-                Chakula / Ulishaji (Food Intake)
+                Food Intake
               </label>
               <input
                 value={foodIntake}
@@ -328,7 +328,7 @@ export default function HomeVisitDetailPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Maelezo ya Matibabu
+              Treatment Notes
             </label>
             <textarea
               value={treatmentNotes}
@@ -339,7 +339,7 @@ export default function HomeVisitDetailPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">
-              Maelezo Mengine
+              Other Notes
             </label>
             <textarea
               value={notes}
@@ -361,14 +361,14 @@ export default function HomeVisitDetailPage() {
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Hifadhi"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
               className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
             >
-              Ghairi
+              Cancel
             </button>
           </div>
         </form>
@@ -379,7 +379,7 @@ export default function HomeVisitDetailPage() {
               <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
               <div>
                 <p className="font-semibold">
-                  Onyo: vitals za ziara hii ziko nje ya kawaida
+                  Warning: this visit's vitals are outside the normal range
                 </p>
                 <ul className="mt-1 list-inside list-disc">
                   {vitalsAlertReasons(visit).map((reason) => (
@@ -395,7 +395,7 @@ export default function HomeVisitDetailPage() {
               <p className="font-medium">{visit.status}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Muda (Session)</p>
+              <p className="text-xs text-zinc-500">Session</p>
               <p className="font-medium">
                 {visit.visit_session
                   ? VISIT_SESSION_LABELS[visit.visit_session] ?? visit.visit_session
@@ -416,7 +416,7 @@ export default function HomeVisitDetailPage() {
                     rel="noopener noreferrer"
                     className="text-brand-blue underline"
                   >
-                    Tazama kwenye Ramani
+                    View on Map
                   </a>
                   {visit.check_in_accuracy_m && (
                     <p className="text-xs font-normal text-zinc-400">
@@ -426,7 +426,7 @@ export default function HomeVisitDetailPage() {
                 </div>
               ) : (
                 <p className="font-medium text-zinc-400">
-                  Hakuna check-in iliyorekodiwa
+                  No check-in recorded
                 </p>
               )}
             </div>
@@ -451,7 +451,7 @@ export default function HomeVisitDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Sukari (Blood Glucose)</p>
+              <p className="text-xs text-zinc-500">Blood Glucose</p>
               <p className="font-medium">
                 {visit.blood_glucose ? `${visit.blood_glucose} mmol/L` : "-"}
               </p>
@@ -463,19 +463,19 @@ export default function HomeVisitDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Chakula (Food Intake)</p>
+              <p className="text-xs text-zinc-500">Food Intake</p>
               <p className="font-medium">{visit.food_intake ?? "-"}</p>
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-xs text-zinc-500">Maelezo ya Matibabu</p>
+            <p className="text-xs text-zinc-500">Treatment Notes</p>
             <p className="mt-1 text-sm">
               {visit.treatment_notes || "Nothing recorded"}
             </p>
           </div>
           {visit.notes && (
             <div className="mt-4">
-              <p className="text-xs text-zinc-500">Maelezo Mengine</p>
+              <p className="text-xs text-zinc-500">Other Notes</p>
               <p className="mt-1 text-sm">{visit.notes}</p>
             </div>
           )}

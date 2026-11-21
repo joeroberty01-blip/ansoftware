@@ -33,7 +33,7 @@ async function post(url: string, data: unknown) {
 }
 
 /**
- * "Umesahau password?" in two steps:
+ * "Forgot password?" in two steps:
  *  1. enter email -> a 6-digit code is emailed
  *  2. enter the code and a new password
  */
@@ -72,15 +72,15 @@ export function ForgotPasswordForm() {
     try {
       const { ok, result } = await post("/api/auth/forgot-password", { email: address });
       if (!ok) {
-        setServerError(result?.error ?? "Imeshindikana kutuma code. Jaribu tena.");
+        setServerError(result?.error ?? "Could not send the code. Please try again.");
         return;
       }
       setEmail(address);
       resetForm.setValue("email", address);
-      setNotice(result?.message ?? "Tumetuma code kwa email yako.");
+      setNotice(result?.message ?? "We sent a code to your email.");
       setResendIn(RESEND_WAIT_SECONDS);
     } catch {
-      setServerError("Hakuna mtandao. Jaribu tena.");
+      setServerError("No network connection. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -92,12 +92,12 @@ export function ForgotPasswordForm() {
     try {
       const { ok, result } = await post("/api/auth/reset-password", data);
       if (!ok) {
-        setServerError(result?.error ?? "Imeshindikana kubadilisha password.");
+        setServerError(result?.error ?? "Could not change the password.");
         return;
       }
-      setSuccessMessage(result?.message ?? "Password imebadilishwa. Sasa unaweza kuingia.");
+      setSuccessMessage(result?.message ?? "Password changed. You can now sign in.");
     } catch {
-      setServerError("Hakuna mtandao. Jaribu tena.");
+      setServerError("No network connection. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -117,11 +117,11 @@ export function ForgotPasswordForm() {
       <div className="flex flex-col items-center gap-3 text-center">
         <BrandMark size="md" />
         <div>
-          <h1 className="text-xl font-bold text-zinc-900">Umesahau password?</h1>
+          <h1 className="text-xl font-bold text-zinc-900">Forgot password?</h1>
           <p className="mt-1 text-sm text-zinc-500">
             {email
-              ? "Weka code uliyotumiwa kwa email na password mpya."
-              : "Weka email yako. Tutakutumia code ya tarakimu 6."}
+              ? "Enter the code we emailed you and a new password."
+              : "Enter your email. We'll send you a 6-digit code."}
           </p>
         </div>
       </div>
@@ -133,7 +133,7 @@ export function ForgotPasswordForm() {
           aria-live="polite"
         >
           <p className="font-semibold">{successMessage}</p>
-          <p className="mt-1">Unapelekwa kwenye login...</p>
+          <p className="mt-1">Taking you to the login...</p>
         </div>
       ) : !email ? (
         <form
@@ -153,7 +153,7 @@ export function ForgotPasswordForm() {
           />
           {errorBox}
           <button type="submit" disabled={submitting} className={buttonClass}>
-            {submitting ? "Inatuma..." : "Tuma code"}
+            {submitting ? "Inatuma..." : "Send code"}
             {!submitting && <ArrowRight className="h-4 w-4" />}
           </button>
         </form>
@@ -184,7 +184,7 @@ export function ForgotPasswordForm() {
               }}
               className="font-semibold text-brand-blue hover:text-brand-blue-dark"
             >
-              Badilisha
+              Change
             </button>
           </p>
           <input type="hidden" {...resetForm.register("email")} />
@@ -192,7 +192,7 @@ export function ForgotPasswordForm() {
           <IconInput
             id="code"
             icon={ShieldCheck}
-            label="Code ya tarakimu 6"
+            label="6-digit code"
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"
@@ -205,7 +205,7 @@ export function ForgotPasswordForm() {
           <IconInput
             id="newPassword"
             icon={Lock}
-            label="Password mpya"
+            label="New password"
             type="password"
             autoComplete="new-password"
             error={resetForm.formState.errors.newPassword?.message}
@@ -215,7 +215,7 @@ export function ForgotPasswordForm() {
           <IconInput
             id="confirmPassword"
             icon={Lock}
-            label="Rudia password mpya"
+            label="Repeat new password"
             type="password"
             autoComplete="new-password"
             error={resetForm.formState.errors.confirmPassword?.message}
@@ -225,7 +225,7 @@ export function ForgotPasswordForm() {
           {errorBox}
 
           <button type="submit" disabled={submitting} className={buttonClass}>
-            {submitting ? "Inabadilisha..." : "Badilisha password"}
+            {submitting ? "Inabadilisha..." : "Change password"}
             {!submitting && <ArrowRight className="h-4 w-4" />}
           </button>
 
@@ -235,14 +235,14 @@ export function ForgotPasswordForm() {
             onClick={() => sendCode(email)}
             className="min-h-11 text-sm font-semibold text-brand-blue hover:text-brand-blue-dark disabled:text-zinc-400"
           >
-            {resendIn > 0 ? `Tuma code tena (${resendIn}s)` : "Tuma code tena"}
+            {resendIn > 0 ? `Resend code (${resendIn}s)` : "Resend code"}
           </button>
         </form>
       )}
 
       <p className="mt-6 text-center text-sm text-zinc-500">
         <Link href="/login" className="font-semibold text-brand-blue hover:text-brand-blue-dark">
-          Rudi kwenye login
+          Back to login
         </Link>
       </p>
     </div>

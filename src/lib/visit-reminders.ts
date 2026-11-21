@@ -17,9 +17,9 @@ export const REMINDER_SLOTS = ["MISSED", "MORNING", "AFTERNOON", "EVENING"] as c
 export type ReminderSlot = (typeof REMINDER_SLOTS)[number];
 
 const SESSION_WORD: Record<Exclude<ReminderSlot, "MISSED">, string> = {
-  MORNING: "asubuhi",
-  AFTERNOON: "mchana",
-  EVENING: "jioni",
+  MORNING: "morning",
+  AFTERNOON: "afternoon",
+  EVENING: "evening",
 };
 
 /** Tanzania is UTC+3 all year (no daylight saving). */
@@ -31,7 +31,7 @@ export function eatDate(offsetDays = 0, now = new Date()): string {
 function names(list: string[], max = 3): string {
   const unique = [...new Set(list)];
   const shown = unique.slice(0, max).join(", ");
-  return unique.length > max ? `${shown} na wengine ${unique.length - max}` : shown;
+  return unique.length > max ? `${shown} and ${unique.length - max} more` : shown;
 }
 
 interface NurseVisitRow {
@@ -90,8 +90,8 @@ export async function runVisitReminders(slot: ReminderSlot, now = new Date()): P
           kind: "MISSED_VISITS",
           dedupeKey: `missed:${today}:${userId}`,
           payload: {
-            title: n === 1 ? "Una ziara 1 uliyokosa" : `Una ziara ${n} ulizokosa`,
-            body: `Bado hazijarekodiwa: ${names(patients)}. Fungua ERP uandike ripoti au sababu.`,
+            title: n === 1 ? "You have 1 missed visit" : `You have ${n} missed visits`,
+            body: `Not recorded yet: ${names(patients)}. Open the ERP and write the report or the reason.`,
             url: "/dashboard#missed-visits",
             tag: "missed-visits",
           },
@@ -102,7 +102,7 @@ export async function runVisitReminders(slot: ReminderSlot, now = new Date()): P
     // Admins: yesterday's missed visits, grouped by nurse.
     const yesterday = eatDate(-1, now);
     const perNurse = await query<{ nurse: string; count: string }>(
-      `SELECT COALESCE(u.full_name, 'Hajapangiwa') AS nurse, COUNT(*)::text AS count
+      `SELECT COALESCE(u.full_name, 'Unassigned') AS nurse, COUNT(*)::text AS count
        FROM home_visits hv
        LEFT JOIN staff s ON s.id = hv.staff_id
        LEFT JOIN users u ON u.id = s.user_id
@@ -127,7 +127,7 @@ export async function runVisitReminders(slot: ReminderSlot, now = new Date()): P
             kind: "MISSED_VISITS_ADMIN",
             dedupeKey: `missed-admin:${today}:${admin.id}`,
             payload: {
-              title: total === 1 ? "Ziara 1 ilikosekana jana" : `Ziara ${total} zilikosekana jana`,
+              title: total === 1 ? "1 visit was missed yesterday" : `${total} visits were missed yesterday`,
               body: detail,
               url: "/home-visits",
               tag: "missed-visits-admin",
@@ -162,11 +162,11 @@ export async function runVisitReminders(slot: ReminderSlot, now = new Date()): P
         kind: `SESSION_${slot}`,
         dedupeKey: `session:${today}:${slot}:${userId}`,
         payload: {
-          title: `Jaza progress ya ${word}`,
+          title: `Fill in the ${word} progress`,
           body:
             n === 1
-              ? `Ziara ya ${patients[0]} bado haijajazwa.`
-              : `Ziara ${n} bado hazijajazwa: ${names(patients)}.`,
+              ? `The visit for ${patients[0]} isn't filled in yet.`
+              : `${n} visits aren't filled in yet: ${names(patients)}.`,
           url: "/dashboard",
           tag: `session-${slot.toLowerCase()}`,
         },

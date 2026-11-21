@@ -36,13 +36,13 @@ export default async function InvoicePrintPage(
 ) {
   const viewer = await getCurrentUser();
   if (!viewer || !(await userCanAccessBilling(viewer))) {
-    return <div className="p-6 text-sm text-zinc-500">Huna ruhusa.</div>;
+    return <div className="p-6 text-sm text-zinc-500">You don't have permission.</div>;
   }
   const { id } = await props.params;
   const invoice = await getInvoiceDetail(id);
 
   if (!invoice) {
-    return <div className="p-6 text-sm text-zinc-500">Haikupatikana.</div>;
+    return <div className="p-6 text-sm text-zinc-500">Not found.</div>;
   }
 
   const isPayable = PAYABLE_TYPES.includes(invoice.doc_type);
@@ -241,14 +241,14 @@ export default async function InvoicePrintPage(
             {isPayable && Number(invoice.amount_paid) > 0 && (
               <div className="mt-2">
                 <div className="flex justify-between py-1 text-xs">
-                  <span className="text-slate-500">Imelipwa</span>
+                  <span className="text-slate-500">Paid</span>
                   <span className="font-bold">TZS {fmt(invoice.amount_paid)}</span>
                 </div>
                 <div
                   className="flex justify-between py-1 pt-1.5 text-xs"
                   style={{ borderTop: `1px solid ${BRAND.line}` }}
                 >
-                  <span className="font-bold">Salio</span>
+                  <span className="font-bold">Balance</span>
                   <span className="font-bold">TZS {fmt(balance)}</span>
                 </div>
               </div>

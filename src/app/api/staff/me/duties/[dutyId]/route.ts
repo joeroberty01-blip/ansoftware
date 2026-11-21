@@ -14,27 +14,27 @@ export async function PATCH(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
 
   const staff = await getStaffByUserId(session.id);
   if (!staff) {
-    return NextResponse.json({ error: "Huna wasifu wa Staff." }, { status: 404 });
+    return NextResponse.json({ error: "You don't have a staff profile." }, { status: 404 });
   }
 
   const { dutyId } = await ctx.params;
   const existing = await getDutyById(dutyId);
   if (!existing || existing.staff_id !== staff.id) {
-    return NextResponse.json({ error: "Jukumu halikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Duty not found." }, { status: 404 });
   }
 
   const body = await req.json();
   const parsed = selfUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

@@ -10,8 +10,8 @@ export const MARKETING_PLATFORMS = [
 ] as const;
 
 export const createPostSchema = z.object({
-  title: z.string().trim().min(2, "Kichwa kinahitajika"),
-  content: z.string().trim().min(2, "Maudhui yanahitajika"),
+  title: z.string().trim().min(2, "Title is required"),
+  content: z.string().trim().min(2, "Content is required"),
   platform: z.enum(MARKETING_PLATFORMS).default("OTHER"),
   aiGenerated: z.boolean().default(false),
 });
@@ -19,15 +19,15 @@ export const createPostSchema = z.object({
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 
 export const updatePostSchema = z.object({
-  title: z.string().trim().min(2, "Kichwa kinahitajika").optional(),
-  content: z.string().trim().min(2, "Maudhui yanahitajika").optional(),
+  title: z.string().trim().min(2, "Title is required").optional(),
+  content: z.string().trim().min(2, "Content is required").optional(),
   platform: z.enum(MARKETING_PLATFORMS).optional(),
 });
 
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;
 
 export const generatePostSchema = z.object({
-  topic: z.string().trim().min(2, "Mada inahitajika").max(300),
+  topic: z.string().trim().min(2, "Topic is required").max(300),
   audience: z.string().trim().max(200).optional().or(z.literal("")),
   platform: z.enum(MARKETING_PLATFORMS).default("OTHER"),
   tone: z.string().trim().max(100).optional().or(z.literal("")),

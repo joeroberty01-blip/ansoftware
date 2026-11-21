@@ -46,7 +46,7 @@ interface Patient {
   allergies: string | null;
 }
 
-const WEEKDAYS = ["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"];
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function localToday(): string {
   const d = new Date();
@@ -138,7 +138,7 @@ function SessionSection({
           });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? `Imeshindwa kuhifadhi ${label.toLowerCase()}.`);
+        setError(json.error ?? `Could not save ${label.toLowerCase()}.`);
         return;
       }
       const reasons = vitalsAlertReasons({
@@ -151,7 +151,7 @@ function SessionSection({
       setAlerts(reasons.length > 0 ? reasons : null);
       await onSaved();
     } catch {
-      setError("Hakuna mtandao. Jaribu tena.");
+      setError("No network connection. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -159,11 +159,11 @@ function SessionSection({
 
   const summary = [
     entry?.blood_pressure ? `BP ${entry.blood_pressure}` : null,
-    entry?.temperature ? `Joto ${entry.temperature}°C` : null,
+    entry?.temperature ? `Temp ${entry.temperature}°C` : null,
     entry?.pulse != null ? `Pulse ${entry.pulse}` : null,
-    entry?.blood_glucose ? `Sukari ${entry.blood_glucose}` : null,
+    entry?.blood_glucose ? `Glucose ${entry.blood_glucose}` : null,
     entry?.spo2 != null ? `SpO₂ ${entry.spo2}%` : null,
-    entry?.weight ? `Uzito ${entry.weight}kg` : null,
+    entry?.weight ? `Weight ${entry.weight}kg` : null,
   ].filter(Boolean);
 
   return (
@@ -181,14 +181,14 @@ function SessionSection({
                 : "bg-zinc-100 text-zinc-500"
           }`}
         >
-          {filled ? "Imejazwa" : entry?.status === "SCHEDULED" ? "Imepangwa, bado kujazwa" : "Haijajazwa"}
+          {filled ? "Imejazwa" : entry?.status === "SCHEDULED" ? "Scheduled, not filled in yet" : "Haijajazwa"}
         </span>
       </div>
       {filled && entry && (
         <p className="mt-1 text-xs text-zinc-500">
           {[
             entry.staff_name,
-            `imehifadhiwa ${new Date(entry.updated_at).toLocaleString("sw-TZ", {
+            `saved ${new Date(entry.updated_at).toLocaleString("en-GB", {
               day: "numeric",
               month: "short",
               hour: "2-digit",
@@ -203,12 +203,12 @@ function SessionSection({
       {filled && !open ? (
         <div className="mt-2">
           <p className="text-sm text-zinc-800">
-            {summary.length > 0 ? summary.join(" · ") : "Hakuna vitals zilizorekodiwa."}
+            {summary.length > 0 ? summary.join(" · ") : "No vitals recorded."}
           </p>
           {[
-            { k: "Chakula", v: entry?.food_intake },
-            { k: "Matibabu / Procedures", v: entry?.treatment_notes },
-            { k: "Maendeleo / Maelezo", v: entry?.notes },
+            { k: "Food Intake", v: entry?.food_intake },
+            { k: "Treatment / Procedures", v: entry?.treatment_notes },
+            { k: "Progress / Notes", v: entry?.notes },
           ]
             .filter((b) => b.v)
             .map((b) => (
@@ -222,11 +222,11 @@ function SessionSection({
             onClick={() => setOpen(true)}
             className="mt-2 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
           >
-            Hariri {label.toLowerCase()}
+            Edit {label.toLowerCase()}
           </button>
         </div>
       ) : !canFill ? (
-        <p className="mt-2 text-sm text-zinc-500">Siku hii bado haijafika.</p>
+        <p className="mt-2 text-sm text-zinc-500">This day hasn't come yet.</p>
       ) : (
         <form onSubmit={save} className="mt-3 flex flex-col gap-3">
           {!filled && (
@@ -243,7 +243,7 @@ function SessionSection({
               <input value={bp} onChange={(e) => setBp(e.target.value)} placeholder="120/80" className={inputClass} />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-              Joto (°C)
+              Temp (°C)
               <input value={temp} onChange={(e) => setTemp(e.target.value)} inputMode="decimal" placeholder="36.5" className={inputClass} />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
@@ -251,7 +251,7 @@ function SessionSection({
               <input value={pulse} onChange={(e) => setPulse(e.target.value)} inputMode="numeric" placeholder="80" className={inputClass} />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-              Sukari (mmol/L)
+              Glucose (mmol/L)
               <input value={glucose} onChange={(e) => setGlucose(e.target.value)} inputMode="decimal" placeholder="5.5" className={inputClass} />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
@@ -259,20 +259,20 @@ function SessionSection({
               <input value={spo2} onChange={(e) => setSpo2(e.target.value)} inputMode="numeric" placeholder="97" className={inputClass} />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-              Uzito (kg)
+              Weight (kg)
               <input value={weight} onChange={(e) => setWeight(e.target.value)} inputMode="decimal" className={inputClass} />
             </label>
           </div>
           <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-            Chakula
-            <input value={food} onChange={(e) => setFood(e.target.value)} placeholder="mf. Amekula uji na chai" className={inputClass} />
+            Food Intake
+            <input value={food} onChange={(e) => setFood(e.target.value)} placeholder="e.g. Had porridge and tea" className={inputClass} />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-            Matibabu / Procedures
+            Treatment / Procedures
             <textarea value={treatment} onChange={(e) => setTreatment(e.target.value)} rows={2} className={inputClass} />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-            Maendeleo ya mgonjwa / Maelezo
+            Patient progress / Notes
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
           </label>
           {error && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -282,7 +282,7 @@ function SessionSection({
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : `Hifadhi ${label.toLowerCase()}`}
+              {saving ? "Inahifadhi..." : `Save ${label.toLowerCase()}`}
             </button>
             {filled && (
               <button
@@ -290,7 +290,7 @@ function SessionSection({
                 onClick={() => setOpen(false)}
                 className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
               >
-                Funga
+                Close
               </button>
             )}
           </div>
@@ -298,7 +298,7 @@ function SessionSection({
       )}
       {alerts && (
         <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs text-orange-800">
-          <p className="font-semibold">Onyo: vitals ziko nje ya kawaida</p>
+          <p className="font-semibold">Warning: vitals are outside the normal range</p>
           <ul className="mt-1 list-inside list-disc">
             {alerts.map((a) => (
               <li key={a}>{a}</li>
@@ -329,13 +329,13 @@ export default function DailyReportPage() {
         fetch(`/api/home-visits?patientId=${patientId}&date=${date}`).then((r) => r.json()),
       ]);
       if (!p.ok) {
-        setLoadError(p.j.error ?? "Mgonjwa hakupatikana.");
+        setLoadError(p.j.error ?? "Patient not found.");
       } else {
         setPatient(p.j.patient);
         setVisits((v.visits ?? []).filter((x: Visit) => dayOf(x.visit_date) === date));
       }
     } catch {
-      setLoadError("Hakuna mtandao. Jaribu tena.");
+      setLoadError("No network connection. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -362,7 +362,7 @@ export default function DailyReportPage() {
 
   if (loading) return <div className="p-6 text-sm text-zinc-500">Loading...</div>;
   if (loadError || !patient) {
-    return <div className="p-6 text-sm text-red-700">{loadError ?? "Haikupatikana."}</div>;
+    return <div className="p-6 text-sm text-red-700">{loadError ?? "Not found."}</div>;
   }
 
   const today = localToday();
@@ -383,14 +383,14 @@ export default function DailyReportPage() {
         <Link href={`/patients/${patient.id}`} className="text-sm font-medium text-brand-blue">
           ← {patient.full_name}
         </Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">Ripoti ya Siku</h1>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">Daily Report</h1>
         <p className="text-sm text-zinc-600">
           {patient.full_name}
           {patient.patient_number ? ` (${patient.patient_number})` : ""} · {weekday}, {date}
-          {date === today ? " · Leo" : ""}
+          {date === today ? " · Today" : ""}
         </p>
         {patient.allergies && (
-          <p className="mt-1 text-xs font-semibold text-red-700">Mzio: {patient.allergies}</p>
+          <p className="mt-1 text-xs font-semibold text-red-700">Allergies: {patient.allergies}</p>
         )}
       </div>
 
@@ -399,14 +399,14 @@ export default function DailyReportPage() {
           href={`/patients/${patient.id}/daily/${shiftDay(date, -1)}`}
           className="min-h-9 rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
         >
-          ← Jana
+          ← Previous day
         </Link>
         <input
           type="date"
           value={date}
           max={today}
           onChange={(e) => e.target.value && router.push(`/patients/${patient.id}/daily/${e.target.value}`)}
-          aria-label="Chagua tarehe"
+          aria-label="Choose a date"
           className="rounded-lg border border-zinc-300 px-2 py-2 text-sm"
         />
         {date < today && (
@@ -414,28 +414,28 @@ export default function DailyReportPage() {
             href={`/patients/${patient.id}/daily/${shiftDay(date, 1)}`}
             className="min-h-9 rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
           >
-            Kesho →
+            Next day →
           </Link>
         )}
         <a
           href={`/api/patients/${patient.id}/visit-reports/pdf?from=${date}&to=${date}`}
           className="min-h-9 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
         >
-          Pakua PDF
+          Download PDF
         </a>
       </div>
 
       {needCheckIn && (
         <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
-          <p className="font-semibold">Hujaingia kazini kwa mgonjwa huyu leo.</p>
+          <p className="font-semibold">You haven't checked in at this patient's home today.</p>
           <p className="mt-1">
-            Bonyeza &quot;Nimefika kazini&quot; (selfie na GPS) kwanza, kisha urudi kujaza ripoti.
+            Tap &quot;Check in&quot; (selfie and GPS) first, then come back to fill in the report.
           </p>
           <Link
             href="/dashboard#mahudhurio"
             className="mt-2 inline-block rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white hover:bg-brand-blue-dark"
           >
-            Nenda kwenye Mahudhurio
+            Go to Attendance
           </Link>
         </div>
       )}
@@ -479,12 +479,12 @@ export default function DailyReportPage() {
         {other.length > 0 && (
           <div className="mt-4 border-t border-zinc-200 pt-4">
             <h2 className="text-sm font-bold text-zinc-700">{NO_SESSION_LABEL}</h2>
-            <p className="text-xs text-zinc-500">Ripoti za zamani zisizo na muda; zinabaki kama zilivyo.</p>
+            <p className="text-xs text-zinc-500">Older reports without a session; they stay as they are.</p>
             <ul className="mt-2 flex flex-col gap-1">
               {other.map((v) => (
                 <li key={v.id}>
                   <Link href={`/home-visits/${v.id}`} className="text-sm text-brand-blue underline">
-                    {v.staff_name ?? "Ripoti"} · {v.blood_pressure ? `BP ${v.blood_pressure}` : v.status}
+                    {v.staff_name ?? "Report"} · {v.blood_pressure ? `BP ${v.blood_pressure}` : v.status}
                   </Link>
                 </li>
               ))}

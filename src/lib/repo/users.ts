@@ -40,7 +40,7 @@ export async function createUser(input: {
       input.status,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kutengeneza mtumiaji");
+  if (!row) throw new Error("Could not create the user");
   return row;
 }
 

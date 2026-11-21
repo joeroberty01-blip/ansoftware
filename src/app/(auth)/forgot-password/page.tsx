@@ -3,7 +3,7 @@ import { AuthShell } from "../_components/auth-shell";
 import { ForgotPasswordForm } from "../_components/forgot-password-form";
 
 export const metadata: Metadata = {
-  title: "Umesahau password | Afya Nyumbani",
+  title: "Forgot password | Afya Nyumbani",
   description: "Reset your Afya Nyumbani account password.",
 };
 

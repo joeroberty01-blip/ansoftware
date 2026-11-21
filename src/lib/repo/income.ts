@@ -25,7 +25,7 @@ export async function createIncome(input: {
       input.createdById,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza mapato");
+  if (!row) throw new Error("Could not add the income");
 
   await logAudit({
     userId: input.createdById,

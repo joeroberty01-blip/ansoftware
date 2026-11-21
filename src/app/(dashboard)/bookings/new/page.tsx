@@ -47,7 +47,7 @@ export default function NewBookingPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Imeshindwa kutengeneza booking.");
+        setError(json.error ?? "Could not create the booking.");
         return;
       }
       router.push(`/bookings/${json.booking.id}`);
@@ -61,7 +61,7 @@ export default function NewBookingPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-        Booking Mpya
+        New Booking
       </h1>
 
       <form
@@ -70,18 +70,18 @@ export default function NewBookingPage() {
       >
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Jina Kamili la Mteja
+            Client's Full Name
           </label>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="mf. Mama Rehema"
+            placeholder="e.g. Mama Rehema"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Namba ya Simu
+            Phone Number
           </label>
           <input
             value={phone}
@@ -92,18 +92,18 @@ export default function NewBookingPage() {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Aina ya Huduma Inayoombwa
+            Service Requested
           </label>
           <input
             value={serviceType}
             onChange={(e) => setServiceType(e.target.value)}
-            placeholder="mf. Nursing Care 24hrs, Physiotherapy..."
+            placeholder="e.g. Nursing Care 24hrs, Physiotherapy..."
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Tarehe Anayopendelea (hiari)
+            Preferred Date (optional)
           </label>
           <input
             type="date"
@@ -114,7 +114,7 @@ export default function NewBookingPage() {
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="source" className="text-xs font-medium text-zinc-600">
-            Umetusikia wapi?
+            How did they hear about us?
           </label>
           <select
             id="source"
@@ -122,7 +122,7 @@ export default function NewBookingPage() {
             onChange={(e) => setSource(e.target.value as BookingSource | "")}
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           >
-            <option value="">-- chagua chanzo --</option>
+            <option value="">-- select source --</option>
             {BOOKING_SOURCES.map((s) => (
               <option key={s} value={s}>
                 {BOOKING_SOURCE_LABELS[s]}
@@ -132,14 +132,14 @@ export default function NewBookingPage() {
           <input
             value={sourceDetail}
             onChange={(e) => setSourceDetail(e.target.value)}
-            placeholder="mf. Aga Khan, Dkt. Mushi, Facebook..."
-            aria-label="Maelezo ya chanzo"
+            placeholder="e.g. Aga Khan, Dr. Mushi, Facebook..."
+            aria-label="Source details"
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="next-follow-up" className="text-xs font-medium text-zinc-600">
-            Tarehe ya kumfuatilia
+            Follow-up date
           </label>
           <input
             id="next-follow-up"
@@ -149,12 +149,12 @@ export default function NewBookingPage() {
             className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
           />
           <p className="text-xs text-zinc-500">
-            Kawaida ni leo: mpigie simu ndani ya saa 2.
+            Usually today: call them within 2 hours.
           </p>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">
-            Maelezo Mengine (hiari)
+            Other Notes (optional)
           </label>
           <textarea
             value={notes}
@@ -175,7 +175,7 @@ export default function NewBookingPage() {
           disabled={submitting || !fullName || !phone || !serviceType}
           className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inatengeneza..." : "Tengeneza Booking"}
+          {submitting ? "Inatengeneza..." : "Create Booking"}
         </button>
       </form>
     </div>

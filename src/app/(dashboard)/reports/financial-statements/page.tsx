@@ -27,18 +27,18 @@ interface BalanceSheet {
 }
 
 const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
-  MISHAHARA: "Mishahara",
-  VIFAA: "Vifaa",
-  USAFIRI: "Usafiri",
-  UENDESHAJI: "Uendeshaji",
-  MENGINEYO: "Mengineyo",
+  MISHAHARA: "Salaries",
+  VIFAA: "Supplies",
+  USAFIRI: "Transport",
+  UENDESHAJI: "Operations",
+  MENGINEYO: "Other",
 };
 
 const INCOME_CATEGORY_LABELS: Record<string, string> = {
-  HUDUMA: "Huduma (Services)",
-  MSAADA: "Msaada/Ruzuku",
-  UWEKEZAJI: "Uwekezaji",
-  MENGINEYO: "Mengineyo",
+  HUDUMA: "Services",
+  MSAADA: "Donations/Grants",
+  UWEKEZAJI: "Investment",
+  MENGINEYO: "Other",
 };
 
 function fmt(value: string) {
@@ -58,11 +58,11 @@ function today() {
 type Preset = "today" | "week" | "month" | "year" | "all" | "custom";
 
 const PRESETS: { value: Exclude<Preset, "custom">; label: string }[] = [
-  { value: "today", label: "Leo" },
-  { value: "week", label: "Wiki Hii" },
-  { value: "month", label: "Mwezi Huu" },
-  { value: "year", label: "Mwaka Huu" },
-  { value: "all", label: "Muda Wote" },
+  { value: "today", label: "Today" },
+  { value: "week", label: "This Week" },
+  { value: "month", label: "This Month" },
+  { value: "year", label: "This Year" },
+  { value: "all", label: "All Time" },
 ];
 
 function presetRange(preset: Exclude<Preset, "custom">): { from: string; to: string } {
@@ -107,17 +107,17 @@ export default function FinancialStatementsPage() {
 
   const pnlRows = pnl
     ? [
-        { label: "Mapato ya Huduma (Service Revenue)", value: pnl.serviceRevenue },
+        { label: "Service Revenue", value: pnl.serviceRevenue },
         ...pnl.otherIncomeByCategory.map((c) => ({
           label: INCOME_CATEGORY_LABELS[c.category] ?? c.category,
           value: c.total,
         })),
-        { label: "JUMLA YA MAPATO", value: pnl.totalRevenue, bold: true },
+        { label: "TOTAL INCOME", value: pnl.totalRevenue, bold: true },
         ...pnl.expensesByCategory.map((c) => ({
           label: EXPENSE_CATEGORY_LABELS[c.category] ?? c.category,
           value: `-${c.total}`,
         })),
-        { label: "JUMLA YA MATUMIZI", value: `-${pnl.totalExpenses}`, bold: true },
+        { label: "TOTAL EXPENSES", value: `-${pnl.totalExpenses}`, bold: true },
         { label: "NET PROFIT", value: pnl.netProfit, bold: true, accent: true },
       ]
     : [];
@@ -129,10 +129,10 @@ export default function FinancialStatementsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-            Taarifa za Fedha
+            Financial Statements
           </h1>
           <p className="mt-0.5 text-sm text-zinc-500">
-            Profit &amp; Loss na Balance Sheet, kutokana na data halisi.
+            Profit &amp; Loss and Balance Sheet, from real data.
           </p>
         </div>
         <button
@@ -174,7 +174,7 @@ export default function FinancialStatementsPage() {
             </div>
             {preset !== "all" && (
               <>
-                <label className="text-xs text-zinc-500">Kutoka</label>
+                <label className="text-xs text-zinc-500">From</label>
                 <input
                   type="date"
                   value={from}
@@ -184,7 +184,7 @@ export default function FinancialStatementsPage() {
                   }}
                   className="rounded border border-zinc-300 px-2 py-1 text-sm"
                 />
-                <label className="text-xs text-zinc-500">Hadi</label>
+                <label className="text-xs text-zinc-500">To</label>
                 <input
                   type="date"
                   value={to}
@@ -198,10 +198,10 @@ export default function FinancialStatementsPage() {
             )}
             {pnl && (
               <ListToolbar
-                filename={`pnl-${pnl.from}-hadi-${pnl.to}`}
+                filename={`pnl-${pnl.from}-to-${pnl.to}`}
                 columns={[
-                  { key: "label", label: "Kipengele" },
-                  { key: "value", label: "Kiasi (TZS)" },
+                  { key: "label", label: "Item" },
+                  { key: "value", label: "Amount (TZS)" },
                 ]}
                 rows={pnlRows}
               />
@@ -241,7 +241,7 @@ export default function FinancialStatementsPage() {
             Balance Sheet (Statement of Financial Position)
           </h2>
           <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <label className="text-xs text-zinc-500">Kama ilivyo tarehe</label>
+            <label className="text-xs text-zinc-500">As at</label>
             <input
               type="date"
               value={asOf}
@@ -252,25 +252,25 @@ export default function FinancialStatementsPage() {
               <ListToolbar
                 filename={`balance-sheet-${balanceSheet.asOf}`}
                 columns={[
-                  { key: "label", label: "Kipengele" },
-                  { key: "value", label: "Kiasi (TZS)" },
+                  { key: "label", label: "Item" },
+                  { key: "value", label: "Amount (TZS)" },
                 ]}
                 rows={[
-                  { label: "Fedha Taslimu/Akaunti (Cash)", value: balanceSheet.cash },
+                  { label: "Cash", value: balanceSheet.cash },
                   {
-                    label: "Madeni ya Wateja (Accounts Receivable)",
+                    label: "Accounts Receivable",
                     value: balanceSheet.accountsReceivable,
                   },
-                  { label: "JUMLA YA MALI (Assets)", value: balanceSheet.totalAssets },
+                  { label: "TOTAL ASSETS", value: balanceSheet.totalAssets },
                   {
-                    label: "Bili Zisizolipwa (Accounts Payable)",
+                    label: "Accounts Payable",
                     value: balanceSheet.accountsPayable,
                   },
                   {
-                    label: "JUMLA YA MADENI (Liabilities)",
+                    label: "TOTAL LIABILITIES",
                     value: balanceSheet.totalLiabilities,
                   },
-                  { label: "MTAJI (Equity)", value: balanceSheet.totalEquity },
+                  { label: "EQUITY", value: balanceSheet.totalEquity },
                 ]}
               />
             )}
@@ -283,24 +283,24 @@ export default function FinancialStatementsPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                Mali (Assets)
+                Assets
               </h3>
               <table className="w-full text-left text-sm">
                 <tbody>
                   <tr className="border-b border-zinc-100">
-                    <td className="py-2 pr-4">Fedha Taslimu/Akaunti (Cash)</td>
+                    <td className="py-2 pr-4">Cash</td>
                     <td className="py-2 pr-4 text-right">
                       TZS {fmt(balanceSheet.cash)}
                     </td>
                   </tr>
                   <tr className="border-b border-zinc-100">
-                    <td className="py-2 pr-4">Madeni ya Wateja (A/R)</td>
+                    <td className="py-2 pr-4">Accounts Receivable (A/R)</td>
                     <td className="py-2 pr-4 text-right">
                       TZS {fmt(balanceSheet.accountsReceivable)}
                     </td>
                   </tr>
                   <tr className="font-bold">
-                    <td className="py-2 pr-4">JUMLA YA MALI</td>
+                    <td className="py-2 pr-4">TOTAL ASSETS</td>
                     <td className="py-2 pr-4 text-right">
                       TZS {fmt(balanceSheet.totalAssets)}
                     </td>
@@ -311,24 +311,24 @@ export default function FinancialStatementsPage() {
 
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                Madeni na Mtaji (Liabilities &amp; Equity)
+                Liabilities &amp; Equity
               </h3>
               <table className="w-full text-left text-sm">
                 <tbody>
                   <tr className="border-b border-zinc-100">
-                    <td className="py-2 pr-4">Bili Zisizolipwa (A/P)</td>
+                    <td className="py-2 pr-4">Accounts Payable (A/P)</td>
                     <td className="py-2 pr-4 text-right">
                       TZS {fmt(balanceSheet.accountsPayable)}
                     </td>
                   </tr>
                   <tr className="border-b border-zinc-100 font-semibold">
-                    <td className="py-2 pr-4">JUMLA YA MADENI</td>
+                    <td className="py-2 pr-4">TOTAL LIABILITIES</td>
                     <td className="py-2 pr-4 text-right">
                       TZS {fmt(balanceSheet.totalLiabilities)}
                     </td>
                   </tr>
                   <tr className="font-bold text-brand-blue">
-                    <td className="py-2 pr-4">MTAJI (EQUITY)</td>
+                    <td className="py-2 pr-4">EQUITY</td>
                     <td className="py-2 pr-4 text-right">
                       TZS {fmt(balanceSheet.totalEquity)}
                     </td>
@@ -341,11 +341,11 @@ export default function FinancialStatementsPage() {
 
         <div className="mt-4 flex items-start gap-2 rounded-lg bg-zinc-50 px-3 py-2.5 text-xs text-zinc-500">
           <span>
-            Kumbuka: &quot;Cash&quot; ni makadirio ya kihasibu kutoka kwenye
-            malipo/mapato/matumizi yaliyorekodiwa (si hesabu ya benki
-            iliyolinganishwa/reconciled). Balance sheet hii haina thamani ya
-            fedha ya stock/vifaa (inventory/fixed assets) kwa sababu mfumo
-            hauhifadhi bei ya ununuzi ya vitu hivyo.
+            Note: &quot;Cash&quot; is an accounting estimate from the
+            recorded payments/income/expenses (not a reconciled bank
+            balance). This balance sheet doesn&apos;t include the value of
+            stock/equipment (inventory/fixed assets) because the system
+            doesn&apos;t store their purchase prices.
           </span>
         </div>
       </div>

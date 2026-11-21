@@ -11,7 +11,7 @@ export async function GET(
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -22,7 +22,7 @@ export async function GET(
 
   const file = await getDocumentFile(id, docId);
   if (!file) {
-    return NextResponse.json({ error: "Faili halikupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "File not found." }, { status: 404 });
   }
 
   await logAudit({ userId: session.id, action: "PATIENT_DOCUMENT_VIEWED", entity: "patient_document", entityId: docId, meta: { patientId: id } });

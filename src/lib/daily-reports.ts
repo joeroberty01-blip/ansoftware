@@ -8,13 +8,13 @@ export const DAILY_SESSIONS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 export type DailySession = (typeof DAILY_SESSIONS)[number];
 
 export const DAILY_SESSION_LABELS: Record<DailySession, string> = {
-  MORNING: "Asubuhi",
-  AFTERNOON: "Mchana",
-  EVENING: "Jioni",
+  MORNING: "Morning",
+  AFTERNOON: "Afternoon",
+  EVENING: "Evening",
 };
 
 /** Label for visits recorded before sessions existed. */
-export const NO_SESSION_LABEL = "Bila muda";
+export const NO_SESSION_LABEL = "No session";
 
 export interface DailyVisitLike {
   patient_id: string;

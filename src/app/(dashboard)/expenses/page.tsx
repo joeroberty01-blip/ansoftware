@@ -28,11 +28,11 @@ interface Bill {
 }
 
 const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
-  { value: "MISHAHARA", label: "Mishahara" },
-  { value: "VIFAA", label: "Vifaa" },
-  { value: "USAFIRI", label: "Usafiri" },
-  { value: "UENDESHAJI", label: "Uendeshaji" },
-  { value: "MENGINEYO", label: "Mengineyo" },
+  { value: "MISHAHARA", label: "Salaries" },
+  { value: "VIFAA", label: "Supplies" },
+  { value: "USAFIRI", label: "Transport" },
+  { value: "UENDESHAJI", label: "Operations" },
+  { value: "MENGINEYO", label: "Other" },
 ];
 
 const CATEGORY_LABELS = Object.fromEntries(
@@ -40,17 +40,17 @@ const CATEGORY_LABELS = Object.fromEntries(
 ) as Record<ExpenseCategory, string>;
 
 const EXPENSE_CSV_COLUMNS = [
-  { key: "date", label: "Tarehe" },
+  { key: "date", label: "Date" },
   { key: "category", label: "Category" },
-  { key: "description", label: "Maelezo" },
-  { key: "amount", label: "Kiasi" },
+  { key: "description", label: "Description" },
+  { key: "amount", label: "Amount" },
 ];
 
 const BILL_CSV_COLUMNS = [
-  { key: "due_date", label: "Tarehe ya Malipo" },
-  { key: "name", label: "Jina" },
+  { key: "due_date", label: "Payment Date" },
+  { key: "name", label: "Name" },
   { key: "category", label: "Category" },
-  { key: "amount", label: "Kiasi" },
+  { key: "amount", label: "Amount" },
   { key: "status", label: "Status" },
 ];
 
@@ -108,7 +108,7 @@ export default function ExpensesPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setExpError(json.error ?? "Imeshindwa kuongeza expense.");
+        setExpError(json.error ?? "Could not add expense.");
         return;
       }
       setExpAmount("");
@@ -132,7 +132,7 @@ export default function ExpensesPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setExpError(json.error ?? "Imeshindwa kusasisha ombi.");
+        setExpError(json.error ?? "Could not update the request.");
         return;
       }
       await loadExpenses();
@@ -189,7 +189,7 @@ export default function ExpensesPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setBillError(json.error ?? "Imeshindwa kuongeza bill.");
+        setBillError(json.error ?? "Could not add the bill.");
         return;
       }
       setBillName("");
@@ -206,7 +206,7 @@ export default function ExpensesPage() {
   const onPayBill = async (id: string) => {
     if (
       !window.confirm(
-        "Lipa bill hii sasa? Kiasi kitaongezwa kwenye Expenses moja kwa moja."
+        "Pay this bill now? The amount will be added to Expenses automatically."
       )
     ) {
       return;
@@ -217,7 +217,7 @@ export default function ExpensesPage() {
       const res = await fetch(`/api/bills/${id}/pay`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) {
-        setBillError(json.error ?? "Imeshindwa kulipa bill.");
+        setBillError(json.error ?? "Could not pay the bill.");
         return;
       }
       await Promise.all([loadBills(), loadExpenses()]);
@@ -268,14 +268,14 @@ export default function ExpensesPage() {
   };
 
   const onDeleteBill = async (id: string) => {
-    if (!window.confirm("Futa bill hii?")) return;
+    if (!window.confirm("Delete this bill?")) return;
     setBillError(null);
     setBillBusyId(id);
     try {
       const res = await fetch(`/api/bills/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json();
-        setBillError(json.error ?? "Imeshindwa kufuta bill.");
+        setBillError(json.error ?? "Could not delete the bill.");
         return;
       }
       await loadBills();
@@ -309,7 +309,7 @@ export default function ExpensesPage() {
               : "text-zinc-500"
           }`}
         >
-          Matumizi (Expenses)
+          Expenses
         </button>
         <button
           onClick={() => setTab("bills")}
@@ -319,7 +319,7 @@ export default function ExpensesPage() {
               : "text-zinc-500"
           }`}
         >
-          Bills za Kampuni
+          Company Bills
         </button>
       </div>
 
@@ -327,7 +327,7 @@ export default function ExpensesPage() {
         <>
           <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm print:hidden">
             <h2 className="mb-4 text-sm font-semibold text-zinc-900">
-              Ongeza Expense
+              Add Expense
             </h2>
             <form
               onSubmit={onAddExpense}
@@ -347,7 +347,7 @@ export default function ExpensesPage() {
               <input
                 value={expAmount}
                 onChange={(e) => setExpAmount(e.target.value)}
-                placeholder="Kiasi"
+                placeholder="Amount"
                 inputMode="decimal"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
@@ -360,7 +360,7 @@ export default function ExpensesPage() {
               <input
                 value={expDescription}
                 onChange={(e) => setExpDescription(e.target.value)}
-                placeholder="Maelezo"
+                placeholder="Description"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <button
@@ -368,7 +368,7 @@ export default function ExpensesPage() {
                 disabled={addingExpense}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {addingExpense ? "Adding..." : "Ongeza Expense"}
+                {addingExpense ? "Adding..." : "Add Expense"}
               </button>
             </form>
             {expError && (
@@ -382,16 +382,16 @@ export default function ExpensesPage() {
             {loadingExpenses ? (
               <p className="text-sm text-zinc-500">Loading...</p>
             ) : expenses.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hakuna matumizi bado.</p>
+              <p className="text-sm text-zinc-500">No expenses yet.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                    <th className="py-2 pr-4">Tarehe</th>
+                    <th className="py-2 pr-4">Date</th>
                     <th className="py-2 pr-4">Category</th>
-                    <th className="py-2 pr-4">Maelezo</th>
-                    <th className="py-2 pr-4 text-right">Kiasi</th>
+                    <th className="py-2 pr-4">Description</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
                     <th className="py-2 pr-4">Status</th>
                     <th className="py-2 pr-4 print:hidden"></th>
                   </tr>
@@ -461,19 +461,19 @@ export default function ExpensesPage() {
               <input
                 value={billName}
                 onChange={(e) => setBillName(e.target.value)}
-                placeholder="Jina la Bill"
+                placeholder="Bill Name"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <input
                 value={billCategory}
                 onChange={(e) => setBillCategory(e.target.value)}
-                placeholder="Category (e.g. Umeme)"
+                placeholder="Category (e.g. Electricity)"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <input
                 value={billAmount}
                 onChange={(e) => setBillAmount(e.target.value)}
-                placeholder="Kiasi"
+                placeholder="Amount"
                 inputMode="decimal"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
@@ -502,16 +502,16 @@ export default function ExpensesPage() {
             {loadingBills ? (
               <p className="text-sm text-zinc-500">Loading...</p>
             ) : bills.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hakuna bills bado.</p>
+              <p className="text-sm text-zinc-500">No bills yet.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                    <th className="py-2 pr-4">Tarehe ya Malipo</th>
-                    <th className="py-2 pr-4">Jina</th>
+                    <th className="py-2 pr-4">Payment Date</th>
+                    <th className="py-2 pr-4">Name</th>
                     <th className="py-2 pr-4">Category</th>
-                    <th className="py-2 pr-4 text-right">Kiasi</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
                     <th className="py-2 pr-4">Status</th>
                     <th className="py-2 pr-4 print:hidden"></th>
                   </tr>
@@ -558,13 +558,13 @@ export default function ExpensesPage() {
                               disabled={savingBillEdit}
                               className="text-xs font-medium text-brand-blue underline disabled:opacity-50"
                             >
-                              Hifadhi
+                              Save
                             </button>
                             <button
                               onClick={() => setEditingBillId(null)}
                               className="text-xs font-medium text-zinc-600 underline"
                             >
-                              Ghairi
+                              Cancel
                             </button>
                           </div>
                         </td>
@@ -596,21 +596,21 @@ export default function ExpensesPage() {
                               disabled={billBusyId === b.id}
                               className="text-xs font-medium text-brand-blue underline disabled:opacity-50"
                             >
-                              Lipa
+                              Pay
                             </button>
                             <button
                               onClick={() => startEditingBill(b)}
                               disabled={billBusyId === b.id}
                               className="text-xs font-medium text-zinc-700 underline disabled:opacity-50"
                             >
-                              Hariri
+                              Edit
                             </button>
                             <button
                               onClick={() => onDeleteBill(b.id)}
                               disabled={billBusyId === b.id}
                               className="text-xs font-medium text-red-700 underline disabled:opacity-50"
                             >
-                              Futa
+                              Delete
                             </button>
                           </div>
                         )}

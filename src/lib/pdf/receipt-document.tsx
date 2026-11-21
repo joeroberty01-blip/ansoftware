@@ -52,16 +52,16 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
       <Page size={[RECEIPT_WIDTH, RECEIPT_HEIGHT]} style={styles.page}>
         <Text style={styles.companyName}>Afya Nyumbani Home Care</Text>
         <Text style={styles.sub}>Dar es Salaam, Tanzania</Text>
-        <Text style={styles.sub}>RISITI YA MALIPO</Text>
+        <Text style={styles.sub}>PAYMENT RECEIPT</Text>
 
         <View style={styles.divider} />
 
         <View style={styles.row}>
-          <Text style={styles.label}>Risiti Na.</Text>
+          <Text style={styles.label}>Receipt No.</Text>
           <Text style={styles.bold}>{payment.receipt_number}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Hati</Text>
+          <Text style={styles.label}>Document</Text>
           <Text>{payment.document_number}</Text>
         </View>
         <View style={styles.row}>
@@ -69,11 +69,11 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
           <Text>{payment.client_name}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Tarehe</Text>
+          <Text style={styles.label}>Date</Text>
           <Text>{paidAt}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Njia</Text>
+          <Text style={styles.label}>Method</Text>
           <Text>{payment.method}</Text>
         </View>
         {payment.reference && (
@@ -89,25 +89,25 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
 
         <View style={styles.divider} />
 
-        <Text style={[styles.center, styles.label]}>Kiasi Kilicholipwa</Text>
+        <Text style={[styles.center, styles.label]}>Amount Paid</Text>
         <Text style={styles.bigAmount}>TZS {fmt(payment.amount)}</Text>
 
         <View style={styles.divider} />
 
         <View style={styles.row}>
-          <Text style={styles.label}>Jumla ya Hati</Text>
+          <Text style={styles.label}>Document Total</Text>
           <Text>{fmt(payment.total_amount)}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Imelipwa Yote</Text>
+          <Text style={styles.label}>Paid in Full</Text>
           <Text>{fmt(payment.paid_to_date)}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={[styles.label, styles.bold]}>Salio</Text>
+          <Text style={[styles.label, styles.bold]}>Balance</Text>
           <Text style={styles.bold}>{fmt(payment.balance_after)}</Text>
         </View>
 
-        <Text style={styles.footer}>Asante kwa kutumia huduma zetu</Text>
+        <Text style={styles.footer}>Thank you for using our services</Text>
         <Text style={styles.footer}>Afya Nyumbani ERP</Text>
       </Page>
     </Document>

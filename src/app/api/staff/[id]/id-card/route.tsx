@@ -48,7 +48,7 @@ export async function GET(
   const { id } = await ctx.params;
   const staff = await getStaffById(id);
   if (!staff) {
-    return NextResponse.json({ error: "Staff hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
   }
 
   if (session.role !== "ADMIN" && staff.user_id !== session.id) {
@@ -58,7 +58,7 @@ export async function GET(
   const [photoDataUri, qrDataUri] = await Promise.all([
     photoToDataUri(staff.photo_url),
     QRCode.toDataURL(
-      `AFYA NYUMBANI HOME CARE\nJina: ${staff.full_name}\nID: ${staff.staff_number}\nTaaluma: ${staff.profession}\nhttps://afyanyumbani.com`,
+      `AFYA NYUMBANI HOME CARE\nName: ${staff.full_name}\nID: ${staff.staff_number}\nProfession: ${staff.profession}\nhttps://afyanyumbani.com`,
       { margin: 1, width: 200 }
     ),
   ]);

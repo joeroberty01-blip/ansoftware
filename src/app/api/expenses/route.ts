@@ -15,7 +15,7 @@ async function requireSession() {
     return {
       session: null,
       response: NextResponse.json(
-        { error: "Unahitaji kuingia kwanza." },
+        { error: "Please sign in first." },
         { status: 401 }
       ),
     };
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   const parsed = createExpenseSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

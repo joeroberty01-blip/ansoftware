@@ -38,10 +38,10 @@ interface Income {
 }
 
 const CSV_COLUMNS = [
-  { key: "date", label: "Tarehe" },
+  { key: "date", label: "Date" },
   { key: "category", label: "Category" },
-  { key: "description", label: "Maelezo" },
-  { key: "amount", label: "Kiasi" },
+  { key: "description", label: "Description" },
+  { key: "amount", label: "Amount" },
   { key: "payment_method", label: "Payment Method" },
 ];
 
@@ -62,25 +62,25 @@ interface CategoryBreakdown {
 type Period = "today" | "week" | "month" | "all";
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: "today", label: "Leo" },
-  { value: "week", label: "Wiki Hii" },
-  { value: "month", label: "Mwezi Huu" },
-  { value: "all", label: "Muda Wote" },
+  { value: "today", label: "Today" },
+  { value: "week", label: "This Week" },
+  { value: "month", label: "This Month" },
+  { value: "all", label: "All Time" },
 ];
 
 const PERIOD_KPI_LABELS: Record<Period, { income: string; expenses: string }> = {
-  today: { income: "Mapato ya Leo", expenses: "Matumizi ya Leo" },
-  week: { income: "Mapato ya Wiki", expenses: "Matumizi ya Wiki" },
-  month: { income: "Mapato ya Mwezi", expenses: "Matumizi ya Mwezi" },
-  all: { income: "Mapato Yote", expenses: "Matumizi Yote" },
+  today: { income: "Today's Income", expenses: "Today's Expenses" },
+  week: { income: "This Week's Income", expenses: "This Week's Expenses" },
+  month: { income: "This Month's Income", expenses: "This Month's Expenses" },
+  all: { income: "Total Income", expenses: "Total Expenses" },
 };
 
 const CATEGORY_OPTIONS: { value: ExpenseCategory; label: string }[] = [
-  { value: "MISHAHARA", label: "Mishahara" },
-  { value: "VIFAA", label: "Vifaa" },
-  { value: "USAFIRI", label: "Usafiri" },
-  { value: "UENDESHAJI", label: "Uendeshaji" },
-  { value: "MENGINEYO", label: "Mengineyo" },
+  { value: "MISHAHARA", label: "Salaries" },
+  { value: "VIFAA", label: "Supplies" },
+  { value: "USAFIRI", label: "Transport" },
+  { value: "UENDESHAJI", label: "Operations" },
+  { value: "MENGINEYO", label: "Other" },
 ];
 
 const CATEGORY_LABELS = Object.fromEntries(
@@ -88,10 +88,10 @@ const CATEGORY_LABELS = Object.fromEntries(
 ) as Record<ExpenseCategory, string>;
 
 const INCOME_CATEGORY_OPTIONS: { value: IncomeCategory; label: string }[] = [
-  { value: "HUDUMA", label: "Huduma (Services)" },
-  { value: "MSAADA", label: "Msaada/Ruzuku (Donation/Grant)" },
-  { value: "UWEKEZAJI", label: "Uwekezaji (Investment)" },
-  { value: "MENGINEYO", label: "Mengineyo" },
+  { value: "HUDUMA", label: "Services" },
+  { value: "MSAADA", label: "Donations/Grants" },
+  { value: "UWEKEZAJI", label: "Investment" },
+  { value: "MENGINEYO", label: "Other" },
 ];
 
 const INCOME_CATEGORY_LABELS = Object.fromEntries(
@@ -154,7 +154,7 @@ function KpiCard({
   value,
   changePct,
   invertColor = false,
-  compareLabel = "vs mwezi uliopita",
+  compareLabel = "vs last month",
 }: {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
@@ -191,7 +191,7 @@ function KpiCard({
 function CategoryDonut({ breakdown }: { breakdown: CategoryBreakdown[] }) {
   const total = breakdown.reduce((sum, b) => sum + Number(b.total), 0);
   if (total === 0) {
-    return <p className="py-6 text-center text-sm text-zinc-500">Hakuna matumizi kwenye kipindi hiki.</p>;
+    return <p className="py-6 text-center text-sm text-zinc-500">No expenses in this period.</p>;
   }
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
@@ -225,7 +225,7 @@ function CategoryDonut({ breakdown }: { breakdown: CategoryBreakdown[] }) {
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[10px] text-zinc-400">Jumla</span>
+          <span className="text-[10px] text-zinc-400">Total</span>
           <span className="text-sm font-bold text-zinc-900">{(total / 1000).toFixed(0)}K</span>
         </div>
       </div>
@@ -338,7 +338,7 @@ export default function FinancePage() {
         });
         const json = await res.json();
         if (!res.ok) {
-          setFormError(json.error ?? "Imeshindwa kuongeza mapato.");
+          setFormError(json.error ?? "Could not add the income.");
           return;
         }
         resetForm();
@@ -353,7 +353,7 @@ export default function FinancePage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setFormError(json.error ?? "Imeshindwa kuongeza expense.");
+        setFormError(json.error ?? "Could not add expense.");
         return;
       }
       if (attachmentFile) {
@@ -392,7 +392,7 @@ export default function FinancePage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Finance / Accounting</h1>
-          <p className="text-sm text-zinc-500">Dhibiti mapato, matumizi na uhasibu wa taasisi</p>
+          <p className="text-sm text-zinc-500">Manage the organisation's income, expenses and accounts</p>
         </div>
         <div className="flex items-center gap-2 print:hidden">
           <div className="flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-1.5">
@@ -423,7 +423,7 @@ export default function FinancePage() {
             className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-700"
           >
             <Wallet className="h-4 w-4" />
-            Ongeza Mapato
+            Add Income
           </button>
           <button
             type="button"
@@ -434,7 +434,7 @@ export default function FinancePage() {
             className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark"
           >
             <Receipt className="h-4 w-4" />
-            Ongeza Expense
+            Add Expense
           </button>
         </div>
       </div>
@@ -497,14 +497,14 @@ export default function FinancePage() {
                     formMode === "income" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"
                   }`}
                 >
-                  Mapato (Income)
+                  Income
                 </button>
               </div>
               <h2 className="text-sm font-semibold text-zinc-900">
-                {formMode === "income" ? "Ongeza Mapato" : "Ongeza Expense"}
+                {formMode === "income" ? "Add Income" : "Add Expense"}
               </h2>
               <p className="text-xs text-zinc-500">
-                {formMode === "income" ? "Ingiza mapato mapya" : "Ingiza matumizi mapya"}
+                {formMode === "income" ? "Enter new income" : "Enter a new expense"}
               </p>
             </div>
             <button
@@ -546,7 +546,7 @@ export default function FinancePage() {
               )}
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Kiasi (TZS)</label>
+              <label className="text-xs font-medium text-zinc-600">Amount (TZS)</label>
               <input
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -556,7 +556,7 @@ export default function FinancePage() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Tarehe</label>
+              <label className="text-xs font-medium text-zinc-600">Date</label>
               <input
                 type="date"
                 value={date}
@@ -566,7 +566,7 @@ export default function FinancePage() {
             </div>
             {formMode === "income" && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-zinc-600">Source (Chanzo)</label>
+                <label className="text-xs font-medium text-zinc-600">Source</label>
                 <input
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
@@ -576,13 +576,13 @@ export default function FinancePage() {
               </div>
             )}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Payment Method (hiari)</label>
+              <label className="text-xs font-medium text-zinc-600">Payment Method (optional)</label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod | "")}
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               >
-                <option value="">-- chagua --</option>
+                <option value="">-- select --</option>
                 {PAYMENT_METHOD_OPTIONS.map((p) => (
                   <option key={p.value} value={p.value}>
                     {p.label}
@@ -591,7 +591,7 @@ export default function FinancePage() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Maelezo</label>
+              <label className="text-xs font-medium text-zinc-600">Description</label>
               <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -602,7 +602,7 @@ export default function FinancePage() {
             {formMode === "expense" && (
               <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-brand-blue">
                 <Paperclip className="h-3.5 w-3.5" />
-                {attachmentFile ? attachmentFile.name : "+ Add Attachment (hiari)"}
+                {attachmentFile ? attachmentFile.name : "+ Add Attachment (optional)"}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,application/pdf"
@@ -621,14 +621,14 @@ export default function FinancePage() {
                 formMode === "income" ? "bg-green-600 hover:bg-green-700" : "bg-brand-blue hover:bg-brand-blue-dark"
               }`}
             >
-              {submitting ? "Adding..." : formMode === "income" ? "Ongeza Mapato" : "Ongeza Expense"}
+              {submitting ? "Adding..." : formMode === "income" ? "Add Income" : "Add Expense"}
             </button>
           </form>
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold text-zinc-900">
-            Matumizi kwa Category ({PERIOD_OPTIONS.find((p) => p.value === period)?.label})
+            Expenses by Category ({PERIOD_OPTIONS.find((p) => p.value === period)?.label})
           </h2>
           <CategoryDonut breakdown={breakdown} />
           <Link
@@ -644,9 +644,9 @@ export default function FinancePage() {
           <h2 className="mb-3 text-sm font-semibold text-zinc-900">Quick Actions</h2>
           <div className="flex flex-col gap-1">
             {[
-              { icon: Receipt, label: "Ongeza Expense", onClick: () => document.getElementById("ongeza-expense-form")?.scrollIntoView({ behavior: "smooth" }) },
-              { icon: FileText, label: "Ongeza Invoice", href: "/billing/new" },
-              { icon: Wallet, label: "Pokea Malipo", href: "/billing" },
+              { icon: Receipt, label: "Add Expense", onClick: () => document.getElementById("ongeza-expense-form")?.scrollIntoView({ behavior: "smooth" }) },
+              { icon: FileText, label: "Add Invoice", href: "/billing/new" },
+              { icon: Wallet, label: "Receive Payment", href: "/billing" },
               { icon: BarChart3, label: "Financial Reports", href: "/reports" },
             ].map((action) =>
               action.href ? (
@@ -683,7 +683,7 @@ export default function FinancePage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-1">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">Matumizi Mapya</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">New Expense</h2>
             <button
               type="button"
               onClick={() => document.getElementById("expenses-table")?.scrollIntoView({ behavior: "smooth" })}
@@ -695,7 +695,7 @@ export default function FinancePage() {
           {loading ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : expenses.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna matumizi bado.</p>
+            <p className="text-sm text-zinc-500">No expenses yet.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {expenses.slice(0, 6).map((exp) => {
@@ -722,12 +722,12 @@ export default function FinancePage() {
 
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-1">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">Mapato ya Hivi Karibuni</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">Recent Income</h2>
           </div>
           {loading ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : recentIncome.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna mapato mengine bado.</p>
+            <p className="text-sm text-zinc-500">No other income yet.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {recentIncome.slice(0, 6).map((inc) => (
@@ -753,14 +753,14 @@ export default function FinancePage() {
 
         <div id="expenses-table" className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-2">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-zinc-900">Matumizi ya Hivi Karibuni</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">Recent Expenses</h2>
             <div className="flex items-center gap-2 print:hidden">
               <div className="relative">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search maelezo au category..."
+                  placeholder="Search description or category..."
                   className="w-56 rounded-lg border border-zinc-300 py-1.5 pr-2 pl-8 text-xs"
                 />
               </div>
@@ -770,7 +770,7 @@ export default function FinancePage() {
           {loading ? (
             <p className="text-sm text-zinc-500">Loading...</p>
           ) : filteredExpenses.length === 0 ? (
-            <p className="text-sm text-zinc-500">Hakuna matumizi yanayolingana.</p>
+            <p className="text-sm text-zinc-500">No matching expenses.</p>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -778,10 +778,10 @@ export default function FinancePage() {
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-3">#</th>
-                      <th className="py-2 pr-3">Tarehe</th>
+                      <th className="py-2 pr-3">Date</th>
                       <th className="py-2 pr-3">Category</th>
-                      <th className="py-2 pr-3">Maelezo</th>
-                      <th className="py-2 pr-3 text-right">Kiasi</th>
+                      <th className="py-2 pr-3">Description</th>
+                      <th className="py-2 pr-3 text-right">Amount</th>
                       <th className="py-2 pr-3">Payment Method</th>
                       <th className="py-2 pr-3">Attachment</th>
                     </tr>

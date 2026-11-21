@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
     return NextResponse.json(
-      { error: "Unahitaji kuingia kwanza." },
+      { error: "Please sign in first." },
       { status: 401 }
     );
   }
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   const parsed = createHomeVisitSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     // Part-time visits are recorded only by the appointed Chief C.O (or an Admin).
     if (d.visitType === "PART_TIME" && !ownStaff?.is_chief_co) {
       return NextResponse.json(
-        { error: "Ni Chief C.O pekee anayeweza kurekodi ziara za Part-time." },
+        { error: "Only the Chief C.O can record Part-time visits." },
         { status: 403 }
       );
     }
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            'Bonyeza "Nimefika kazini" kwenye Dashboard kwanza (selfie na GPS kwa mgonjwa huyu), kisha ujaze ripoti.',
+            'Tap "Check in" on the Dashboard first (selfie and GPS at this patient\'s home), then fill in the report.',
           code: "ATTENDANCE_REQUIRED",
         },
         { status: 403 }
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
   // evening: every new entry names its session, and a session is filled once.
   if (!d.visitSession) {
     return NextResponse.json(
-      { error: "Chagua muda wa ripoti: Asubuhi, Mchana au Jioni." },
+      { error: "Choose the report session: Morning, Afternoon or Evening." },
       { status: 400 }
     );
   }
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
   if (existing && (existing.status !== "SCHEDULED" || d.status === "SCHEDULED")) {
     return NextResponse.json(
       {
-        error: `Ripoti ya ${sessionWord} ya ${d.visitDate} kwa mgonjwa huyu tayari ipo. Ifungue uihariri badala ya kuandika nyingine.`,
+        error: `The ${sessionWord} report for ${d.visitDate} already exists for this patient. Open and edit it instead of writing another.`,
         existingId: existing.id,
       },
       { status: 409 }

@@ -39,10 +39,10 @@ export async function runFollowUpReminders(now = new Date()): Promise<FollowUpRe
   result.admins = admins.length;
 
   const names = due.slice(0, 3).map((b) => b.full_name);
-  const more = due.length > 3 ? ` na wengine ${due.length - 3}` : "";
-  const late = overdue > 0 ? ` (${overdue} wamechelewa)` : "";
+  const more = due.length > 3 ? ` and ${due.length - 3} more` : "";
+  const late = overdue > 0 ? ` (${overdue} overdue)` : "";
   const title =
-    due.length === 1 ? "Ombi 1 la kufuatilia leo" : `Maombi ${due.length} ya kufuatilia leo`;
+    due.length === 1 ? "1 request to follow up today" : `${due.length} requests to follow up today`;
 
   for (const admin of admins) {
     const delivered = await notifyOnce({
@@ -51,7 +51,7 @@ export async function runFollowUpReminders(now = new Date()): Promise<FollowUpRe
       dedupeKey: `followup:${today}:${admin.id}`,
       payload: {
         title,
-        body: `${names.join(", ")}${more}${late}. Piga simu au tuma WhatsApp, kisha rekodi kwenye ERP.`,
+        body: `${names.join(", ")}${more}${late}. Call or send a WhatsApp, then record it in the ERP.`,
         url: "/bookings?due=1",
         tag: "booking-follow-up",
       },

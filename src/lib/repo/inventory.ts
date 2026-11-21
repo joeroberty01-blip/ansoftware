@@ -25,7 +25,7 @@ export async function createItem(input: {
      RETURNING *`,
     [input.name, input.category, input.unit, input.reorderLevel]
   );
-  if (!row) throw new Error("Imeshindwa kuongeza item");
+  if (!row) throw new Error("Could not add the item");
   return row;
 }
 

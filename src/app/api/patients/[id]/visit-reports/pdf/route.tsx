@@ -16,7 +16,7 @@ export async function GET(
 ) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const { id } = await ctx.params;
@@ -25,7 +25,7 @@ export async function GET(
 
   const patient = await getPatientById(id);
   if (!patient) {
-    return NextResponse.json({ error: "Mgonjwa hakupatikana." }, { status: 404 });
+    return NextResponse.json({ error: "Patient not found." }, { status: 404 });
   }
 
   const fromParam = req.nextUrl.searchParams.get("from");
@@ -40,7 +40,7 @@ export async function GET(
   });
 
   const rangeLabel =
-    from || to ? `${from ?? "mwanzo"} hadi ${to ?? "leo"}` : "Ziara zote";
+    from || to ? `${from ?? "start"} to ${to ?? "today"}` : "All visits";
   const alertIds = new Set(visits.filter((v) => hasVitalsAlert(v)).map((v) => v.id));
 
   const buffer = await renderToBuffer(
@@ -56,7 +56,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Ripoti_za_Ziara_${safeName}.pdf"`,
+      "Content-Disposition": `attachment; filename="Visit_Reports_${safeName}.pdf"`,
     },
   });
 }

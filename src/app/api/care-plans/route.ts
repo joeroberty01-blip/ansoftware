@@ -8,12 +8,12 @@ import { assertPatientAccess } from "@/lib/patient-access";
 export async function GET(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const patientId = req.nextUrl.searchParams.get("patientId");
   if (!patientId) {
-    return NextResponse.json({ error: "patientId inahitajika." }, { status: 400 });
+    return NextResponse.json({ error: "patientId is required." }, { status: 400 });
   }
   if (session.role !== "ADMIN") {
     const denied = await assertPatientAccess(session, patientId);
@@ -27,14 +27,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getCurrentUser();
   if (!session) {
-    return NextResponse.json({ error: "Unahitaji kuingia kwanza." }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
   const body = await req.json();
   const parsed = createCarePlanSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data sio sahihi" },
+      { error: parsed.error.issues[0]?.message ?? "Invalid data" },
       { status: 400 }
     );
   }

@@ -40,7 +40,7 @@ export async function createCarePlan(input: {
       input.createdById,
     ]
   );
-  if (!row) throw new Error("Imeshindwa kutengeneza care plan");
+  if (!row) throw new Error("Could not create the care plan");
   return row;
 }
 

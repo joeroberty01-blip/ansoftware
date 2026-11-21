@@ -74,7 +74,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
       onSubmit={onSubmit}
       className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
     >
-      <h2 className="text-sm font-semibold text-zinc-900">Taarifa Zangu</h2>
+      <h2 className="text-sm font-semibold text-zinc-900">My Details</h2>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-zinc-600">Email</label>
         <input
@@ -84,7 +84,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Jina Kamili</label>
+        <label className="text-xs font-medium text-zinc-600">Full Name</label>
         <input
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
@@ -92,7 +92,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Namba ya Simu</label>
+        <label className="text-xs font-medium text-zinc-600">Phone Number</label>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
@@ -112,7 +112,7 @@ function ProfileForm({ initialMe }: { initialMe: Me | null }) {
         disabled={saving}
         className="mt-1 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
       >
-        {saving ? "Saving..." : "Hifadhi"}
+        {saving ? "Saving..." : "Save"}
       </button>
     </form>
   );
@@ -160,7 +160,7 @@ function PasswordForm() {
     >
       <h2 className="text-sm font-semibold text-zinc-900">Change Password</h2>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Password ya Sasa</label>
+        <label className="text-xs font-medium text-zinc-600">Current Password</label>
         <input
           type="password"
           value={currentPassword}
@@ -170,7 +170,7 @@ function PasswordForm() {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Password Mpya</label>
+        <label className="text-xs font-medium text-zinc-600">New Password</label>
         <input
           type="password"
           value={newPassword}
@@ -181,7 +181,7 @@ function PasswordForm() {
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-zinc-600">
-          Thibitisha Password Mpya
+          Confirm New Password
         </label>
         <input
           type="password"

@@ -23,18 +23,18 @@ import { listLeaveRequests } from "./leave";
 import { listRecentActivity, type AuditLogWithUser } from "../audit";
 
 const ACTIVITY_LABELS: Record<string, string> = {
-  PAYMENT_RECORDED: "alirekodi malipo",
-  LEAVE_APPROVED: "aliidhinisha likizo",
-  LEAVE_REJECTED: "alikataa ombi la likizo",
-  STAFF_APPROVED: "aliidhinisha staff mpya",
-  STAFF_REJECTED: "alikataa ombi la staff",
-  PAYROLL_GENERATED: "alitengeneza payroll",
-  EXPENSE_CREATED: "aliongeza expense",
-  STOCK_IN: "aliongeza stock",
-  STOCK_OUT: "alitoa stock",
-  INVOICE_CANCELLED: "aliighairi invoice",
-  SALARY_PAID: "alilipa mshahara",
-  BILL_PAID: "alilipa bill",
+  PAYMENT_RECORDED: "recorded a payment",
+  LEAVE_APPROVED: "approved leave",
+  LEAVE_REJECTED: "rejected a leave request",
+  STAFF_APPROVED: "approved a new staff member",
+  STAFF_REJECTED: "rejected a staff request",
+  PAYROLL_GENERATED: "generated payroll",
+  EXPENSE_CREATED: "added an expense",
+  STOCK_IN: "added stock",
+  STOCK_OUT: "issued stock",
+  INVOICE_CANCELLED: "cancelled an invoice",
+  SALARY_PAID: "paid a salary",
+  BILL_PAID: "paid a bill",
 };
 
 function formatActivity(log: AuditLogWithUser): string {
@@ -162,47 +162,47 @@ export async function getDashboardOverview(
 
   const pendingActions: PendingAction[] = [
     {
-      label: "Staff wanaosubiri idhini",
+      label: "Staff awaiting approval",
       count: pendingStaff.length,
       href: "/staff/pending",
     },
     {
-      label: "Likizo zinazosubiri idhini",
+      label: "Leave awaiting approval",
       count: pendingLeave.length,
       href: "/staff",
     },
     {
-      label: "Invoices zinazosubiri malipo",
+      label: "Invoices awaiting payment",
       count: outstanding.count,
       href: "/billing",
     },
     {
-      label: "Items chini ya stock",
+      label: "Items low on stock",
       count: lowStock.length,
       href: "/inventory/alerts",
     },
     {
-      label: "Batches zinazokaribia kuisha",
+      label: "Batches expiring soon",
       count: expiring.length,
       href: "/inventory/alerts",
     },
     {
-      label: "Ziara zilizokosekana (missed)",
+      label: "Missed visits",
       count: missedVisitsCount,
       href: "/home-visits",
     },
     {
-      label: "Vitals zisizo za kawaida (leo)",
+      label: "Abnormal vitals (today)",
       count: abnormalVitalsCount,
       href: "/home-visits",
     },
     {
-      label: "Bookings mpya zinazosubiri",
+      label: "New bookings waiting",
       count: newBookingsCount,
       href: "/bookings",
     },
     {
-      label: "Leseni za staff zinazokaribia kuisha",
+      label: "Staff licences expiring soon",
       count: expiringLicenses.length,
       href: "/staff",
     },

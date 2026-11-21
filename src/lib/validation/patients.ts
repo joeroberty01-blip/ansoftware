@@ -3,7 +3,7 @@ import { MAR_SLOTS } from "../mar";
 
 const optionalDate = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Tarehe sio sahihi")
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date")
   .optional()
   .or(z.literal(""));
 
@@ -11,11 +11,11 @@ const optionalText = (max: number) =>
   z.string().trim().max(max).optional().or(z.literal(""));
 
 export const createPatientSchema = z.object({
-  fullName: z.string().trim().min(2, "Jina la mgonjwa linahitajika"),
+  fullName: z.string().trim().min(2, "Patient name is required"),
   dateOfBirth: optionalDate,
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   phone: optionalText(30),
-  email: z.string().trim().email("Barua pepe sio sahihi").optional().or(z.literal("")),
+  email: z.string().trim().email("Invalid email address").optional().or(z.literal("")),
   address: optionalText(300),
   emergencyContactName: optionalText(150),
   emergencyContactPhone: optionalText(30),
@@ -32,7 +32,7 @@ export const updatePatientSchema = createPatientSchema.partial().extend({
 });
 
 export const addMedicationSchema = z.object({
-  medicationName: z.string().trim().min(2, "Jina la dawa linahitajika"),
+  medicationName: z.string().trim().min(2, "Medication name is required"),
   dosage: optionalText(100),
   frequency: optionalText(100),
   startDate: optionalDate,
@@ -44,8 +44,8 @@ export const addMedicationSchema = z.object({
 export type AddMedicationInput = z.infer<typeof addMedicationSchema>;
 
 export const addDocumentSchema = z.object({
-  title: z.string().trim().min(2, "Jina la document linahitajika"),
-  documentType: z.string().trim().min(1, "Aina ya document inahitajika"),
+  title: z.string().trim().min(2, "Document name is required"),
+  documentType: z.string().trim().min(1, "Document type is required"),
   notes: optionalText(1000),
 });
 

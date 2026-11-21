@@ -35,7 +35,7 @@ async function registration() {
 }
 
 /**
- * "Washa arifa za simu": registers the service worker, asks permission and
+ * "Turn on phone notifications": registers the service worker, asks permission and
  * saves this device so the server can send visit reminders.
  */
 export function PushSetupCard({ compact = false }: { compact?: boolean }) {
@@ -104,11 +104,11 @@ export function PushSetupCard({ compact = false }: { compact?: boolean }) {
       const test = await fetch("/api/push/test", { method: "POST" });
       setMessage(
         test.ok
-          ? "Arifa zimewashwa. Umetumiwa arifa ya majaribio."
-          : "Arifa zimewashwa, lakini arifa ya majaribio haikufika."
+          ? "Notifications are on. A test notification was sent to you."
+          : "Notifications are on, but the test notification didn't arrive."
       );
     } catch (err) {
-      setMessage(`Imeshindikana kuwasha arifa: ${(err as Error).message}`);
+      setMessage(`Could not turn on notifications: ${(err as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -140,7 +140,7 @@ export function PushSetupCard({ compact = false }: { compact?: boolean }) {
     try {
       const res = await fetch("/api/push/test", { method: "POST" });
       const json = await res.json().catch(() => ({}));
-      setMessage(res.ok ? "Arifa ya majaribio imetumwa." : json.error ?? "Imeshindikana.");
+      setMessage(res.ok ? "Test notification sent." : json.error ?? "Something went wrong.");
     } finally {
       setBusy(false);
     }
@@ -154,17 +154,17 @@ export function PushSetupCard({ compact = false }: { compact?: boolean }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-brand-blue">
-            {state === "on" ? "Arifa za simu zimewashwa" : "Washa arifa za simu"}
+            {state === "on" ? "Phone notifications are on" : "Turn on phone notifications"}
           </h2>
           <p className="mt-0.5 text-sm text-zinc-600">
             {state === "ios-install" &&
-              "Kwenye iPhone: bonyeza Share, kisha “Add to Home Screen”. Fungua Afya ERP kutoka kwenye skrini ya simu, kisha urudi hapa kuwasha arifa."}
+              "On iPhone: tap Share, then “Add to Home Screen”. Open Afya ERP from your home screen, then come back here to turn on notifications."}
             {state === "denied" &&
-              "Arifa zimezuiwa kwenye kivinjari hiki. Fungua mipangilio ya tovuti (alama ya kufuli kwenye anwani) na uruhusu Notifications."}
+              "Notifications are blocked in this browser. Open the site settings (the lock icon in the address bar) and allow Notifications."}
             {state === "off" &&
-              "Pokea vikumbusho vya kujaza progress (asubuhi, mchana, jioni) na taarifa za ziara ulizokosa, hata ERP ikiwa imefungwa."}
+              "Get reminders to fill in progress (morning, afternoon, evening) and alerts about missed visits, even when the ERP is closed."}
             {state === "on" &&
-              "Kifaa hiki kitapokea vikumbusho vya progress mara 3 kwa siku na ziara zilizokosekana."}
+              "This device will get progress reminders 3 times a day and alerts about missed visits."}
           </p>
           {message && <p className="mt-1 text-sm font-medium text-zinc-800">{message}</p>}
         </div>
@@ -176,7 +176,7 @@ export function PushSetupCard({ compact = false }: { compact?: boolean }) {
               disabled={busy}
               className="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-60"
             >
-              {busy ? "Inawasha..." : "Washa arifa"}
+              {busy ? "Turning on..." : "Turn on notifications"}
             </button>
           )}
           {state === "on" && (
@@ -187,7 +187,7 @@ export function PushSetupCard({ compact = false }: { compact?: boolean }) {
                 disabled={busy}
                 className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
               >
-                Jaribu arifa
+                Test notification
               </button>
               <button
                 type="button"
@@ -195,7 +195,7 @@ export function PushSetupCard({ compact = false }: { compact?: boolean }) {
                 disabled={busy}
                 className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
               >
-                Zima
+                Turn off
               </button>
             </>
           )}
