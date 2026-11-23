@@ -61,6 +61,7 @@ export function DashboardShell({
   role,
   canBilling,
   canClinical,
+  canPartTime,
   pendingStaffCount,
   lowStockCount,
   outstandingCount,
@@ -73,6 +74,7 @@ export function DashboardShell({
   role: UserRole;
   canBilling: boolean;
   canClinical: boolean;
+  canPartTime: boolean;
   pendingStaffCount: number;
   lowStockCount: number;
   outstandingCount: number;
@@ -138,6 +140,7 @@ export function DashboardShell({
             role={role}
             canBilling={canBilling}
             canClinical={canClinical}
+            canPartTime={canPartTime}
             badges={{
               pendingStaff: pendingStaffCount,
               lowStock: lowStockCount,
@@ -278,6 +281,7 @@ export function DashboardShell({
             role={role}
             canBilling={canBilling}
             canClinical={canClinical}
+            canPartTime={canPartTime}
             pendingStaffCount={pendingStaffCount}
             lowStockCount={lowStockCount}
             outstandingCount={outstandingCount}

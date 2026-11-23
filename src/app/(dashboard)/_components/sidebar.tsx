@@ -30,6 +30,8 @@ export interface NavItem {
   hideForStaff?: boolean;
   /** Clinical = patient care pages; billing = invoices/receipts. */
   area?: "clinical" | "billing";
+  /** Only Admins and the appointed Chief C.O see it. */
+  partTimeOnly?: boolean;
   badgeKey?: "pendingStaff" | "lowStock" | "outstanding" | "newBookings";
   group: "main" | "billing" | "other";
 }
@@ -38,6 +40,13 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
   { label: "Patients", href: "/patients", icon: HeartPulse, area: "clinical", group: "main" },
   { label: "Home Visits", href: "/home-visits", icon: MapPinned, area: "clinical", group: "main" },
+  {
+    label: "Part-time Visits",
+    href: "/part-time-visits",
+    icon: CalendarClock,
+    partTimeOnly: true,
+    group: "main",
+  },
   {
     label: "Attendance",
     href: "/attendance",
@@ -129,6 +138,7 @@ export function Sidebar({
   role,
   canBilling = false,
   canClinical = true,
+  canPartTime = false,
   pendingStaffCount = 0,
   lowStockCount = 0,
   outstandingCount = 0,
@@ -138,6 +148,7 @@ export function Sidebar({
   role: UserRole;
   canBilling?: boolean;
   canClinical?: boolean;
+  canPartTime?: boolean;
   pendingStaffCount?: number;
   lowStockCount?: number;
   outstandingCount?: number;
@@ -159,6 +170,7 @@ export function Sidebar({
     if (item.hideForStaff && role === "STAFF") return false;
     if (item.area === "billing" && !canBilling) return false;
     if (item.area === "clinical" && !canClinical) return false;
+    if (item.partTimeOnly && !canPartTime) return false;
     return true;
   });
 

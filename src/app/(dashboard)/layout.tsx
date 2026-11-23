@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   const staff = user.role === "ADMIN" ? null : await getStaffByUserId(user.id);
   const canBilling = canAccessBilling(user.role, staff?.profession);
   const canClinical = user.role === "ADMIN" || staff?.profession !== "ACCOUNTANT";
+  const canPartTime = user.role === "ADMIN" || !!staff?.is_chief_co;
 
   let pendingStaffCount = 0;
   let lowStockCount = 0;
@@ -92,6 +93,7 @@ export default async function DashboardLayout({
       role={user.role}
       canBilling={canBilling}
       canClinical={canClinical}
+      canPartTime={canPartTime}
       pendingStaffCount={pendingStaffCount}
       lowStockCount={lowStockCount}
       outstandingCount={outstandingCount}
