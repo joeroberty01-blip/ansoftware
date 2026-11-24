@@ -54,6 +54,7 @@ import {
   Printer as PhPrinter,
   Pulse as PhPulse,
   Receipt as PhReceipt,
+  Repeat as PhRepeat,
   Ruler as PhRuler,
   Scales as PhScales,
   Shield as PhShield,
@@ -154,6 +155,7 @@ export const Pill = make(PhPill as PhIcon, "Pill");
 export const Plus = make(PhPlus as PhIcon, "Plus");
 export const Printer = make(PhPrinter as PhIcon, "Printer");
 export const Receipt = make(PhReceipt as PhIcon, "Receipt");
+export const Repeat = make(PhRepeat as PhIcon, "Repeat");
 export const RotateCcw = make(PhArrowCounterClockwise as PhIcon, "RotateCcw");
 export const Ruler = make(PhRuler as PhIcon, "Ruler");
 export const Search = make(PhMagnifyingGlass as PhIcon, "Search");

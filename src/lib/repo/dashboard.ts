@@ -35,6 +35,9 @@ const ACTIVITY_LABELS: Record<string, string> = {
   INVOICE_CANCELLED: "cancelled an invoice",
   SALARY_PAID: "paid a salary",
   BILL_PAID: "paid a bill",
+  PART_TIME_VISIT_CREATED: "recorded a part-time visit",
+  PART_TIME_VISIT_UPDATED: "edited a part-time visit",
+  PART_TIME_VISIT_CANCELLED: "cancelled a part-time visit",
 };
 
 function formatActivity(log: AuditLogWithUser): string {

@@ -25,11 +25,13 @@ export function TopNav({
   role,
   canBilling,
   canClinical,
+  canPartTime,
   badges,
 }: {
   role: UserRole;
   canBilling: boolean;
   canClinical: boolean;
+  canPartTime: boolean;
   badges: Record<string, number>;
 }) {
   const pathname = usePathname();
@@ -53,6 +55,7 @@ export function TopNav({
     if (item.hideForStaff && role === "STAFF") return false;
     if (item.area === "billing" && !canBilling) return false;
     if (item.area === "clinical" && !canClinical) return false;
+    if (item.partTimeOnly && !canPartTime) return false;
     return true;
   });
 

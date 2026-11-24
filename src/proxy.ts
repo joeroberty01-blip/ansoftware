@@ -38,6 +38,8 @@ const PROTECTED_PREFIXES = [
   "/api/push",
   "/attendance",
   "/api/attendance",
+  "/part-time-visits",
+  "/api/part-time-visits",
 ];
 
 const ADMIN_ONLY_PREFIXES = [
@@ -152,5 +154,7 @@ export const config = {
     "/api/push/:path*",
     "/attendance/:path*",
     "/api/attendance/:path*",
+    "/part-time-visits/:path*",
+    "/api/part-time-visits/:path*",
   ],
 };
