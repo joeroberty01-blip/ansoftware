@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 import { updateStaffSchema } from "@/lib/validation/staff";
 import { getStaffById, updateStaffProfile } from "@/lib/repo/staff";
 
@@ -52,6 +53,7 @@ export async function PATCH(
     );
   }
 
+  const before = await getStaffById(id);
   const staff = await updateStaffProfile(id, {
     profession: parsed.data.profession,
     licenseNumber:
@@ -84,6 +86,17 @@ export async function PATCH(
 
   if (!staff) {
     return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
+  }
+
+  // Being Chief C.O opens every patient's record: keep changes in the audit log.
+  if (before && before.is_chief_co !== staff.is_chief_co) {
+    await logAudit({
+      userId: session.id,
+      action: "CHIEF_CO_CHANGED",
+      entity: "staff",
+      entityId: id,
+      meta: { isChiefCo: staff.is_chief_co },
+    });
   }
 
   return NextResponse.json({ staff });

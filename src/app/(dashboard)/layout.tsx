@@ -94,6 +94,7 @@ export default async function DashboardLayout({
       canBilling={canBilling}
       canClinical={canClinical}
       canPartTime={canPartTime}
+      isChiefCo={!!staff?.is_chief_co}
       pendingStaffCount={pendingStaffCount}
       lowStockCount={lowStockCount}
       outstandingCount={outstandingCount}

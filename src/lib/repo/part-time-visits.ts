@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import { query, withTransaction } from "../db";
 import { logAudit } from "../audit";
-import type { PartTimeVisitInput } from "../validation/part-time-visits";
+import type { PartTimePayInput, PartTimeVisitInput } from "../validation/part-time-visits";
 
 export class PartTimeVisitError extends Error {
   constructor(message: string, readonly status: number) {
@@ -28,6 +28,14 @@ export interface PartTimeVisit {
   covered_staff_id: string | null;
   covered_staff_name: string | null;
   notes: string | null;
+  /** Pay fields are null for everyone but an Admin. */
+  pay_amount: string | null;
+  pay_reason: string | null;
+  pay_set_by_name: string | null;
+  paid_at: string | null;
+  paid_by_name: string | null;
+  payment_method: string | null;
+  payment_reference: string | null;
   voided_at: string | null;
   void_reason: string | null;
   voided_by_name: string | null;
@@ -38,10 +46,14 @@ export interface PartTimeVisit {
 /**
  * Every part-time visit between two dates (inclusive). A home visit report
  * marked Part-time is listed too, unless the same person, patient and day is
- * already in the register.
+ * already in the register. Pay is left out unless `withPay`.
  */
-export async function listPartTimeVisits(from: string, to: string): Promise<PartTimeVisit[]> {
-  return query<PartTimeVisit>(
+export async function listPartTimeVisits(
+  from: string,
+  to: string,
+  withPay: boolean
+): Promise<PartTimeVisit[]> {
+  const rows = await query<PartTimeVisit>(
     `SELECT * FROM (
        SELECT p.id, 'REGISTER' AS origin, NULL::text AS home_visit_id,
               p.staff_id, p.external_name, p.external_phone,
@@ -50,7 +62,9 @@ export async function listPartTimeVisits(from: string, to: string): Promise<Part
               to_char(p.start_time, 'HH24:MI') AS start_time,
               to_char(p.end_time, 'HH24:MI') AS end_time,
               p.reason, p.reason_note, p.covered_staff_id, cu.full_name AS covered_staff_name,
-              p.notes, p.voided_at, p.void_reason, vu.full_name AS voided_by_name,
+              p.notes, p.pay_amount, p.pay_reason, psu.full_name AS pay_set_by_name,
+              p.paid_at, pbu.full_name AS paid_by_name, p.payment_method, p.payment_reference,
+              p.voided_at, p.void_reason, vu.full_name AS voided_by_name,
               u.full_name AS created_by_name, p.created_at
        FROM part_time_visits p
        JOIN patients pt ON pt.id = p.patient_id
@@ -60,6 +74,8 @@ export async function listPartTimeVisits(from: string, to: string): Promise<Part
        LEFT JOIN staff cs ON cs.id = p.covered_staff_id
        LEFT JOIN users cu ON cu.id = cs.user_id
        LEFT JOIN users vu ON vu.id = p.voided_by_id
+       LEFT JOIN users psu ON psu.id = p.pay_set_by_id
+       LEFT JOIN users pbu ON pbu.id = p.paid_by_id
        WHERE p.visit_date BETWEEN $1 AND $2
        UNION ALL
        SELECT 'hv-' || h.id, 'VISIT_REPORT', h.id,
@@ -67,7 +83,8 @@ export async function listPartTimeVisits(from: string, to: string): Promise<Part
               COALESCE(su.full_name, 'Not recorded'),
               h.patient_id, pt.full_name, h.visit_date,
               NULL, NULL, NULL, NULL, NULL, NULL,
-              NULL, NULL, NULL, NULL,
+              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+              NULL, NULL, NULL,
               u.full_name, h.created_at
        FROM home_visits h
        JOIN patients pt ON pt.id = h.patient_id
@@ -85,6 +102,17 @@ export async function listPartTimeVisits(from: string, to: string): Promise<Part
      ORDER BY v.visit_date DESC, v.start_time DESC NULLS LAST, v.created_at DESC`,
     [from, to]
   );
+  if (withPay) return rows;
+  return rows.map((r) => ({
+    ...r,
+    pay_amount: null,
+    pay_reason: null,
+    pay_set_by_name: null,
+    paid_at: null,
+    paid_by_name: null,
+    payment_method: null,
+    payment_reference: null,
+  }));
 }
 
 export interface PartTimeOptions {
@@ -197,10 +225,17 @@ async function lockActive(client: PoolClient, id: string): Promise<Record<string
   return rows[0];
 }
 
+function assertNotPaid(row: Record<string, unknown>) {
+  if (row.paid_at) {
+    throw new PartTimeVisitError("This visit is already paid. Undo the payment first.", 409);
+  }
+}
+
 /** The audit entry keeps the values as they were before the edit. */
 export async function updatePartTimeVisit(id: string, d: PartTimeVisitInput, userId: string) {
   return withTransaction(async (client) => {
     const before = await lockActive(client, id);
+    assertNotPaid(before);
     await assertValid(client, d, id);
     await client.query(
       `UPDATE part_time_visits
@@ -223,10 +258,67 @@ export async function updatePartTimeVisit(id: string, d: PartTimeVisitInput, use
   });
 }
 
+/** Admin only (checked by the route). Records pay; it does not create an expense. */
+export async function updatePartTimePay(id: string, d: PartTimePayInput, userId: string) {
+  return withTransaction(async (client) => {
+    const row = await lockActive(client, id);
+    const audit = (action: string, amount: string | null, meta: Record<string, unknown>) =>
+      logAudit(
+        { userId, action, entity: "part_time_visit", entityId: id, amount, meta },
+        client
+      );
+
+    if (d.action === "SET_AMOUNT") {
+      assertNotPaid(row);
+      await client.query(
+        `UPDATE part_time_visits
+         SET pay_amount = $2, pay_reason = $3, pay_set_by_id = $4, updated_at = now()
+         WHERE id = $1`,
+        [id, d.amount, d.reason, userId]
+      );
+      await audit("PART_TIME_PAY_SET", d.amount, {
+        reason: d.reason,
+        previousAmount: row.pay_amount,
+        previousReason: row.pay_reason,
+      });
+    } else if (d.action === "MARK_PAID") {
+      assertNotPaid(row);
+      if (!row.pay_amount) throw new PartTimeVisitError("Set the amount first.", 400);
+      await client.query(
+        `UPDATE part_time_visits
+         SET paid_at = now(), paid_by_id = $2, payment_method = $3, payment_reference = $4,
+             updated_at = now()
+         WHERE id = $1`,
+        [id, userId, d.method, d.reference]
+      );
+      await audit("PART_TIME_PAID", String(row.pay_amount), {
+        method: d.method,
+        reference: d.reference,
+      });
+    } else {
+      if (!row.paid_at) throw new PartTimeVisitError("This visit is not marked as paid.", 409);
+      await client.query(
+        `UPDATE part_time_visits
+         SET paid_at = NULL, paid_by_id = NULL, payment_method = NULL, payment_reference = NULL,
+             updated_at = now()
+         WHERE id = $1`,
+        [id]
+      );
+      await audit("PART_TIME_PAYMENT_UNDONE", String(row.pay_amount), {
+        reason: d.reason,
+        paidAt: row.paid_at,
+        paidById: row.paid_by_id,
+        method: row.payment_method,
+        reference: row.payment_reference,
+      });
+    }
+  });
+}
+
 /** Cancels a wrong record. The row stays on file with who cancelled it and why. */
 export async function voidPartTimeVisit(id: string, reason: string, userId: string) {
   return withTransaction(async (client) => {
-    await lockActive(client, id);
+    assertNotPaid(await lockActive(client, id));
     await client.query(
       `UPDATE part_time_visits
        SET voided_at = now(), voided_by_id = $2, void_reason = $3, updated_at = now()

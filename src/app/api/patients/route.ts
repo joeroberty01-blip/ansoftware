@@ -29,7 +29,11 @@ export async function GET(req: NextRequest) {
     // tied to specific patients — they see the full patient list like an
     // Admin. Every other profession is scoped to their own assignments,
     // not an optional filter, always enforced regardless of any query param.
-    if (ownStaff.profession !== "ADMIN_STAFF") {
+    // The Chief C.O sees every patient too (same rule as patient-access.ts),
+    // or only their own when asking for assignedToMe.
+    const seesAll =
+      ownStaff.profession === "ADMIN_STAFF" || (ownStaff.is_chief_co && !assignedToMe);
+    if (!seesAll) {
       assignedStaffId = ownStaff.id;
     }
   } else if (assignedToMe) {

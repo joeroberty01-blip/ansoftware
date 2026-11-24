@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findUserById } from "@/lib/repo/users";
+import { getStaffByUserId } from "@/lib/repo/staff";
 
 export async function GET() {
   const session = await getCurrentUser();
@@ -16,12 +17,15 @@ export async function GET() {
     return NextResponse.json({ error: "User not found." }, { status: 404 });
   }
 
+  const staff = user.role === "ADMIN" ? null : await getStaffByUserId(session.id);
+
   return NextResponse.json({
     user: {
       fullName: user.full_name,
       email: user.email,
       role: user.role,
       phone: user.phone,
+      isChiefCo: !!staff?.is_chief_co,
     },
   });
 }

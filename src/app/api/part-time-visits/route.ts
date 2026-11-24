@@ -23,11 +23,12 @@ export async function GET(req: NextRequest) {
   const [y, m] = month.split("-").map(Number);
   const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
 
+  const isAdmin = auth.session.role === "ADMIN";
   const [visits, options] = await Promise.all([
-    listPartTimeVisits(`${month}-01`, `${month}-${String(lastDay).padStart(2, "0")}`),
+    listPartTimeVisits(`${month}-01`, `${month}-${String(lastDay).padStart(2, "0")}`, isAdmin),
     listPartTimeOptions(),
   ]);
-  return NextResponse.json({ month, today, visits, ...options });
+  return NextResponse.json({ month, today, isAdmin, visits, ...options });
 }
 
 export async function POST(req: NextRequest) {

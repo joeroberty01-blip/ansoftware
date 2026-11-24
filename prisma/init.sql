@@ -615,3 +615,12 @@ CREATE TABLE IF NOT EXISTS part_time_visits (
 CREATE INDEX IF NOT EXISTS idx_part_time_visits_date ON part_time_visits(visit_date DESC);
 CREATE INDEX IF NOT EXISTS idx_part_time_visits_staff ON part_time_visits(staff_id, visit_date DESC);
 CREATE INDEX IF NOT EXISTS idx_part_time_visits_patient ON part_time_visits(patient_id, visit_date DESC);
+
+-- Pay for the visit: an Admin sets the amount with a reason, then marks it paid.
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS pay_amount DECIMAL(14,2) CHECK (pay_amount > 0);
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS pay_reason TEXT;
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS pay_set_by_id TEXT REFERENCES users(id);
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS paid_by_id TEXT REFERENCES users(id);
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE part_time_visits ADD COLUMN IF NOT EXISTS payment_reference TEXT;

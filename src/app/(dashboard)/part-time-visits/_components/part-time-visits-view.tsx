@@ -10,6 +10,7 @@ import {
   PART_TIME_REASONS,
   type PartTimeReason,
 } from "@/lib/validation/part-time-visits";
+import { PayPanel, METHOD_LABELS } from "./pay-panel";
 
 /** Value of the "who visited" list meaning "type a name instead". */
 const OUTSIDE = "__outside__";
@@ -48,6 +49,11 @@ const reasonLabel = (r: string | null) =>
 const timeRange = (v: PartTimeVisit) =>
   v.start_time ? `${v.start_time}${v.end_time ? ` – ${v.end_time}` : ""}` : "-";
 
+const money = (n: number) => `TZS ${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+
+const payTotal = (rows: PartTimeVisit[]) =>
+  rows.reduce((sum, v) => sum + Number(v.pay_amount ?? 0), 0);
+
 const isCover = (r: string) => COVER_REASONS.includes(r as PartTimeReason);
 
 const inputClass =
@@ -64,6 +70,8 @@ function tally(rows: PartTimeVisit[], key: (v: PartTimeVisit) => string) {
 export function PartTimeVisitsView() {
   const [month, setMonth] = useState("");
   const [today, setToday] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [payFor, setPayFor] = useState<PartTimeVisit | null>(null);
   const [visits, setVisits] = useState<PartTimeVisit[]>([]);
   const [staff, setStaff] = useState<PartTimeOptions["staff"]>([]);
   const [patients, setPatients] = useState<PartTimeOptions["patients"]>([]);
@@ -97,6 +105,7 @@ export function PartTimeVisitsView() {
       }
       setMonth(json.month);
       setToday(json.today);
+      setIsAdmin(!!json.isAdmin);
       setVisits(json.visits);
       setStaff(json.staff);
       setPatients(json.patients);
@@ -113,6 +122,7 @@ export function PartTimeVisitsView() {
 
   const openForm = (state: FormState, id: string | null) => {
     setForm(state);
+    setPayFor(null);
     setEditingId(id);
     setFormError(null);
     setMessage(null);
@@ -232,6 +242,31 @@ export function PartTimeVisitsView() {
     }
   };
 
+  const undoPaid = async (v: PartTimeVisit) => {
+    const reason = window.prompt(
+      `Undo the payment of ${money(Number(v.pay_amount))} to ${v.staff_name}?\nUse this only if it was marked as paid by mistake. Write the reason:`
+    );
+    if (reason === null) return;
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/part-time-visits/${v.id}/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "UNDO_PAID", reason }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json.error ?? "Could not undo the payment.");
+        return;
+      }
+      setMessage("Payment undone. The visit is unpaid again.");
+      await load(month);
+    } catch {
+      setError("No network connection. Please try again.");
+    }
+  };
+
   const active = visits.filter((v) => !v.voided_at);
   const cancelledCount = visits.length - active.length;
   const matches = (v: PartTimeVisit) =>
@@ -241,6 +276,10 @@ export function PartTimeVisitsView() {
   const counted = active.filter(matches);
   const byStaff = tally(counted, (v) => v.staff_name);
   const byReason = tally(counted, (v) => reasonLabel(v.reason));
+  const paidRows = counted.filter((v) => v.paid_at);
+  const unpaidRows = counted.filter((v) => v.pay_amount && !v.paid_at);
+  const noAmount = counted.filter((v) => v.origin === "REGISTER" && !v.pay_amount).length;
+  const payByPerson = (name: string) => payTotal(counted.filter((v) => v.staff_name === name));
   const staffNames = [...new Set(active.map((v) => v.staff_name))].sort();
 
   const csvRows = shown.map((v) => ({
@@ -253,6 +292,12 @@ export function PartTimeVisitsView() {
     reason_note: v.reason_note,
     covered_staff_name: v.covered_staff_name,
     notes: v.notes,
+    pay_amount: v.pay_amount,
+    pay_reason: v.pay_reason,
+    pay_status: v.paid_at ? "Paid" : v.pay_amount ? "Unpaid" : "Amount not set",
+    paid_on: v.paid_at?.slice(0, 10),
+    payment_method: v.payment_method ? METHOD_LABELS[v.payment_method] ?? v.payment_method : "",
+    payment_reference: v.payment_reference,
     recorded_by: v.created_by_name,
     status: v.voided_at ? `Cancelled: ${v.void_reason}` : "Recorded",
   }));
@@ -528,6 +573,19 @@ export function PartTimeVisitsView() {
         </form>
       )}
 
+      {payFor && (
+        <PayPanel
+          key={payFor.id}
+          visit={payFor}
+          onClose={() => setPayFor(null)}
+          onSaved={async (text) => {
+            setPayFor(null);
+            setMessage(text);
+            await load(month);
+          }}
+        />
+      )}
+
       <div className="flex flex-wrap items-center gap-2 print:hidden">
         <input
           type="month"
@@ -593,6 +651,16 @@ export function PartTimeVisitsView() {
               { key: "reason_note", label: "Reason details" },
               { key: "covered_staff_name", label: "In place of" },
               { key: "notes", label: "Notes" },
+              ...(isAdmin
+                ? [
+                    { key: "pay_amount", label: "Amount (TZS)" },
+                    { key: "pay_reason", label: "Amount reason" },
+                    { key: "pay_status", label: "Payment" },
+                    { key: "paid_on", label: "Paid on" },
+                    { key: "payment_method", label: "Method" },
+                    { key: "payment_reference", label: "Reference" },
+                  ]
+                : []),
               { key: "recorded_by", label: "Recorded by" },
               { key: "status", label: "Status" },
             ]}
@@ -614,11 +682,31 @@ export function PartTimeVisitsView() {
         ))}
       </div>
 
+      {isAdmin && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            { label: "Paid", value: money(payTotal(paidRows)), warn: false },
+            { label: "Unpaid", value: money(payTotal(unpaidRows)), warn: unpaidRows.length > 0 },
+            { label: "Visits with no amount yet", value: noAmount, warn: noAmount > 0 },
+          ].map((c) => (
+            <div
+              key={c.label}
+              className={`rounded-xl border p-3 shadow-sm sm:p-4 ${
+                c.warn ? "border-orange-200 bg-orange-50" : "border-zinc-200 bg-white"
+              }`}
+            >
+              <p className="text-xs font-medium text-zinc-600">{c.label}</p>
+              <p className="mt-1 text-xl font-bold text-zinc-900">{c.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {counted.length > 0 && (
         <div className="grid gap-4 lg:grid-cols-2">
           {[
-            { title: "Visits per person", rows: byStaff },
-            { title: "Visits per reason", rows: byReason },
+            { title: "Visits per person", rows: byStaff, pay: isAdmin },
+            { title: "Visits per reason", rows: byReason, pay: false },
           ].map((t) => (
             <div key={t.title} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
               <h2 className="text-sm font-semibold text-zinc-900">{t.title}</h2>
@@ -626,7 +714,12 @@ export function PartTimeVisitsView() {
                 {t.rows.map(([name, n]) => (
                   <li key={name} className="flex items-center justify-between gap-3 py-1.5 text-sm">
                     <span className="min-w-0 break-words text-zinc-700">{name}</span>
-                    <span className="font-semibold text-zinc-900">{n}</span>
+                    <span className="shrink-0 text-right">
+                      <span className="font-semibold text-zinc-900">{n}</span>
+                      {t.pay && payByPerson(name) > 0 && (
+                        <span className="ml-2 text-xs text-zinc-500">{money(payByPerson(name))}</span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -655,6 +748,7 @@ export function PartTimeVisitsView() {
                   <th className="py-2 pr-4">Reason</th>
                   <th className="py-2 pr-4">In place of</th>
                   <th className="py-2 pr-4">Notes</th>
+                  {isAdmin && <th className="py-2 pr-4">Pay</th>}
                   <th className="py-2 pr-4">Recorded by</th>
                   <th className="py-2 print:hidden">Actions</th>
                 </tr>
@@ -705,12 +799,47 @@ export function PartTimeVisitsView() {
                     <td className="max-w-xs py-2 pr-4 break-words whitespace-pre-wrap">
                       {v.notes ?? "-"}
                     </td>
+                    {isAdmin && (
+                      <td className="py-2 pr-4">
+                        {v.pay_amount ? (
+                          <span className="block">
+                            <span className="block font-medium whitespace-nowrap">
+                              {money(Number(v.pay_amount))}
+                            </span>
+                            <span
+                              className={`block text-xs font-semibold ${
+                                v.paid_at ? "text-emerald-700" : "text-orange-700"
+                              }`}
+                            >
+                              {v.paid_at
+                                ? `Paid ${new Date(v.paid_at).toLocaleDateString("en-GB")}${
+                                    v.payment_method
+                                      ? ` · ${METHOD_LABELS[v.payment_method] ?? v.payment_method}`
+                                      : ""
+                                  }${v.payment_reference ? ` · ${v.payment_reference}` : ""}`
+                                : "Unpaid"}
+                            </span>
+                            <span className="block text-xs text-zinc-500">{v.pay_reason}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-500">Not set</span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-2 pr-4 text-xs">{v.created_by_name}</td>
                     <td className="py-2 print:hidden">
                       {v.voided_at ? (
                         <span className="text-xs">
                           Cancelled by {v.voided_by_name}: {v.void_reason}
                         </span>
+                      ) : v.paid_at ? (
+                        <button
+                          type="button"
+                          onClick={() => undoPaid(v)}
+                          className="text-xs font-semibold text-red-700 hover:underline"
+                        >
+                          Undo payment
+                        </button>
                       ) : v.origin === "VISIT_REPORT" ? (
                         <span className="flex flex-wrap gap-3">
                           <Link
@@ -731,6 +860,19 @@ export function PartTimeVisitsView() {
                         </span>
                       ) : (
                         <span className="flex flex-wrap gap-3">
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                closeForm();
+                                setMessage(null);
+                                setPayFor(v);
+                              }}
+                              className="text-xs font-semibold text-emerald-700 hover:underline"
+                            >
+                              {v.pay_amount ? "Pay" : "Set amount"}
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => editVisit(v)}

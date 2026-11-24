@@ -38,6 +38,9 @@ const ACTIVITY_LABELS: Record<string, string> = {
   PART_TIME_VISIT_CREATED: "recorded a part-time visit",
   PART_TIME_VISIT_UPDATED: "edited a part-time visit",
   PART_TIME_VISIT_CANCELLED: "cancelled a part-time visit",
+  PART_TIME_PAY_SET: "set the pay for a part-time visit",
+  PART_TIME_PAID: "paid a part-time visit",
+  PART_TIME_PAYMENT_UNDONE: "undid a part-time visit payment",
 };
 
 function formatActivity(log: AuditLogWithUser): string {

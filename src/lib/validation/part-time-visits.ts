@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_METHODS } from "./invoices";
 
 /** Why a part-time person was sent instead of, or on top of, the usual staff. */
 export const PART_TIME_REASONS = [
@@ -87,6 +88,29 @@ export const partTimeVisitSchema = z
     }
   });
 export type PartTimeVisitInput = z.infer<typeof partTimeVisitSchema>;
+
+/** Admin only: set what a visit pays and why, mark it paid, or undo a wrong mark. */
+export const partTimePaySchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("SET_AMOUNT"),
+    amount: z
+      .string()
+      .trim()
+      .regex(/^\d{1,10}(\.\d{1,2})?$/, "Invalid amount (e.g. 15000 or 15000.50)")
+      .refine((v) => Number(v) > 0, "Amount must be greater than zero"),
+    reason: z.string().trim().min(3, "Write the reason for this amount").max(500),
+  }),
+  z.object({
+    action: z.literal("MARK_PAID"),
+    method: z.enum(PAYMENT_METHODS, { error: "Choose a payment method" }),
+    reference: optionalText(200),
+  }),
+  z.object({
+    action: z.literal("UNDO_PAID"),
+    reason: z.string().trim().min(3, "Write why the payment is being undone").max(500),
+  }),
+]);
+export type PartTimePayInput = z.infer<typeof partTimePaySchema>;
 
 export const voidPartTimeVisitSchema = z.object({
   reason: z.string().trim().min(3, "Write why this record is being cancelled").max(500),

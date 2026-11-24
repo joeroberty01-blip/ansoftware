@@ -156,6 +156,7 @@ export default function PatientsListPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isChiefCo, setIsChiefCo] = useState(false);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | PatientStatus>("ALL");
@@ -180,7 +181,10 @@ export default function PatientsListPage() {
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
+      .then((json) => {
+        setIsAdmin(json.user?.role === "ADMIN");
+        setIsChiefCo(!!json.user?.isChiefCo);
+      })
       .catch(() => {});
   }, []);
 
@@ -386,7 +390,7 @@ export default function PatientsListPage() {
         </div>
       </div>
 
-      {!isAdmin && (
+      {!isAdmin && !isChiefCo && (
         <p className="rounded-lg bg-brand-blue-light/40 px-3 py-2 text-sm text-brand-blue print:hidden">
           You only see patients assigned to you.
         </p>

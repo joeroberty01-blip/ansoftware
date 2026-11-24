@@ -29,6 +29,7 @@ interface Staff {
   email: string;
   phone: string | null;
   profession: string;
+  is_chief_co?: boolean;
   license_number: string | null;
   license_expiry_date: string | null;
   start_date: string;
@@ -783,7 +784,14 @@ export default function StaffListPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-2.5 pr-4 text-zinc-600">{s.profession}</td>
+                      <td className="py-2.5 pr-4 text-zinc-600">
+                        {s.profession}
+                        {s.is_chief_co && (
+                          <span className="ml-2 rounded-full bg-brand-orange-light px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-brand-orange">
+                            Chief C.O
+                          </span>
+                        )}
+                      </td>
                       <td className="py-2.5 pr-4 text-zinc-600">{DEPARTMENT_BY_PROFESSION[s.profession] ?? "-"}</td>
                       <td className="py-2.5 pr-4 text-zinc-600">{s.phone ?? "-"}</td>
                       <td className="py-2.5 pr-4">

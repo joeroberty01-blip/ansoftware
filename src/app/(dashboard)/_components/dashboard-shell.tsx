@@ -62,6 +62,7 @@ export function DashboardShell({
   canBilling,
   canClinical,
   canPartTime,
+  isChiefCo = false,
   pendingStaffCount,
   lowStockCount,
   outstandingCount,
@@ -75,6 +76,7 @@ export function DashboardShell({
   canBilling: boolean;
   canClinical: boolean;
   canPartTime: boolean;
+  isChiefCo?: boolean;
   pendingStaffCount: number;
   lowStockCount: number;
   outstandingCount: number;
@@ -131,7 +133,11 @@ export function DashboardShell({
                 <span className="text-brand-orange">Nyumbani</span>
               </span>
               <span className="block text-[10px] text-zinc-400">
-                {role === "ADMIN" ? "Care that comes home" : "Staff Portal"}
+                {role === "ADMIN"
+                  ? "Care that comes home"
+                  : isChiefCo
+                    ? "Chief C.O Portal"
+                    : "Staff Portal"}
               </span>
             </span>
           </Link>
@@ -237,7 +243,7 @@ export function DashboardShell({
                     {fullName}
                   </span>
                   <span className="block text-xs text-zinc-500">
-                    {role === "ADMIN" ? "Super Administrator" : "Staff"}
+                    {role === "ADMIN" ? "Super Administrator" : isChiefCo ? "Chief C.O" : "Staff"}
                   </span>
                 </span>
                 <ChevronDown className="hidden h-3.5 w-3.5 text-zinc-400 sm:block" />
