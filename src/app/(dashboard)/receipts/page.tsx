@@ -40,8 +40,8 @@ const CSV_COLUMNS = [
   { key: "amount", label: "Amount" },
   { key: "balance_after", label: "Balance" },
   { key: "method", label: "Method" },
-  { key: "reference", label: "Kumbukumbu" },
-  { key: "received_by_name", label: "Aliyepokea" },
+  { key: "reference", label: "Reference" },
+  { key: "received_by_name", label: "Received by" },
 ];
 
 const MANUAL_CSV_COLUMNS = [
@@ -50,8 +50,8 @@ const MANUAL_CSV_COLUMNS = [
   { key: "client_name", label: "Client" },
   { key: "amount", label: "Amount" },
   { key: "method", label: "Method" },
-  { key: "reference", label: "Kumbukumbu" },
-  { key: "issued_by_name", label: "Aliyetoa" },
+  { key: "reference", label: "Reference" },
+  { key: "issued_by_name", label: "Issued by" },
 ];
 
 const PAYMENT_METHODS = [
@@ -280,7 +280,7 @@ export default function ReceiptsPage() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">
-                Notes (optional)
+                Reference (optional)
               </label>
               <input
                 value={mrReference}
@@ -310,7 +310,7 @@ export default function ReceiptsPage() {
             disabled={mrSubmitting}
             className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {mrSubmitting ? "Inatengeneza..." : "Create and Print"}
+            {mrSubmitting ? "Creating..." : "Create and Print"}
           </button>
         </form>
       )}
@@ -350,7 +350,7 @@ export default function ReceiptsPage() {
                 <th className="py-2 pr-4 text-right">Amount</th>
                 <th className="py-2 pr-4 text-right">Balance</th>
                 <th className="py-2 pr-4">Method</th>
-                <th className="py-2 pr-4">Aliyepokea</th>
+                <th className="py-2 pr-4">Received by</th>
                 <th className="py-2 pr-4 print:hidden"></th>
               </tr>
             </thead>
@@ -440,7 +440,7 @@ export default function ReceiptsPage() {
                     <th className="py-2 pr-4">Client</th>
                     <th className="py-2 pr-4 text-right">Amount</th>
                     <th className="py-2 pr-4">Method</th>
-                    <th className="py-2 pr-4">Aliyetoa</th>
+                    <th className="py-2 pr-4">Issued by</th>
                     <th className="py-2 pr-4 print:hidden"></th>
                   </tr>
                 </thead>

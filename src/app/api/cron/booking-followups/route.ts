@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "CRON_SECRET is not set." }, { status: 503 });
   }
   if (!cronAuthorized(req)) {
-    return NextResponse.json({ error: "Hairuhusiwi." }, { status: 401 });
+    return NextResponse.json({ error: "Not allowed." }, { status: 401 });
   }
   if (!pushConfigured()) {
     return NextResponse.json({ error: "VAPID keys are not set." }, { status: 503 });

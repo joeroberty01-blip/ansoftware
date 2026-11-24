@@ -24,7 +24,7 @@ function initialDocType(param: string | null): DocType {
 const CLIENT_TYPE_OPTIONS = [
   { value: "INDIVIDUAL", label: "Individual" },
   { value: "CORPORATE", label: "Company" },
-  { value: "INSURANCE", label: "Bima" },
+  { value: "INSURANCE", label: "Insurance" },
 ];
 
 interface ItemRow {
@@ -407,7 +407,7 @@ export default function NewBillingPage() {
           disabled={submitting}
           className="self-start rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inatengeneza..." : "Create"}
+          {submitting ? "Creating..." : "Create"}
         </button>
       </form>
     </div>

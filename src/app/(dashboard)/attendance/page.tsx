@@ -238,7 +238,7 @@ export default function AttendancePage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               { label: "Staff checked in", value: staffIn },
-              { label: "Walichelewa", value: late, warn: late > 0 },
+              { label: "Late", value: late, warn: late > 0 },
               { label: `Away from home (> ${near} m)`, value: away, warn: away > 0 },
               { label: "Not checked in", value: missing.length, warn: missing.length > 0 },
             ].map((c) => (
@@ -266,10 +266,10 @@ export default function AttendancePage() {
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Staff</th>
                       <th className="py-2 pr-4">Patient</th>
-                      <th className="py-2 pr-4">Aliingia</th>
-                      <th className="py-2 pr-4">Umbali</th>
-                      <th className="py-2 pr-4">Alitoka</th>
-                      <th className="py-2 pr-4">Masaa</th>
+                      <th className="py-2 pr-4">Checked in</th>
+                      <th className="py-2 pr-4">Distance</th>
+                      <th className="py-2 pr-4">Checked out</th>
+                      <th className="py-2 pr-4">Hours</th>
                       <th className="py-2 pr-4">Selfie</th>
                       <th className="py-2 pr-4"></th>
                     </tr>
@@ -283,7 +283,7 @@ export default function AttendancePage() {
                           <span className="block">{time(r.check_in_at)}</span>
                           {r.late_minutes > 0 && (
                             <span className="text-xs font-semibold text-red-700">
-                              amechelewa dk {r.late_minutes}
+                              {r.late_minutes} min late
                             </span>
                           )}
                         </td>
@@ -296,7 +296,7 @@ export default function AttendancePage() {
                               rel="noopener noreferrer"
                               className="text-xs text-brand-blue underline"
                             >
-                              Ramani
+                              Map
                               {r.check_in_accuracy_m ? ` (±m ${Math.round(Number(r.check_in_accuracy_m))})` : ""}
                             </a>
                           </span>
@@ -320,7 +320,7 @@ export default function AttendancePage() {
                               {/* eslint-disable-next-line @next/next/no-img-element -- private, auth-checked image */}
                               <img
                                 src={`/api/attendance/${r.id}/photo`}
-                                alt={`Selfie ya ${r.staff_name}`}
+                                alt={`Selfie of ${r.staff_name}`}
                                 loading="lazy"
                                 className="h-12 w-12 rounded-lg object-cover"
                               />
@@ -377,7 +377,7 @@ export default function AttendancePage() {
                 { key: "staff_number", label: "Number" },
                 { key: "days", label: "Days" },
                 { key: "shifts", label: "Shifts" },
-                { key: "hours", label: "Masaa" },
+                { key: "hours", label: "Hours" },
                 { key: "minutes_worked", label: "Minutes" },
                 { key: "late_days", label: "Late days" },
                 { key: "late_minutes", label: "Minutes late" },
@@ -400,8 +400,8 @@ export default function AttendancePage() {
                     <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       <th className="py-2 pr-4">Staff</th>
                       <th className="py-2 pr-4">Days</th>
-                      <th className="py-2 pr-4">Masaa</th>
-                      <th className="py-2 pr-4">Alichelewa</th>
+                      <th className="py-2 pr-4">Hours</th>
+                      <th className="py-2 pr-4">Late</th>
                       <th className="py-2 pr-4">Away from home</th>
                       <th className="py-2 pr-4">Not closed</th>
                     </tr>

@@ -175,7 +175,7 @@ export default function NewBookingPage() {
           disabled={submitting || !fullName || !phone || !serviceType}
           className="mt-2 self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {submitting ? "Inatengeneza..." : "Create Booking"}
+          {submitting ? "Creating..." : "Create Booking"}
         </button>
       </form>
     </div>

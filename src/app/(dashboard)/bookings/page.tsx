@@ -44,8 +44,8 @@ interface Stats {
 const STATUS_OPTIONS = [
   { value: "", label: "All" },
   { value: "NEW", label: "New" },
-  { value: "ASSIGNED", label: "Imepangiwa" },
-  { value: "COMPLETED", label: "Imekamilika" },
+  { value: "ASSIGNED", label: "Assigned" },
+  { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
@@ -57,7 +57,7 @@ const STATUS_BADGES: Record<string, string> = {
 };
 
 function sourceLabel(source: string | null) {
-  return source ? (BOOKING_SOURCE_LABELS[source as BookingSource] ?? source) : "Haijulikani";
+  return source ? (BOOKING_SOURCE_LABELS[source as BookingSource] ?? source) : "Unknown";
 }
 
 function todayLocal() {
@@ -159,7 +159,7 @@ export default function BookingsListPage(props: PageProps<"/bookings">) {
             <p className="text-xs text-zinc-500">this month</p>
           </div>
           <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-zinc-600">Wanaokubali</p>
+            <p className="text-xs font-medium text-zinc-600">Acceptance rate</p>
             <p className="mt-1 text-2xl font-bold text-zinc-900">
               {stats.thisMonth > 0
                 ? `${Math.round((stats.convertedThisMonth / stats.thisMonth) * 100)}%`

@@ -286,7 +286,7 @@ export default function InventoryItemDetailPage() {
                   item.is_low_stock ? "text-amber-700" : "text-zinc-900"
                 }`}
               >
-                {item.is_low_stock ? "Low Stock" : "Sawa"}
+                {item.is_low_stock ? "Low Stock" : "In Stock"}
               </p>
             </div>
           </div>

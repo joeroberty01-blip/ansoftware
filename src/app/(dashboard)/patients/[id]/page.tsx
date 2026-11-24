@@ -1609,7 +1609,7 @@ export default function PatientDetailPage() {
                   <th className="py-2 pr-4">Medications</th>
                   <th className="py-2 pr-4">Dosage</th>
                   <th className="py-2 pr-4">Frequency</th>
-                  <th className="py-2 pr-4">Nyakati</th>
+                  <th className="py-2 pr-4">Times</th>
                   <th className="py-2 pr-4">Started</th>
                 </tr>
               </thead>
@@ -1827,7 +1827,7 @@ export default function PatientDetailPage() {
                   { key: "visit_session", label: "Session" },
                   { key: "visit_type", label: "Type" },
                   { key: "status", label: "Status" },
-                  { key: "staff_name", label: "Nesi" },
+                  { key: "staff_name", label: "Nurse" },
                   { key: "location", label: "Location" },
                   { key: "blood_pressure", label: "BP" },
                   { key: "temperature", label: "Temp (°C)" },
@@ -1948,7 +1948,7 @@ export default function PatientDetailPage() {
                           </h4>
                           {slot.entries.length === 0 ? (
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-xs text-zinc-400">Haijajazwa.</p>
+                              <p className="text-xs text-zinc-400">Not filled in.</p>
                               {day.date <= localToday() && slot.session && (
                                 <Link
                                   href={dailyHref(day.date, slot.session)}
@@ -2151,7 +2151,7 @@ export default function PatientDetailPage() {
                 disabled={cpSubmitting || !cpEndDate || cpSessions.length === 0}
                 className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {cpSubmitting ? "Inatengeneza..." : "Create Care Plan"}
+                {cpSubmitting ? "Creating..." : "Create Care Plan"}
               </button>
             </form>
           )}
@@ -2212,7 +2212,7 @@ export default function PatientDetailPage() {
                           disabled={cpBusyId === cp.id}
                           className="rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
                         >
-                          {cpBusyId === cp.id ? "Inatengeneza..." : "Create Visits"}
+                          {cpBusyId === cp.id ? "Creating..." : "Create Visits"}
                         </button>
                         <button
                           type="button"

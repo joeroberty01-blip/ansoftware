@@ -74,12 +74,12 @@ export default async function ManualReceiptPrintPage(
       </div>
       {receipt.reference && (
         <div className="flex justify-between">
-          <span>Kumbukumbu</span>
+          <span>Reference</span>
           <span>{receipt.reference}</span>
         </div>
       )}
       <div className="flex justify-between">
-        <span>Aliyetoa</span>
+        <span>Issued by</span>
         <span>{receipt.issued_by_name}</span>
       </div>
 

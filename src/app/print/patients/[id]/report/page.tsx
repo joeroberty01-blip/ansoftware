@@ -31,7 +31,7 @@ function EntryText({ v }: { v: HomeVisitWithNames }) {
       </p>
       <p className="mt-0.5">
         <span className="text-zinc-600">Vitals: </span>
-        {vitals.length ? vitals.join("  ·  ") : "Hazikurekodiwa"}
+        {vitals.length ? vitals.join("  ·  ") : "Not recorded"}
       </p>
       {blocks.map((b) => (
         <p key={b.label} className="mt-0.5 whitespace-pre-wrap break-words">
@@ -130,7 +130,7 @@ export default async function PatientReportPrintPage(
                 <th className="py-1.5 pr-2 font-semibold">Medications</th>
                 <th className="py-1.5 pr-2 font-semibold">Dosage</th>
                 <th className="py-1.5 pr-2 font-semibold">Frequency</th>
-                <th className="py-1.5 pr-2 font-semibold">Ilianza</th>
+                <th className="py-1.5 pr-2 font-semibold">Started</th>
               </tr>
             </thead>
             <tbody>
@@ -184,7 +184,7 @@ export default async function PatientReportPrintPage(
                         {slot.label}
                       </p>
                       {slot.entries.length === 0 ? (
-                        <p className="text-xs text-zinc-400">Haijajazwa.</p>
+                        <p className="text-xs text-zinc-400">Not filled in.</p>
                       ) : (
                         slot.entries.map((v) => <EntryText key={v.id} v={v} />)
                       )}

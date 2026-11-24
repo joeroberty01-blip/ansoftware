@@ -454,7 +454,7 @@ export function AttendanceCard() {
             disabled={busy || !patientId || !selfie || !position}
             className="rounded-lg bg-brand-blue px-4 py-3 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {busy ? "Inahifadhi..." : "Check in"}
+            {busy ? "Saving..." : "Check in"}
           </button>
         </div>
       )}

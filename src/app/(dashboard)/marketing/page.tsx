@@ -660,13 +660,13 @@ function AiTab() {
           disabled={generating || !topic}
           className="self-start rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark disabled:opacity-50"
         >
-          {generating ? "Inatengeneza..." : "Create"}
+          {generating ? "Creating..." : "Create"}
         </button>
       </form>
 
       {result && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-2 text-sm font-semibold text-zinc-900">Matokeo</h3>
+          <h3 className="mb-2 text-sm font-semibold text-zinc-900">Result</h3>
           <textarea
             value={result}
             onChange={(e) => setResult(e.target.value)}

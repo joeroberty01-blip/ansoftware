@@ -1334,7 +1334,7 @@ export function StaffDetailView({
                 disabled={generating}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {generating ? "Inatengeneza..." : "Create Payroll"}
+                {generating ? "Creating..." : "Create Payroll"}
               </button>
               <label className="col-span-2 flex items-center gap-1.5 text-xs font-medium text-zinc-600 sm:col-span-4">
                 <input
@@ -1400,7 +1400,7 @@ export function StaffDetailView({
                   disabled={payingId === payFormId}
                   className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
                 >
-                  {payingId === payFormId ? "Inalipa..." : "Confirm Payment"}
+                  {payingId === payFormId ? "Paying..." : "Confirm Payment"}
                 </button>
                 <button
                   type="button"
@@ -1473,7 +1473,7 @@ export function StaffDetailView({
                       {p.payment_reference ?? "-"}
                       {p.paid_by_name && (
                         <span className="block text-xs text-zinc-500">
-                          Imethibitishwa na {p.paid_by_name}
+                          Confirmed by {p.paid_by_name}
                         </span>
                       )}
                     </td>
@@ -1521,7 +1521,7 @@ export function StaffDetailView({
               <input
                 value={leaveReason}
                 onChange={(e) => setLeaveReason(e.target.value)}
-                placeholder="Sababu"
+                placeholder="Reason"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm sm:col-span-1"
               />
               <button
@@ -1529,7 +1529,7 @@ export function StaffDetailView({
                 disabled={requesting}
                 className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
               >
-                {requesting ? "Inaomba..." : "Request Leave"}
+                {requesting ? "Requesting..." : "Request Leave"}
               </button>
             </form>
           )}
@@ -1549,7 +1549,7 @@ export function StaffDetailView({
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4 text-right">Days</th>
-                  <th className="py-2 pr-4">Sababu</th>
+                  <th className="py-2 pr-4">Reason</th>
                   <th className="py-2 pr-4">Status</th>
                   {viewerIsAdmin && <th className="py-2 pr-4"></th>}
                 </tr>

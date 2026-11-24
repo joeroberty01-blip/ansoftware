@@ -181,7 +181,7 @@ function SessionSection({
                 : "bg-zinc-100 text-zinc-500"
           }`}
         >
-          {filled ? "Imejazwa" : entry?.status === "SCHEDULED" ? "Scheduled, not filled in yet" : "Haijajazwa"}
+          {filled ? "Filled in" : entry?.status === "SCHEDULED" ? "Scheduled, not filled in yet" : "Not filled in"}
         </span>
       </div>
       {filled && entry && (
@@ -282,7 +282,7 @@ function SessionSection({
               disabled={saving}
               className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {saving ? "Inahifadhi..." : `Save ${label.toLowerCase()}`}
+              {saving ? "Saving..." : `Save ${label.toLowerCase()}`}
             </button>
             {filled && (
               <button
@@ -456,7 +456,7 @@ export default function DailyReportPage() {
               </a>
             );
           })}
-          <span className="text-xs text-zinc-500">{filledCount}/3 vimejazwa</span>
+          <span className="text-xs text-zinc-500">{filledCount}/3 filled in</span>
         </div>
 
         <div className="flex flex-col gap-4">

@@ -23,7 +23,7 @@ interface Actor {
 const CSV_COLUMNS = [
   { key: "created_at", label: "Date/Time" },
   { key: "user_name", label: "User" },
-  { key: "action", label: "Kitendo" },
+  { key: "action", label: "Action" },
   { key: "entity", label: "Entity" },
   { key: "entity_id", label: "Entity ID" },
   { key: "amount", label: "Amount" },
@@ -186,7 +186,7 @@ export default function AuditLogPage() {
                   <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     <th className="py-2 pr-4">Date/Time</th>
                     <th className="py-2 pr-4">User</th>
-                    <th className="py-2 pr-4">Kitendo</th>
+                    <th className="py-2 pr-4">Action</th>
                     <th className="py-2 pr-4">Entity</th>
                     <th className="py-2 pr-4 text-right">Amount</th>
                   </tr>

@@ -52,7 +52,7 @@ function addDays(days: number) {
 
 /** The plan's rhythm: day 1, 3, 7, then a reminder at day 30. */
 const QUICK_DATES = [
-  { days: 1, label: "Kesho" },
+  { days: 1, label: "Tomorrow" },
   { days: 3, label: "3 Days" },
   { days: 7, label: "1 Week" },
   { days: 30, label: "30 Days" },
@@ -360,7 +360,7 @@ export default function BookingDetailPage() {
               <span>{booking.preferred_date?.slice(0, 10) ?? "-"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-500">Ilitengenezwa</span>
+              <span className="text-zinc-500">Created</span>
               <span>{booking.created_at.slice(0, 10)}</span>
             </div>
             {booking.notes && (
@@ -436,7 +436,7 @@ export default function BookingDetailPage() {
           className="rounded-xl border border-brand-blue/30 bg-white p-5 shadow-sm"
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-zinc-900">Ufuatiliaji</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">Follow-up</h2>
             <span className="text-xs font-medium text-zinc-600">
               {followUpLabel(booking.next_follow_up_date, booking.status)}
             </span>
@@ -623,7 +623,7 @@ export default function BookingDetailPage() {
             </h2>
             {booking.patient_id ? (
               <p className="text-sm">
-                Ameunganishwa na:{" "}
+                Linked to:{" "}
                 <Link
                   href={`/patients/${booking.patient_id}`}
                   className="font-medium text-brand-blue underline"
@@ -655,7 +655,7 @@ export default function BookingDetailPage() {
                     Link
                   </button>
                 </div>
-                <p className="text-center text-xs text-zinc-400">au</p>
+                <p className="text-center text-xs text-zinc-400">or</p>
                 <button
                   type="button"
                   onClick={onConvertToPatient}

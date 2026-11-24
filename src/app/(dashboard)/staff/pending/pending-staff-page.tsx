@@ -87,7 +87,7 @@ export default function PendingStaffPage() {
                 <th className="py-2 pr-4">Name</th>
                 <th className="py-2 pr-4">Email</th>
                 <th className="py-2 pr-4">Phone</th>
-                <th className="py-2 pr-4">Aliomba</th>
+                <th className="py-2 pr-4">Requested</th>
                 <th className="py-2 pr-4"></th>
               </tr>
             </thead>

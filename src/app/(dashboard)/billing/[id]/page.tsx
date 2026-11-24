@@ -208,7 +208,7 @@ export default function BillingDetailPage() {
               disabled={converting}
               className="rounded bg-brand-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-blue-dark disabled:opacity-50"
             >
-              {converting ? "Inageuza..." : convertLabel}
+              {converting ? "Converting..." : convertLabel}
             </button>
           )}
           <a
@@ -318,7 +318,7 @@ export default function BillingDetailPage() {
                 <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4">Method</th>
-                  <th className="py-2 pr-4">Kumbukumbu</th>
+                  <th className="py-2 pr-4">Reference</th>
                   <th className="py-2 pr-4 text-right">Amount</th>
                   <th className="py-2 pr-4"></th>
                 </tr>
@@ -378,7 +378,7 @@ export default function BillingDetailPage() {
               <input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                placeholder="Notes (optional)"
+                placeholder="Reference (optional)"
                 className="rounded border border-zinc-300 px-2 py-1.5 text-sm"
               />
               <button

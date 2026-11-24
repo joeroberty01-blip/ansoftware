@@ -10,7 +10,7 @@ const CSV_COLUMNS = [
   { key: "title", label: "Name" },
   { key: "document_type", label: "Type" },
   { key: "notes", label: "Description" },
-  { key: "uploaded_by_name", label: "Aliyepakia" },
+  { key: "uploaded_by_name", label: "Uploaded by" },
   { key: "created_at", label: "Date" },
 ];
 
@@ -231,7 +231,7 @@ export default function DocumentsPage() {
                   <th className="py-2 pr-4">Name</th>
                   <th className="py-2 pr-4">Type</th>
                   <th className="py-2 pr-4">Description</th>
-                  <th className="py-2 pr-4">Aliyepakia</th>
+                  <th className="py-2 pr-4">Uploaded by</th>
                   <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4">File</th>
                 </tr>

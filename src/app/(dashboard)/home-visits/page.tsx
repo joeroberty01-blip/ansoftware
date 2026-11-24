@@ -153,7 +153,7 @@ export default function HomeVisitsListPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Home Visits</h1>
           <p className="text-sm text-zinc-500">
-            One report per patient per session: Morning, Afternoon and Evening.
+            One report per patient per day: Morning, Afternoon and Evening.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -237,7 +237,7 @@ export default function HomeVisitsListPage() {
                         </div>
                       )}
                     </dl>
-                    <p className="mt-2 truncate text-xs text-zinc-500">Nesi: {staffNames(r.visits)}</p>
+                    <p className="mt-2 truncate text-xs text-zinc-500">Nurse: {staffNames(r.visits)}</p>
                   </li>
                 );
               })}
@@ -255,7 +255,7 @@ export default function HomeVisitsListPage() {
                       </th>
                     ))}
                     {showOther && <th className="py-2 pr-4">{NO_SESSION_LABEL}</th>}
-                    <th className="py-2 pr-4">Nesi</th>
+                    <th className="py-2 pr-4">Nurse</th>
                   </tr>
                 </thead>
                 <tbody>

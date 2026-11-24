@@ -95,7 +95,7 @@ export default function LoginPage() {
             label="Email"
             type="email"
             autoComplete="email"
-            placeholder="wewe@example.com"
+            placeholder="you@example.com"
             error={errors.email?.message}
             {...register("email")}
           />
@@ -130,7 +130,7 @@ export default function LoginPage() {
             disabled={submitting}
             className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-blue-dark px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/25 transition-opacity hover:opacity-95 disabled:opacity-50"
           >
-            {submitting ? "Inaingia..." : "Sign in"}
+            {submitting ? "Signing in..." : "Sign in"}
             {!submitting && <ArrowRight className="h-4 w-4" />}
           </button>
         </form>

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "CRON_SECRET is not set." }, { status: 503 });
   }
   if (!cronAuthorized(req)) {
-    return NextResponse.json({ error: "Hairuhusiwi." }, { status: 401 });
+    return NextResponse.json({ error: "Not allowed." }, { status: 401 });
   }
   const slot = req.nextUrl.searchParams.get("slot") as ReminderSlot | null;
   if (!slot || !REMINDER_SLOTS.includes(slot)) {

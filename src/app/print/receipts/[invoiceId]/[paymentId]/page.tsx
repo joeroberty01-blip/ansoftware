@@ -71,12 +71,12 @@ export default async function ReceiptPrintPage(
       </div>
       {payment.reference && (
         <div className="flex justify-between">
-          <span>Kumbukumbu</span>
+          <span>Reference</span>
           <span>{payment.reference}</span>
         </div>
       )}
       <div className="flex justify-between">
-        <span>Aliyepokea</span>
+        <span>Received by</span>
         <span>{payment.received_by_name}</span>
       </div>
 

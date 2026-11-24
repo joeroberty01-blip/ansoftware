@@ -160,7 +160,7 @@ export function VisitReportDocument({
                       <Text style={styles.sessionName}>{slot.label}</Text>
                     </View>
                     {slot.entries.length === 0 ? (
-                      <Text style={styles.empty}>Haijajazwa.</Text>
+                      <Text style={styles.empty}>Not filled in.</Text>
                     ) : (
                       slot.entries.map((v) => <Entry key={v.id} v={v} warn={alertIds.has(v.id)} />)
                     )}

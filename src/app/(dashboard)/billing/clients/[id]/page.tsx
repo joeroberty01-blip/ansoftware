@@ -345,7 +345,7 @@ export default function ClientBillingDetailPage() {
                 <th className="py-2 pr-4">Receipt No.</th>
                 <th className="py-2 pr-4">Document</th>
                 <th className="py-2 pr-4">Method</th>
-                <th className="py-2 pr-4">Kumbukumbu</th>
+                <th className="py-2 pr-4">Reference</th>
                 <th className="py-2 pr-4 text-right">Amount</th>
                 <th className="py-2 pr-4 text-right">Balance</th>
                 <th className="py-2 pr-4"></th>

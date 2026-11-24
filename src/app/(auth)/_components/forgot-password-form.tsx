@@ -153,7 +153,7 @@ export function ForgotPasswordForm() {
           />
           {errorBox}
           <button type="submit" disabled={submitting} className={buttonClass}>
-            {submitting ? "Inatuma..." : "Send code"}
+            {submitting ? "Sending..." : "Send code"}
             {!submitting && <ArrowRight className="h-4 w-4" />}
           </button>
         </form>
@@ -225,7 +225,7 @@ export function ForgotPasswordForm() {
           {errorBox}
 
           <button type="submit" disabled={submitting} className={buttonClass}>
-            {submitting ? "Inabadilisha..." : "Change password"}
+            {submitting ? "Changing..." : "Change password"}
             {!submitting && <ArrowRight className="h-4 w-4" />}
           </button>
 

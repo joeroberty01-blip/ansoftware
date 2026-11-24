@@ -78,12 +78,12 @@ export function ReceiptDocument({ payment }: { payment: PaymentWithContext }) {
         </View>
         {payment.reference && (
           <View style={styles.row}>
-            <Text style={styles.label}>Kumbukumbu</Text>
+            <Text style={styles.label}>Reference</Text>
             <Text>{payment.reference}</Text>
           </View>
         )}
         <View style={styles.row}>
-          <Text style={styles.label}>Aliyepokea</Text>
+          <Text style={styles.label}>Received by</Text>
           <Text>{payment.received_by_name}</Text>
         </View>
 
