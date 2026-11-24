@@ -20,10 +20,10 @@ export function distanceMeters(
   return Math.round(2 * R * Math.asin(Math.min(1, Math.sqrt(h))));
 }
 
-/** "m 35" / "km 6.2" in Swahili word order. */
+/** "35 m" / "6.2 km". */
 export function formatDistance(m: number | null | undefined): string {
   if (m == null) return "-";
-  return m < 1000 ? `m ${m}` : `km ${(m / 1000).toFixed(m < 10000 ? 1 : 0)}`;
+  return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`;
 }
 
 export function mapsUrl(lat: number | string, lng: number | string): string {

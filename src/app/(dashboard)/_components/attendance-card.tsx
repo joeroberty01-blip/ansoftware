@@ -4,6 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { NEAR_HOME_METERS, formatDistance } from "@/lib/geo";
+import {
+  GeoError,
+  geoPermission,
+  locate,
+  watchGeoPermission,
+  WEAK_ACCURACY_M,
+  type GeoPermission,
+  type GeoProblem,
+  type GeoReading,
+} from "@/lib/locate";
+import { inPageCameraSupported, SelfieCamera, shrinkPhoto } from "./selfie-camera";
 
 interface Shift {
   id: string;
@@ -28,66 +39,27 @@ interface MeResponse {
   patients?: { id: string; full_name: string; address: string | null; has_home: boolean }[];
 }
 
-interface Position {
-  lat: number;
-  lng: number;
-  accuracy: number;
-}
-
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 const hours = (minutes: number | null) =>
   minutes == null ? "-" : `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
 
-type GeoProblem = "denied" | "unavailable" | "unsupported";
+/** A reading older than this is taken again before it is sent. */
+const FRESH_MS = 3 * 60 * 1000;
 
-class GeoError extends Error {
-  constructor(public kind: GeoProblem, message: string) {
-    super(message);
-  }
-}
+const reported = new Set<string>();
 
-function readPosition(options: PositionOptions): Promise<Position> {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
-      reject,
-      options
-    );
-  });
-}
-
-/**
- * One GPS reading. Tries the precise GPS first; if the phone cannot get a
- * satellite fix (indoors, weak signal) it falls back to the network/Wi-Fi
- * location instead of failing.
- */
-async function getPosition(): Promise<Position> {
-  if (typeof navigator === "undefined" || !navigator.geolocation) {
-    throw new GeoError("unsupported", "This browser has no GPS. Open the ERP in Google Chrome.");
-  }
-  const denied = () =>
-    new GeoError(
-      "denied",
-      "Your phone is blocking location for the ERP. Turning on the phone's Location is not enough: follow the steps below."
-    );
-  try {
-    return await readPosition({ enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
-  } catch (err) {
-    const e = err as GeolocationPositionError;
-    if (e?.code === 1) throw denied();
-  }
-  try {
-    return await readPosition({ enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 });
-  } catch (err) {
-    const e = err as GeolocationPositionError;
-    if (e?.code === 1) throw denied();
-    throw new GeoError(
-      "unavailable",
-      "The phone couldn't get your location. Make sure Location is on, go outside or near a window, then tap again."
-    );
-  }
+/** Tells the office why this phone is stuck (once per problem, no location sent). */
+function reportProblem(kind: string, detail = "") {
+  if (reported.has(kind)) return;
+  reported.add(kind);
+  fetch("/api/attendance/problem", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, detail: detail.slice(0, 200), inApp: inAppBrowser() }),
+    keepalive: true,
+  }).catch(() => undefined);
 }
 
 /** Opened inside WhatsApp/Facebook/Instagram instead of a real browser. */
@@ -111,7 +83,7 @@ function GpsHelp({ kind }: { kind: GeoProblem }) {
       setCopied(false);
     }
   };
-  if (kind === "unavailable") return null;
+  if (kind === "unavailable" || kind === "dismissed") return null;
   return (
     <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
       <p className="font-bold">How to allow location for the ERP</p>
@@ -160,19 +132,6 @@ function GpsHelp({ kind }: { kind: GeoProblem }) {
   );
 }
 
-/** Small JPEG of the selfie (max 480 px), so it uploads fast on mobile data. */
-async function shrinkSelfie(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 480 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.72));
-  if (!blob) throw new Error("Could not read the photo.");
-  return blob;
-}
-
 function DistanceBadge({ distance, hasHome }: { distance: number | null; hasHome: boolean }) {
   if (distance == null) {
     return (
@@ -200,7 +159,11 @@ export function AttendanceCard() {
   const [patientId, setPatientId] = useState("");
   const [selfie, setSelfie] = useState<Blob | null>(null);
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
-  const [position, setPosition] = useState<Position | null>(null);
+  const [position, setPosition] = useState<GeoReading | null>(null);
+  const [searching, setSearching] = useState<number | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraNote, setCameraNote] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [locating, setLocating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -209,16 +172,61 @@ export function AttendanceCard() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/attendance/me");
-    const json = (await res.json().catch(() => null)) as MeResponse | null;
-    if (!res.ok || !json) return;
-    setData(json);
-    if (json.patients?.length === 1) setPatientId((p) => p || json.patients![0].id);
+    try {
+      const res = await fetch("/api/attendance/me");
+      const json = (await res.json().catch(() => null)) as MeResponse | null;
+      if (!res.ok || !json) throw new Error("load failed");
+      setLoadFailed(false);
+      setData(json);
+      if (json.patients?.length === 1) setPatientId((p) => p || json.patients![0].id);
+    } catch {
+      setLoadFailed(true);
+    }
   }, []);
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load();
   }, [load]);
+
+  const getLocation = useCallback(async (): Promise<GeoReading> => {
+    setLocating(true);
+    setSearching(null);
+    setGeoProblem(null);
+    try {
+      const reading = await locate((best) => setSearching(best.accuracy));
+      setPosition(reading);
+      return reading;
+    } catch (e) {
+      if (e instanceof GeoError) {
+        setGeoProblem(e.kind);
+        reportProblem(e.kind);
+      }
+      throw e;
+    } finally {
+      setLocating(false);
+      setSearching(null);
+    }
+  }, []);
+
+  // Location already allowed: start looking as soon as the card opens, so
+  // it is ready by the time the selfie is taken. Already refused: say so now.
+  const needsCheckIn = !!data?.staff && !data.open && (data.patients?.length ?? 0) > 0;
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!needsCheckIn || autoStarted.current) return;
+    autoStarted.current = true;
+    const start = (state: GeoPermission) => {
+      if (state === "granted") {
+        getLocation().catch(() => undefined);
+      } else if (state === "denied") {
+        setGeoProblem("denied");
+        reportProblem("denied");
+      }
+    };
+    geoPermission().then(start);
+    // Allowed later from the browser's settings: carry on without a refresh.
+    watchGeoPermission(start);
+  }, [needsCheckIn, getLocation]);
 
   useEffect(() => {
     return () => {
@@ -226,50 +234,97 @@ export function AttendanceCard() {
     };
   }, [selfieUrl]);
 
+  if (!data && loadFailed) {
+    return (
+      <section id="mahudhurio" className="rounded-2xl border border-red-200 bg-red-50 p-4 sm:p-5">
+        <p className="text-sm text-red-800">Attendance could not load. Check your internet.</p>
+        <button
+          type="button"
+          onClick={() => load()}
+          className="mt-2 min-h-10 rounded-lg bg-brand-blue px-4 text-sm font-semibold text-white"
+        >
+          Try again
+        </button>
+      </section>
+    );
+  }
   if (!data?.staff || data.staff.profession === "ADMIN_STAFF") return null;
 
-  const locate = async () => {
+  const onLocate = async () => {
     setError(null);
-    setGeoProblem(null);
-    setLocating(true);
     try {
-      setPosition(await getPosition());
+      await getLocation();
     } catch (e) {
       setError((e as Error).message);
-      if (e instanceof GeoError) setGeoProblem(e.kind);
-    } finally {
-      setLocating(false);
     }
   };
 
-  const onSelfie = async (file: File | undefined) => {
+  const acceptSelfie = (photo: Blob) => {
+    setSelfie(photo);
+    setSelfieUrl(URL.createObjectURL(photo));
+    setCameraOpen(false);
+    setCameraNote(null);
+    setError(null);
+  };
+
+  const onSelfieFile = async (file: File | undefined) => {
     if (!file) return;
     setError(null);
     try {
-      const small = await shrinkSelfie(file);
-      setSelfie(small);
-      setSelfieUrl(URL.createObjectURL(small));
+      acceptSelfie(await shrinkPhoto(file));
     } catch (e) {
       setError((e as Error).message);
+      reportProblem("photo-failed", (e as Error).message);
     }
   };
 
+  const openCamera = () => {
+    setError(null);
+    if (inPageCameraSupported()) setCameraOpen(true);
+    else fileRef.current?.click();
+  };
+
+  const networkError = () => {
+    reportProblem("network");
+    setError("No internet. Your selfie and location are still here: tap again when the network is back.");
+  };
+
   const checkIn = async () => {
-    if (!patientId || !selfie || !position) return;
+    if (!patientId || !selfie) return;
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
+      let pos = position;
+      if (!pos || Date.now() - pos.at > FRESH_MS) {
+        try {
+          pos = await getLocation();
+        } catch (e) {
+          setError((e as Error).message);
+          return;
+        }
+      }
       const form = new FormData();
       form.set("patientId", patientId);
-      form.set("lat", String(position.lat));
-      form.set("lng", String(position.lng));
-      form.set("accuracy", String(Math.round(position.accuracy)));
+      form.set("lat", String(pos.lat));
+      form.set("lng", String(pos.lng));
+      form.set("accuracy", String(Math.round(pos.accuracy)));
       form.set("photo", selfie, "selfie.jpg");
-      const res = await fetch("/api/attendance/check-in", { method: "POST", body: form });
+      let res: Response;
+      try {
+        res = await fetch("/api/attendance/check-in", { method: "POST", body: form });
+      } catch {
+        networkError();
+        return;
+      }
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? "Check-in failed.");
+        setError(json.error ?? "Check-in failed. Please try again.");
+        // Already checked in (an earlier try did get through): show that shift.
+        if (res.status === 409) {
+          await load();
+          router.refresh();
+        }
         return;
       }
       setSelfie(null);
@@ -288,27 +343,37 @@ export function AttendanceCard() {
     setError(null);
     setMessage(null);
     try {
-      const pos = await getPosition();
-      const res = await fetch("/api/attendance/check-out", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: pos.lat, lng: pos.lng, accuracy: Math.round(pos.accuracy) }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(json.error ?? "Check-out failed.");
+      const pos = await getLocation();
+      let res: Response;
+      try {
+        res = await fetch("/api/attendance/check-out", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: pos.lat, lng: pos.lng, accuracy: Math.round(pos.accuracy) }),
+        });
+      } catch {
+        reportProblem("network");
+        setError("No internet. Tap Check out again when the network is back.");
         return;
       }
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json.error ?? "Check-out failed. Please try again.");
+        if (res.status === 409) await load();
+        return;
+      }
+      setPosition(null);
       setMessage("You're checked out. Thank you!");
       await load();
     } catch (e) {
       setError((e as Error).message);
-      if (e instanceof GeoError) setGeoProblem(e.kind);
     } finally {
       setBusy(false);
     }
   };
 
+  const searchingText =
+    searching == null ? "Searching..." : `Improving... ±${Math.round(searching)} m`;
   const open = data.open ?? null;
   const forgotten = data.forgotten ?? null;
   const today = data.today ?? [];
@@ -334,6 +399,8 @@ export function AttendanceCard() {
           &quot;Check out&quot; when your shift ends.
         </p>
       )}
+
+      {!open && inAppBrowser() && !geoProblem && <GpsHelp kind="denied" />}
 
       {open ? (
         <div className="mt-3 rounded-xl bg-emerald-50 p-3">
@@ -364,7 +431,7 @@ export function AttendanceCard() {
               disabled={busy}
               className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
             >
-              {busy ? "Getting location..." : "Check out"}
+              {locating ? searchingText : busy ? "Saving..." : "Check out"}
             </button>
           </div>
         </div>
@@ -405,11 +472,23 @@ export function AttendanceCard() {
                 <p className="text-sm font-medium text-zinc-800">{selfieUrl ? "Selfie taken ✓" : "Take a selfie"}</p>
                 <button
                   type="button"
-                  onClick={() => fileRef.current?.click()}
+                  onClick={openCamera}
                   className="mt-1 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
                 >
                   {selfieUrl ? "Retake" : "Open camera"}
                 </button>
+                {cameraNote && (
+                  <>
+                    <p className="mt-1 text-xs text-amber-800">{cameraNote}</p>
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="mt-1 min-h-9 text-left text-xs font-semibold text-brand-blue underline"
+                    >
+                      Use the phone&apos;s camera app
+                    </button>
+                  </>
+                )}
                 <input
                   ref={fileRef}
                   type="file"
@@ -417,7 +496,7 @@ export function AttendanceCard() {
                   capture="user"
                   className="hidden"
                   onChange={(e) => {
-                    onSelfie(e.target.files?.[0]);
+                    onSelfieFile(e.target.files?.[0]);
                     e.target.value = "";
                   }}
                 />
@@ -434,15 +513,20 @@ export function AttendanceCard() {
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-zinc-800">
-                  {position ? `Location found (accuracy ~${Math.round(position.accuracy)} m)` : "Get location (GPS)"}
+                  {position ? `Location found (±${Math.round(position.accuracy)} m)` : "Get location (GPS)"}
                 </p>
+                {position && position.accuracy > WEAK_ACCURACY_M && (
+                  <p className="mt-0.5 text-xs text-amber-800">
+                    Weak signal. Go outside or near a window and tap Get again.
+                  </p>
+                )}
                 <button
                   type="button"
-                  onClick={locate}
+                  onClick={onLocate}
                   disabled={locating}
                   className="mt-1 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
                 >
-                  {locating ? "Searching..." : position ? "Get again" : "Get location"}
+                  {locating ? searchingText : position ? "Get again" : "Get location"}
                 </button>
               </div>
             </div>
@@ -451,15 +535,38 @@ export function AttendanceCard() {
           <button
             type="button"
             onClick={checkIn}
-            disabled={busy || !patientId || !selfie || !position}
+            disabled={busy || !patientId || !selfie}
             className="rounded-lg bg-brand-blue px-4 py-3 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
           >
-            {busy ? "Saving..." : "Check in"}
+            {busy ? (locating ? searchingText : "Saving...") : "Check in"}
           </button>
+          {(!patientId || !selfie) && (
+            <p className="text-xs text-zinc-500">
+              {!patientId ? "Choose the patient" : ""}
+              {!patientId && !selfie ? ", then take" : !selfie ? "Take" : ""}
+              {!selfie ? " a selfie" : ""} to check in.
+            </p>
+          )}
         </div>
       )}
 
-      {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {cameraOpen && (
+        <SelfieCamera
+          onPhoto={acceptSelfie}
+          onClose={() => setCameraOpen(false)}
+          onProblem={(kind, detail) => {
+            setCameraOpen(false);
+            reportProblem(kind, detail);
+            setCameraNote(
+              kind === "camera-denied"
+                ? "The camera is blocked for the ERP. Tap the lock icon 🔒 next to the address → Permissions → Camera → Allow, or:"
+                : "The camera didn't open here. Close other apps using it and try again, or:"
+            );
+          }}
+        />
+      )}
+
+      {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {geoProblem && <GpsHelp kind={geoProblem} />}
       {message && <p className="mt-3 text-sm font-medium text-emerald-700">{message}</p>}
 

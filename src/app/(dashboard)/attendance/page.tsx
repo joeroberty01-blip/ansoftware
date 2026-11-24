@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ListToolbar } from "../_components/list-toolbar";
 import { formatDistance, mapsUrl } from "@/lib/geo";
+import { WEAK_ACCURACY_M } from "@/lib/locate";
 
 interface Row {
   id: string;
@@ -297,8 +298,13 @@ export default function AttendancePage() {
                               className="text-xs text-brand-blue underline"
                             >
                               Map
-                              {r.check_in_accuracy_m ? ` (±m ${Math.round(Number(r.check_in_accuracy_m))})` : ""}
+                              {r.check_in_accuracy_m ? ` (±${Math.round(Number(r.check_in_accuracy_m))} m)` : ""}
                             </a>
+                            {Number(r.check_in_accuracy_m ?? 0) > WEAK_ACCURACY_M && (
+                              <span className="text-xs font-semibold text-amber-700">
+                                Weak GPS signal
+                              </span>
+                            )}
                           </span>
                         </td>
                         <td className="py-2 pr-4">

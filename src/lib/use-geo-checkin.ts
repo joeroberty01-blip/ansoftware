@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { locate } from "./locate";
 
 export interface GeoCheckIn {
   lat: number;
@@ -21,30 +22,11 @@ export function useGeoCheckIn() {
 
   const captureLocation = useCallback(() => {
     setError(null);
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setError("This device/browser doesn't support GPS.");
-      return;
-    }
     setChecking(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCheckIn({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        });
-        setChecking(false);
-      },
-      (err) => {
-        setError(
-          err.code === err.PERMISSION_DENIED
-            ? "Location (GPS) permission was denied. Allow location in the browser settings, then try again."
-            : "Could not get your location. Make sure GPS/Location is on, then try again."
-        );
-        setChecking(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    locate()
+      .then(({ lat, lng, accuracy }) => setCheckIn({ lat, lng, accuracy }))
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setChecking(false));
   }, []);
 
   const reset = useCallback(() => {
