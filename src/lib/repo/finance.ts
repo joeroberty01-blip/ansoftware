@@ -190,7 +190,7 @@ export interface MonthlyExpensePoint {
   expenses: string;
 }
 
-/** Last `months` calendar months of expenses (SUM of expenses.amount), oldest first. */
+/** Last `months` calendar months of expenses (SUM of approved expenses.amount), oldest first. */
 export async function getExpenseTrend(
   months: number
 ): Promise<MonthlyExpensePoint[]> {
@@ -206,6 +206,7 @@ export async function getExpenseTrend(
      LEFT JOIN expenses e
        ON e.date >= ms.month_start
        AND e.date < ms.month_start + interval '1 month'
+       AND e.status = 'APPROVED'
      GROUP BY ms.month_start
      ORDER BY ms.month_start ASC`,
     [months]

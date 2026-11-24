@@ -260,7 +260,7 @@ export function PartTimeVisitsView() {
         setError(json.error ?? "Could not undo the payment.");
         return;
       }
-      setMessage("Payment undone. The visit is unpaid again.");
+      setMessage("Payment undone. The visit is unpaid again and its expense no longer counts.");
       await load(month);
     } catch {
       setError("No network connection. Please try again.");

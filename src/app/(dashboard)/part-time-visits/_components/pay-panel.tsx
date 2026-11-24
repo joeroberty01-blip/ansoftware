@@ -135,7 +135,7 @@ export function PayPanel({
           className="mt-4 grid gap-4 border-t border-zinc-200 pt-4 sm:grid-cols-2 lg:grid-cols-3"
           onSubmit={(e) => {
             e.preventDefault();
-            send({ action: "MARK_PAID", method, reference }, "Visit marked as paid.");
+            send({ action: "MARK_PAID", method, reference }, "Visit marked as paid and added to Expenses.");
           }}
         >
           <div>
@@ -178,11 +178,11 @@ export function PayPanel({
               Mark as Paid
             </button>
           </div>
-          {changed && (
-            <p className="text-xs text-zinc-500 sm:col-span-2 lg:col-span-3">
-              Save the new amount before marking it as paid.
-            </p>
-          )}
+          <p className="text-xs text-zinc-500 sm:col-span-2 lg:col-span-3">
+            {changed
+              ? "Save the new amount before marking it as paid."
+              : "Marking it as paid also adds it to Expenses (Salaries). Don't record it there again."}
+          </p>
         </form>
       )}
 

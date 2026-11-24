@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { query, withTransaction } from "../db";
 import { logAudit } from "../audit";
@@ -258,7 +259,14 @@ export async function updatePartTimeVisit(id: string, d: PartTimeVisitInput, use
   });
 }
 
-/** Admin only (checked by the route). Records pay; it does not create an expense. */
+/** Expenses made by paying a visit carry the visit's id in their own id. */
+const expenseIdPrefix = (visitId: string) => `ptv-${visitId}-`;
+
+/**
+ * Admin only (checked by the route). Marking a visit as paid records an
+ * approved expense in the same transaction; undoing the payment rejects that
+ * expense, so it stays on file but no longer counts.
+ */
 export async function updatePartTimePay(id: string, d: PartTimePayInput, userId: string) {
   return withTransaction(async (client) => {
     const row = await lockActive(client, id);
@@ -291,9 +299,25 @@ export async function updatePartTimePay(id: string, d: PartTimePayInput, userId:
          WHERE id = $1`,
         [id, userId, d.method, d.reference]
       );
+      const expense = await client.query<{ id: string }>(
+        `INSERT INTO expenses (id, category, amount, date, description, payment_method,
+                               created_by_id, status)
+         SELECT $2, 'MISHAHARA', p.pay_amount,
+                (now() AT TIME ZONE 'Africa/Dar_es_Salaam')::date,
+                'Part-time visit: ' || COALESCE(u.full_name, p.external_name)
+                  || ', ' || to_char(p.visit_date, 'DD/MM/YYYY'),
+                $3::payment_method, $4, 'APPROVED'
+         FROM part_time_visits p
+         LEFT JOIN staff s ON s.id = p.staff_id
+         LEFT JOIN users u ON u.id = s.user_id
+         WHERE p.id = $1
+         RETURNING id`,
+        [id, expenseIdPrefix(id) + randomUUID(), d.method, userId]
+      );
       await audit("PART_TIME_PAID", String(row.pay_amount), {
         method: d.method,
         reference: d.reference,
+        expenseId: expense.rows[0].id,
       });
     } else {
       if (!row.paid_at) throw new PartTimeVisitError("This visit is not marked as paid.", 409);
@@ -304,8 +328,16 @@ export async function updatePartTimePay(id: string, d: PartTimePayInput, userId:
          WHERE id = $1`,
         [id]
       );
+      const expenses = await client.query<{ id: string }>(
+        `UPDATE expenses
+         SET status = 'REJECTED', description = description || ' (payment undone, not counted)'
+         WHERE starts_with(id, $1) AND status = 'APPROVED'
+         RETURNING id`,
+        [expenseIdPrefix(id)]
+      );
       await audit("PART_TIME_PAYMENT_UNDONE", String(row.pay_amount), {
         reason: d.reason,
+        rejectedExpenseIds: expenses.rows.map((e) => e.id),
         paidAt: row.paid_at,
         paidById: row.paid_by_id,
         method: row.payment_method,

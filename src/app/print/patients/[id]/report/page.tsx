@@ -1,3 +1,5 @@
+import { getCurrentUser } from "@/lib/auth";
+import { assertPatientAccess } from "@/lib/patient-access";
 import { getPatientById, listMedications } from "@/lib/repo/patients";
 import { listHomeVisits, type HomeVisitWithNames } from "@/lib/repo/home-visits";
 import {
@@ -48,6 +50,15 @@ export default async function PatientReportPrintPage(
   props: PageProps<"/print/patients/[id]/report">
 ) {
   const { id } = await props.params;
+  const viewer = await getCurrentUser();
+  if (!viewer || (await assertPatientAccess(viewer, id))) {
+    return (
+      <div className="p-6 text-sm text-zinc-500">
+        You don&apos;t have access to this patient&apos;s report.
+      </div>
+    );
+  }
+
   const patient = await getPatientById(id);
 
   if (!patient) {
