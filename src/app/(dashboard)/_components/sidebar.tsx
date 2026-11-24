@@ -82,6 +82,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Expenses",
     href: "/expenses",
     icon: FileSpreadsheet,
+    hideForStaff: true,
     group: "billing",
   },
   {

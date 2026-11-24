@@ -60,6 +60,7 @@ interface Overview {
   visitsToday: number;
   visitsTodayDelta: number;
   pendingReportsCount: number;
+  financeHidden: boolean;
   expensesThisMonth: string;
   expenseChangePct: number | null;
   todaysVisits: VisitItem[];
@@ -217,12 +218,14 @@ export function StaffPortalDashboard() {
           >
             <Plus className="h-4 w-4" /> New Report
           </Link>
+          {!data.financeHidden && (
           <button
             onClick={() => setShowExpenseForm((v) => !v)}
             className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white hover:bg-green-700 sm:text-sm"
           >
             <Plus className="h-4 w-4" /> Record Expense
           </button>
+          )}
           <Link
             href="/inventory"
             className="flex items-center gap-1.5 rounded-lg bg-brand-orange px-3 py-2 text-xs font-medium text-white hover:bg-brand-orange-dark sm:text-sm"
@@ -376,6 +379,7 @@ export function StaffPortalDashboard() {
             <p className="mt-1 text-xs font-medium text-red-600">Due today</p>
           )}
         </div>
+        {!data.financeHidden && (
         <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
             <span className="rounded-lg bg-purple-100 p-1.5 text-purple-700">
@@ -393,6 +397,7 @@ export function StaffPortalDashboard() {
             </p>
           )}
         </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -544,6 +549,7 @@ export function StaffPortalDashboard() {
           </Link>
         </div>
 
+        {!data.financeHidden && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-1">
           <h2 className="mb-4 text-sm font-semibold text-zinc-900">Recent Expenses</h2>
           {data.recentExpenses.length === 0 ? (
@@ -587,6 +593,7 @@ export function StaffPortalDashboard() {
             </div>
           )}
         </div>
+        )}
 
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm lg:col-span-1">
           <div className="mb-3 flex items-center justify-between">

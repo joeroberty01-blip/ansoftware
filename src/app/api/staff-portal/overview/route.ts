@@ -37,6 +37,8 @@ export async function GET() {
     );
   }
 
+  // The Chief C.O sees no finance records.
+  const financeHidden = staff.is_chief_co;
   const today = new Date().toISOString().slice(0, 10);
   const thisMonth = monthRange(0);
   const lastMonth = monthRange(-1);
@@ -59,9 +61,13 @@ export async function GET() {
     listVisitsNeedingReportForStaff(staff.id),
     listDutiesDueTodayForStaff(staff.id),
     getInventoryUsageForUser(session.id, thisMonth.from, thisMonth.to),
-    listExpensesForUser(session.id, 5),
-    getExpenseSummaryForUser(session.id, thisMonth.from, thisMonth.to),
-    getExpenseSummaryForUser(session.id, lastMonth.from, lastMonth.to),
+    financeHidden ? [] : listExpensesForUser(session.id, 5),
+    financeHidden
+      ? { totalThisMonth: "0" }
+      : getExpenseSummaryForUser(session.id, thisMonth.from, thisMonth.to),
+    financeHidden
+      ? { totalThisMonth: "0" }
+      : getExpenseSummaryForUser(session.id, lastMonth.from, lastMonth.to),
     getVisitsTodayComparisonForStaff(staff.id),
     listMissedVisitsForStaff(staff.id),
     countMissedVisitsForStaff(staff.id),
@@ -78,6 +84,7 @@ export async function GET() {
 
   return NextResponse.json({
     fullName: session.fullName,
+    financeHidden,
     patientsToday,
     visitsToday: visitsComparison.todayCount,
     visitsTodayDelta: visitsComparison.todayCount - visitsComparison.yesterdayCount,

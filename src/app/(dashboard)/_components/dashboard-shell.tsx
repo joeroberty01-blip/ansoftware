@@ -213,7 +213,9 @@ export function DashboardShell({
                     {CREATE_LINKS.filter(
                       (link) =>
                         role === "ADMIN" ||
-                        (link.href !== "/patients/new" && link.href !== "/bookings/new")
+                        (link.href !== "/patients/new" &&
+                          link.href !== "/bookings/new" &&
+                          (link.href !== "/billing/new" || canBilling))
                     ).map((link) => (
                       <Link
                         key={link.href}

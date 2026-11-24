@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { isFinanceHidden } from "@/lib/permissions";
 import { createExpenseSchema } from "@/lib/validation/expenses";
 import {
   createExpense,
@@ -23,9 +24,15 @@ async function requireSession() {
   return { session, response: null };
 }
 
+function financeHidden() {
+  return NextResponse.json({ error: "You don't have permission to do this." }, { status: 403 });
+}
+
 export async function GET(req: NextRequest) {
   const { session, response } = await requireSession();
   if (!session) return response;
+
+  if (await isFinanceHidden(session)) return financeHidden();
 
   if (session.role !== "ADMIN") {
     // Staff can only ever see their own expense requests, never the
@@ -42,6 +49,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { session, response } = await requireSession();
   if (!session) return response;
+
+  if (await isFinanceHidden(session)) return financeHidden();
 
   const body = await req.json();
   const parsed = createExpenseSchema.safeParse(body);

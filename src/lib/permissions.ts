@@ -9,13 +9,17 @@ import type { Profession, UserRole } from "./types";
 //   ACCOUNTANT                       - billing area (invoices, clients,
 //                                      payments, receipts) only
 //   ADMIN_STAFF (front desk)         - both areas
+// The Chief C.O is clinical only, whatever their profession: no finance
+// records, not even their own expense requests.
 const BILLING_PROFESSIONS: Profession[] = ["ACCOUNTANT", "ADMIN_STAFF"];
 
 export function canAccessBilling(
   role: UserRole,
-  profession: Profession | null | undefined
+  profession: Profession | null | undefined,
+  isChiefCo = false
 ): boolean {
   if (role === "ADMIN") return true;
+  if (isChiefCo) return false;
   return !!profession && BILLING_PROFESSIONS.includes(profession);
 }
 
@@ -25,7 +29,13 @@ export async function userCanAccessBilling(user: {
 }): Promise<boolean> {
   if (user.role === "ADMIN") return true;
   const staff = await getStaffByUserId(user.id);
-  return canAccessBilling(user.role, staff?.profession);
+  return canAccessBilling(user.role, staff?.profession, staff?.is_chief_co);
+}
+
+/** True for the Chief C.O, who sees no finance records. */
+export async function isFinanceHidden(user: { id: string; role: UserRole }): Promise<boolean> {
+  if (user.role === "ADMIN") return false;
+  return !!(await getStaffByUserId(user.id))?.is_chief_co;
 }
 
 /** API guard: returns a 403 response when the user may not use billing. */
