@@ -7,6 +7,7 @@ export default async function StaffProfilePage(
 ) {
   await requireAdminPage();
   const { id } = await props.params;
+  const { tab } = await props.searchParams;
   const staff = await getStaffById(id);
 
   if (!staff) {
@@ -18,6 +19,7 @@ export default async function StaffProfilePage(
       initialStaff={staff}
       viewerIsAdmin={true}
       isOwnProfile={false}
+      initialTab={tab === "attendance" ? "attendance" : "payroll"}
     />
   );
 }

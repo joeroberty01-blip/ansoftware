@@ -13,6 +13,7 @@ import {
   CalendarDays,
 } from "@/components/icons";
 import { relativeDays } from "@/lib/date-utils";
+import { AttendanceTab } from "./attendance-tab";
 
 interface Staff {
   id: string;
@@ -140,15 +141,17 @@ export function StaffDetailView({
   initialStaff,
   viewerIsAdmin,
   isOwnProfile,
+  initialTab = "payroll",
 }: {
   initialStaff: Staff;
   viewerIsAdmin: boolean;
   isOwnProfile: boolean;
+  initialTab?: "payroll" | "attendance";
 }) {
   const [staff, setStaff] = useState<Staff>(initialStaff);
   const [tab, setTab] = useState<
-    "payroll" | "leave" | "duties" | "performance" | "patients"
-  >("payroll");
+    "payroll" | "attendance" | "leave" | "duties" | "performance" | "patients"
+  >(initialTab);
 
   // --- Assigned patients ---
   const [assignedPatients, setAssignedPatients] = useState<AssignedPatient[]>([]);
@@ -1245,7 +1248,7 @@ export function StaffDetailView({
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-zinc-200">
+      <div className="flex gap-2 overflow-x-auto border-b border-zinc-200">
         <button
           onClick={() => setTab("payroll")}
           className={`px-3 py-2 text-sm font-medium ${
@@ -1255,6 +1258,16 @@ export function StaffDetailView({
           }`}
         >
           Payroll
+        </button>
+        <button
+          onClick={() => setTab("attendance")}
+          className={`px-3 py-2 text-sm font-medium ${
+            tab === "attendance"
+              ? "border-b-2 border-zinc-900 text-zinc-900"
+              : "text-zinc-500"
+          }`}
+        >
+          Attendance
         </button>
         <button
           onClick={() => setTab("leave")}
@@ -1297,6 +1310,8 @@ export function StaffDetailView({
           Performance
         </button>
       </div>
+
+      {tab === "attendance" && <AttendanceTab staffId={staff.id} staffName={staff.full_name} />}
 
       {tab === "payroll" && (
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">

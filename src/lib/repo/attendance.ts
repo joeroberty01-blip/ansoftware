@@ -109,6 +109,21 @@ export async function listAttendanceForStaffToday(staffId: string): Promise<Atte
   );
 }
 
+/** One staff member's check-ins in a month (YYYY-MM), newest first. */
+export async function listAttendanceForStaffMonth(
+  staffId: string,
+  month: string
+): Promise<AttendanceWithNames[]> {
+  return query<AttendanceWithNames>(
+    `SELECT ${SELECT_WITH_NAMES} ${FROM_WITH_NAMES}
+     WHERE a.staff_id = $1
+       AND a.work_date >= ($2 || '-01')::date
+       AND a.work_date < ($2 || '-01')::date + interval '1 month'
+     ORDER BY a.check_in_at DESC`,
+    [staffId, month]
+  );
+}
+
 /** True when this staff member checked in for this patient today (Dar es Salaam). */
 export async function hasCheckInToday(staffId: string, patientId: string): Promise<boolean> {
   const row = await queryOne<{ ok: boolean }>(

@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
 } from "@/components/icons";
 import { ListToolbar } from "../_components/list-toolbar";
+import { AttendanceTodayPanel, TodayCell, useAttendanceToday } from "./_components/attendance-today";
 import { downloadCsv } from "@/lib/csv-export";
 import { relativeDays } from "@/lib/date-utils";
 
@@ -241,6 +242,7 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 export default function StaffListPage() {
   const router = useRouter();
+  const attendance = useAttendanceToday();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [overview, setOverview] = useState<StaffOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -594,6 +596,8 @@ export default function StaffListPage() {
         />
       </div>
 
+      <AttendanceTodayPanel data={attendance.data} failed={attendance.failed} />
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold text-zinc-900">Staff Overview</h2>
@@ -737,6 +741,7 @@ export default function StaffListPage() {
                   <th className="py-2 pr-4">
                     <SortHeader label="Role" sortKey="profession" activeKey={sortKey} dir={sortDir} onSort={onSort} />
                   </th>
+                  <th className="py-2 pr-4">Attendance Today</th>
                   <th className="py-2 pr-4">Department</th>
                   <th className="py-2 pr-4">Phone</th>
                   <th className="py-2 pr-4">
@@ -791,6 +796,9 @@ export default function StaffListPage() {
                             Chief C.O
                           </span>
                         )}
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <TodayCell staffId={s.id} data={attendance.data} />
                       </td>
                       <td className="py-2.5 pr-4 text-zinc-600">{DEPARTMENT_BY_PROFESSION[s.profession] ?? "-"}</td>
                       <td className="py-2.5 pr-4 text-zinc-600">{s.phone ?? "-"}</td>

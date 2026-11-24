@@ -32,6 +32,8 @@ export async function GET() {
   ]);
   return NextResponse.json({
     staff: { id: staff.id, profession: staff.profession },
+    // The phone's own clock may be wrong: the selfie is stamped with this one.
+    now: Date.now(),
     date,
     shiftStart,
     open,

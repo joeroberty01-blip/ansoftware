@@ -14,7 +14,7 @@ import {
   type GeoProblem,
   type GeoReading,
 } from "@/lib/locate";
-import { inPageCameraSupported, SelfieCamera, shrinkPhoto } from "./selfie-camera";
+import { inPageCameraSupported, SelfieCamera, shrinkPhoto, stampPhoto } from "./selfie-camera";
 
 interface Shift {
   id: string;
@@ -31,6 +31,7 @@ interface Shift {
 
 interface MeResponse {
   staff: { id: string; profession: string } | null;
+  now?: number;
   date?: string;
   shiftStart?: string;
   open?: Shift | null;
@@ -44,6 +45,28 @@ const time = (iso: string) =>
 
 const hours = (minutes: number | null) =>
   minutes == null ? "-" : `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
+
+/** "24 Nov 2026, 10:02:31" in Dar es Salaam, whatever the phone's time zone. */
+const stampTime = (ms: number) =>
+  new Date(ms).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: "Africa/Dar_es_Salaam",
+  });
+
+/** Ticks by itself so only this line re-renders every second. */
+function LiveTime({ offset }: { offset: number }) {
+  const [ms, setMs] = useState(() => Date.now() + offset);
+  useEffect(() => {
+    const timer = setInterval(() => setMs(Date.now() + offset), 1000);
+    return () => clearInterval(timer);
+  }, [offset]);
+  return <>{stampTime(ms)}</>;
+}
 
 /** A reading older than this is taken again before it is sent. */
 const FRESH_MS = 3 * 60 * 1000;
@@ -157,7 +180,9 @@ export function AttendanceCard() {
   const router = useRouter();
   const [data, setData] = useState<MeResponse | null>(null);
   const [patientId, setPatientId] = useState("");
-  const [selfie, setSelfie] = useState<Blob | null>(null);
+  /** Taken but not saved yet (no internet or no GPS): kept for another try. */
+  const [selfie, setSelfie] = useState<{ photo: Blob; at: number } | null>(null);
+  const [clockOffset, setClockOffset] = useState(0);
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
   const [position, setPosition] = useState<GeoReading | null>(null);
   const [searching, setSearching] = useState<number | null>(null);
@@ -178,6 +203,7 @@ export function AttendanceCard() {
       if (!res.ok || !json) throw new Error("load failed");
       setLoadFailed(false);
       setData(json);
+      if (json.now) setClockOffset(json.now - Date.now());
       if (json.patients?.length === 1) setPatientId((p) => p || json.patients![0].id);
     } catch {
       setLoadFailed(true);
@@ -188,24 +214,32 @@ export function AttendanceCard() {
     load();
   }, [load]);
 
-  const getLocation = useCallback(async (): Promise<GeoReading> => {
+  const searchRef = useRef<Promise<GeoReading> | null>(null);
+  const getLocation = useCallback((): Promise<GeoReading> => {
+    // One search at a time: the camera, the card and "Check in" share it.
+    if (searchRef.current) return searchRef.current;
     setLocating(true);
     setSearching(null);
     setGeoProblem(null);
-    try {
-      const reading = await locate((best) => setSearching(best.accuracy));
-      setPosition(reading);
-      return reading;
-    } catch (e) {
-      if (e instanceof GeoError) {
-        setGeoProblem(e.kind);
-        reportProblem(e.kind);
-      }
-      throw e;
-    } finally {
-      setLocating(false);
-      setSearching(null);
-    }
+    const search = locate((best) => setSearching(best.accuracy))
+      .then((reading) => {
+        setPosition(reading);
+        return reading;
+      })
+      .catch((e) => {
+        if (e instanceof GeoError) {
+          setGeoProblem(e.kind);
+          reportProblem(e.kind);
+        }
+        throw e;
+      })
+      .finally(() => {
+        searchRef.current = null;
+        setLocating(false);
+        setSearching(null);
+      });
+    searchRef.current = search;
+    return search;
   }, []);
 
   // Location already allowed: start looking as soon as the card opens, so
@@ -250,6 +284,8 @@ export function AttendanceCard() {
   }
   if (!data?.staff || data.staff.profession === "ADMIN_STAFF") return null;
 
+  const patients = data.patients ?? [];
+
   const onLocate = async () => {
     setError(null);
     try {
@@ -260,11 +296,13 @@ export function AttendanceCard() {
   };
 
   const acceptSelfie = (photo: Blob) => {
-    setSelfie(photo);
+    const taken = { photo, at: Date.now() + clockOffset };
+    setSelfie(taken);
     setSelfieUrl(URL.createObjectURL(photo));
     setCameraOpen(false);
     setCameraNote(null);
     setError(null);
+    checkIn(taken);
   };
 
   const onSelfieFile = async (file: File | undefined) => {
@@ -278,25 +316,30 @@ export function AttendanceCard() {
     }
   };
 
+  const isFresh = (reading: GeoReading | null) => !!reading && Date.now() - reading.at <= FRESH_MS;
+
   const openCamera = () => {
     setError(null);
+    setMessage(null);
+    // The location is found while the selfie is being taken.
+    if (!isFresh(position)) getLocation().catch(() => undefined);
     if (inPageCameraSupported()) setCameraOpen(true);
     else fileRef.current?.click();
   };
 
   const networkError = () => {
     reportProblem("network");
-    setError("No internet. Your selfie and location are still here: tap again when the network is back.");
+    setError('No internet. Your selfie is kept: tap "Send again" when the network is back.');
   };
 
-  const checkIn = async () => {
-    if (!patientId || !selfie) return;
+  const checkIn = async (taken: { photo: Blob; at: number }) => {
+    if (!patientId) return;
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
       let pos = position;
-      if (!pos || Date.now() - pos.at > FRESH_MS) {
+      if (!pos || !isFresh(pos)) {
         try {
           pos = await getLocation();
         } catch (e) {
@@ -304,12 +347,17 @@ export function AttendanceCard() {
           return;
         }
       }
+      const stamped = await stampPhoto(taken.photo, [
+        stampTime(taken.at),
+        patients.find((x) => x.id === patientId)?.full_name ?? "",
+        `${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)} (±${Math.round(pos.accuracy)} m)`,
+      ]);
       const form = new FormData();
       form.set("patientId", patientId);
       form.set("lat", String(pos.lat));
       form.set("lng", String(pos.lng));
       form.set("accuracy", String(Math.round(pos.accuracy)));
-      form.set("photo", selfie, "selfie.jpg");
+      form.set("photo", stamped, "selfie.jpg");
       let res: Response;
       try {
         res = await fetch("/api/attendance/check-in", { method: "POST", body: form });
@@ -322,6 +370,8 @@ export function AttendanceCard() {
         setError(json.error ?? "Check-in failed. Please try again.");
         // Already checked in (an earlier try did get through): show that shift.
         if (res.status === 409) {
+          setSelfie(null);
+          setSelfieUrl(null);
           await load();
           router.refresh();
         }
@@ -330,7 +380,9 @@ export function AttendanceCard() {
       setSelfie(null);
       setSelfieUrl(null);
       setPosition(null);
-      setMessage("You're checked in. You can now fill in today's report.");
+      setMessage(
+        "You're checked in: selfie, location and time saved. You can now fill in today's report."
+      );
       await load();
       router.refresh();
     } finally {
@@ -377,7 +429,6 @@ export function AttendanceCard() {
   const open = data.open ?? null;
   const forgotten = data.forgotten ?? null;
   const today = data.today ?? [];
-  const patients = data.patients ?? [];
 
   return (
     <section
@@ -458,100 +509,129 @@ export function AttendanceCard() {
             </select>
           </label>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {selfie && selfieUrl ? (
             <div className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3">
-              {selfieUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- local preview of a blob URL
-                <img src={selfieUrl} alt="Selfie" className="h-14 w-14 shrink-0 rounded-full object-cover" />
-              ) : (
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-500">
-                  1
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-800">{selfieUrl ? "Selfie taken ✓" : "Take a selfie"}</p>
-                <button
-                  type="button"
-                  onClick={openCamera}
-                  className="mt-1 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                >
-                  {selfieUrl ? "Retake" : "Open camera"}
-                </button>
-                {cameraNote && (
-                  <>
-                    <p className="mt-1 text-xs text-amber-800">{cameraNote}</p>
+              {/* eslint-disable-next-line @next/next/no-img-element -- local preview of a blob URL */}
+              <img
+                src={selfieUrl}
+                alt="Your selfie"
+                className="h-16 w-16 shrink-0 rounded-full object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-zinc-800">
+                  {busy
+                    ? locating
+                      ? `Selfie taken ✓ Location: ${searchingText}`
+                      : "Saving your attendance..."
+                    : "Selfie taken, not saved yet"}
+                </p>
+                {!busy && (
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => fileRef.current?.click()}
-                      className="mt-1 min-h-9 text-left text-xs font-semibold text-brand-blue underline"
+                      onClick={() => checkIn(selfie)}
+                      disabled={!patientId}
+                      className="min-h-10 rounded-lg bg-brand-blue px-4 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
                     >
-                      Use the phone&apos;s camera app
+                      Send again
                     </button>
-                  </>
+                    <button
+                      type="button"
+                      onClick={openCamera}
+                      className="min-h-10 rounded-lg border border-zinc-300 px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                    >
+                      Retake
+                    </button>
+                  </div>
                 )}
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  className="hidden"
-                  onChange={(e) => {
-                    onSelfieFile(e.target.files?.[0]);
-                    e.target.value = "";
-                  }}
-                />
               </div>
             </div>
-
-            <div className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3">
-              <span
-                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-xs ${
-                  position ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100 text-zinc-500"
-                }`}
-              >
-                {position ? "GPS ✓" : "2"}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-800">
-                  {position ? `Location found (±${Math.round(position.accuracy)} m)` : "Get location (GPS)"}
-                </p>
-                {position && position.accuracy > WEAK_ACCURACY_M && (
-                  <p className="mt-0.5 text-xs text-amber-800">
-                    Weak signal. Go outside or near a window and tap Get again.
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={onLocate}
-                  disabled={locating}
-                  className="mt-1 min-h-9 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
-                >
-                  {locating ? searchingText : position ? "Get again" : "Get location"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={checkIn}
-            disabled={busy || !patientId || !selfie}
-            className="rounded-lg bg-brand-blue px-4 py-3 text-sm font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
-          >
-            {busy ? (locating ? searchingText : "Saving...") : "Check in"}
-          </button>
-          {(!patientId || !selfie) && (
+          ) : (
+            <button
+              type="button"
+              onClick={openCamera}
+              disabled={busy || !patientId}
+              className="min-h-14 rounded-xl bg-brand-blue px-4 text-base font-semibold text-white hover:bg-brand-blue-dark disabled:opacity-50"
+            >
+              📷 Take selfie and check in
+            </button>
+          )}
+          {!selfie && (
             <p className="text-xs text-zinc-500">
-              {!patientId ? "Choose the patient" : ""}
-              {!patientId && !selfie ? ", then take" : !selfie ? "Take" : ""}
-              {!selfie ? " a selfie" : ""} to check in.
+              {patientId
+                ? "Your selfie, location and time are saved together, at once."
+                : "Choose the patient first."}
             </p>
           )}
+
+          <p className="flex flex-wrap items-center gap-2 text-xs text-zinc-600">
+            <span>
+              {locating
+                ? `Location: ${searchingText}`
+                : position
+                  ? `Location found ✓ (±${Math.round(position.accuracy)} m)`
+                  : "Location: not found yet"}
+            </span>
+            {!locating && (
+              <button
+                type="button"
+                onClick={onLocate}
+                className="min-h-9 font-semibold text-brand-blue underline"
+              >
+                {position ? "Get again" : "Get location"}
+              </button>
+            )}
+          </p>
+          {!locating && position && position.accuracy > WEAK_ACCURACY_M && (
+            <p className="text-xs text-amber-800">
+              Weak signal. Go outside or near a window and tap Get again.
+            </p>
+          )}
+
+          {cameraNote && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              <p>{cameraNote}</p>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="mt-2 min-h-10 rounded-lg border border-amber-400 bg-white px-3 text-sm font-semibold"
+              >
+                Use the phone&apos;s camera app
+              </button>
+            </div>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            className="hidden"
+            onChange={(e) => {
+              onSelfieFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
         </div>
       )}
 
       {cameraOpen && (
         <SelfieCamera
+          status={
+            <>
+              <span className="block font-semibold">
+                <LiveTime offset={clockOffset} />
+              </span>
+              <span className="block text-white/80">
+                {locating
+                  ? `Location: ${searchingText}`
+                  : position
+                    ? `Location found ✓ (±${Math.round(position.accuracy)} m)`
+                    : geoProblem
+                      ? "Location not found: you can still take the photo"
+                      : "Location: waiting..."}
+              </span>
+            </>
+          }
           onPhoto={acceptSelfie}
           onClose={() => setCameraOpen(false)}
           onProblem={(kind, detail) => {

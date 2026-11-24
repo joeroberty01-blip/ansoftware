@@ -21,25 +21,68 @@ function toJpeg(source: CanvasImageSource, width: number, height: number): Promi
   );
 }
 
-/** Small JPEG from a photo file. Some phones can't decode one way, so try two. */
-export async function shrinkPhoto(file: File): Promise<Blob> {
+/** The photo as something a canvas can draw; image decoding differs by phone. */
+async function decodePhoto(photo: Blob): Promise<{ source: CanvasImageSource; w: number; h: number }> {
   try {
-    const bitmap = await createImageBitmap(file);
-    const blob = await toJpeg(bitmap, bitmap.width, bitmap.height);
-    bitmap.close();
-    return blob;
+    const bitmap = await createImageBitmap(photo);
+    return { source: bitmap, w: bitmap.width, h: bitmap.height };
   } catch {
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(photo);
     try {
       const img = new Image();
-      img.src = url;
-      await img.decode();
-      return await toJpeg(img, img.naturalWidth, img.naturalHeight);
-    } catch {
-      throw new Error("The phone couldn't open that photo. Please take it again.");
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("decode"));
+        img.src = url;
+      });
+      return { source: img, w: img.naturalWidth, h: img.naturalHeight };
     } finally {
       URL.revokeObjectURL(url);
     }
+  }
+}
+
+/**
+ * Writes lines of text along the bottom of the photo (time, patient,
+ * location). Never holds up a check-in: if it fails or is slow, the plain
+ * photo is sent, and the time and location are saved with it anyway.
+ */
+export async function stampPhoto(photo: Blob, lines: string[]): Promise<Blob> {
+  const draw = async (): Promise<Blob> => {
+    const { source, w, h } = await decodePhoto(photo);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return photo;
+    ctx.drawImage(source, 0, 0);
+    const size = Math.max(12, Math.round(w / 30));
+    const pad = Math.round(size * 0.6);
+    const lineHeight = Math.round(size * 1.35);
+    const barHeight = lineHeight * lines.length + pad * 2;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.fillRect(0, h - barHeight, w, barHeight);
+    ctx.fillStyle = "#fff";
+    ctx.font = `600 ${size}px sans-serif`;
+    ctx.textBaseline = "top";
+    lines.forEach((line, n) =>
+      ctx.fillText(line, pad, h - barHeight + pad + n * lineHeight, w - pad * 2)
+    );
+    return new Promise((resolve) => canvas.toBlob((b) => resolve(b ?? photo), "image/jpeg", 0.8));
+  };
+  return Promise.race([
+    draw().catch(() => photo),
+    new Promise<Blob>((resolve) => setTimeout(() => resolve(photo), 4000)),
+  ]);
+}
+
+/** Small JPEG from a photo file taken with the phone's own camera app. */
+export async function shrinkPhoto(file: File): Promise<Blob> {
+  try {
+    const { source, w, h } = await decodePhoto(file);
+    return await toJpeg(source, w, h);
+  } catch {
+    throw new Error("The phone couldn't open that photo. Please take it again.");
   }
 }
 
@@ -52,10 +95,13 @@ export const inPageCameraSupported = () =>
  * reloads and the photo is lost.
  */
 export function SelfieCamera({
+  status,
   onPhoto,
   onClose,
   onProblem,
 }: {
+  /** Shown under the picture: the time and how the location is going. */
+  status: React.ReactNode;
   onPhoto: (photo: Blob) => void;
   onClose: () => void;
   /** The camera can't be used here: offer the phone's camera app instead. */
@@ -140,6 +186,7 @@ export function SelfieCamera({
           </p>
         )}
       </div>
+      <div className="w-full max-w-sm text-center text-sm text-white">{status}</div>
       <div className="flex w-full max-w-sm gap-3">
         <button
           type="button"
@@ -154,7 +201,7 @@ export function SelfieCamera({
           disabled={!ready || busy}
           className="min-h-12 flex-[2] rounded-xl bg-brand-blue px-4 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {busy ? "Saving..." : "Take photo"}
+          {busy ? "Saving..." : "Take photo and check in"}
         </button>
       </div>
     </div>
