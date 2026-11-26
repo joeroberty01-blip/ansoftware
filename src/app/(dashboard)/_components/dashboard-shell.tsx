@@ -63,6 +63,7 @@ export function DashboardShell({
   canClinical,
   canPartTime,
   isChiefCo = false,
+  accountTitle = null,
   pendingStaffCount,
   lowStockCount,
   outstandingCount,
@@ -77,6 +78,8 @@ export function DashboardShell({
   canClinical: boolean;
   canPartTime: boolean;
   isChiefCo?: boolean;
+  /** Set per account by the Admin, e.g. "C.E.O"; otherwise from the role. */
+  accountTitle?: string | null;
   pendingStaffCount: number;
   lowStockCount: number;
   outstandingCount: number;
@@ -135,9 +138,11 @@ export function DashboardShell({
               <span className="block text-[10px] text-zinc-400">
                 {role === "ADMIN"
                   ? "Care that comes home"
-                  : isChiefCo
-                    ? "Chief C.O Portal"
-                    : "Staff Portal"}
+                  : accountTitle
+                    ? `${accountTitle} Portal`
+                    : isChiefCo
+                      ? "Chief C.O Portal"
+                      : "Staff Portal"}
               </span>
             </span>
           </Link>
@@ -245,7 +250,8 @@ export function DashboardShell({
                     {fullName}
                   </span>
                   <span className="block text-xs text-zinc-500">
-                    {role === "ADMIN" ? "Super Administrator" : isChiefCo ? "Chief C.O" : "Staff"}
+                    {accountTitle ??
+                      (role === "ADMIN" ? "Super Administrator" : isChiefCo ? "Chief C.O" : "Staff")}
                   </span>
                 </span>
                 <ChevronDown className="hidden h-3.5 w-3.5 text-zinc-400 sm:block" />

@@ -9,6 +9,7 @@ import { countOutstandingInvoices } from "@/lib/repo/invoices";
 import { countBookingsNeedingAction } from "@/lib/repo/bookings";
 import { countMissedVisitsForStaff } from "@/lib/repo/home-visits";
 import { getAttendanceReminder } from "@/lib/repo/attendance";
+import { getAccountTitle } from "@/lib/repo/account-titles";
 import { DashboardShell } from "./_components/dashboard-shell";
 
 export default async function DashboardLayout({
@@ -84,6 +85,13 @@ export default async function DashboardLayout({
     }
   }
 
+  let accountTitle: string | null = null;
+  try {
+    accountTitle = await getAccountTitle(user.id);
+  } catch (err) {
+    console.error("[dashboard-layout] getAccountTitle failed:", err);
+  }
+
   const notificationCount =
     pendingStaffCount + lowStockCount + outstandingCount + newBookingsCount + missedVisitsCount;
 
@@ -95,6 +103,7 @@ export default async function DashboardLayout({
       canClinical={canClinical}
       canPartTime={canPartTime}
       isChiefCo={!!staff?.is_chief_co}
+      accountTitle={accountTitle}
       pendingStaffCount={pendingStaffCount}
       lowStockCount={lowStockCount}
       outstandingCount={outstandingCount}
