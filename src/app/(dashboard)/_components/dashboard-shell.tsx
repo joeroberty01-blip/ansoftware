@@ -23,6 +23,7 @@ const CREATE_LINKS = [
   { label: "New Booking", href: "/bookings/new" },
   { label: "New Invoice/Quotation", href: "/billing/new" },
   { label: "New Inventory Item", href: "/inventory/new" },
+  { label: "New Staff Member", href: "/staff/new" },
 ];
 
 /** Red bar at the very top of every page until the nurse checks in today. */
@@ -215,9 +216,12 @@ export function DashboardShell({
                     onClick={() => setCreateOpen(false)}
                   />
                   <div className="absolute right-0 z-20 mt-2 w-52 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg">
-                    {CREATE_LINKS.filter(
-                      (link) =>
-                        role === "ADMIN" ||
+                    {CREATE_LINKS.filter((link) =>
+                      // Admins add staff from Staff Management (with salary); the Chief C.O uses /staff/new.
+                      link.href === "/staff/new"
+                        ? role !== "ADMIN" && isChiefCo
+                        : role === "ADMIN" ||
+                        (isChiefCo && link.href === "/patients/new") ||
                         (link.href !== "/patients/new" &&
                           link.href !== "/bookings/new" &&
                           (link.href !== "/billing/new" || canBilling))

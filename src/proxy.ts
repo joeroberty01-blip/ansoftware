@@ -61,7 +61,9 @@ const ADMIN_ONLY_PREFIXES = [
 // /staff and /api/staff are otherwise Admin-only. The route handlers behind
 // these paths do their own self-or-admin ownership checks against the real
 // staff record, so the proxy only needs to let the request through.
-const ADMIN_ONLY_EXCEPTIONS = ["/staff/me", "/api/staff/me"];
+// /staff/new and /api/staff/new let the Chief C.O add clinical staff; the page
+// and route handler check Admin-or-Chief-C.O themselves.
+const ADMIN_ONLY_EXCEPTIONS = ["/staff/me", "/api/staff/me", "/staff/new", "/api/staff/new"];
 const ID_CARD_ROUTE = /^\/api\/staff\/[^/]+\/id-card$/;
 const STAFF_SELF_ACCESS_ROUTES = [
   /^\/api\/staff\/[^/]+\/documents$/,

@@ -23,7 +23,7 @@ export default function NewPatientPage() {
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((json) => setIsAdmin(json.user?.role === "ADMIN"))
+      .then((json) => setIsAdmin(json.user?.role === "ADMIN" || !!json.user?.isChiefCo))
       .catch(() => setIsAdmin(false));
   }, []);
 

@@ -1,3 +1,4 @@
+import { canAddPatientsAndStaff } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   }
-  if (session.role !== "ADMIN") {
+  if (!(await canAddPatientsAndStaff(session))) {
     return NextResponse.json(
       { error: "You don't have permission. Contact the Admin to register a new patient." },
       { status: 403 }

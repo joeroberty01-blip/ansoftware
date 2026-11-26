@@ -38,6 +38,12 @@ export async function isFinanceHidden(user: { id: string; role: UserRole }): Pro
   return !!(await getStaffByUserId(user.id))?.is_chief_co;
 }
 
+/** Admins and the Chief C.O can register new patients and new clinical staff. */
+export async function canAddPatientsAndStaff(user: { id: string; role: UserRole }): Promise<boolean> {
+  if (user.role === "ADMIN") return true;
+  return !!(await getStaffByUserId(user.id))?.is_chief_co;
+}
+
 /** API guard: returns a 403 response when the user may not use billing. */
 export async function assertBillingAccess(user: {
   id: string;

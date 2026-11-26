@@ -378,7 +378,7 @@ export default function PatientsListPage() {
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Patients</h1>
         <div className="flex flex-wrap gap-2">
           <ListToolbar filename="patients" columns={CSV_COLUMNS} rows={enriched} />
-          {isAdmin && (
+          {(isAdmin || isChiefCo) && (
             <Link
               href="/patients/new"
               className="flex items-center gap-1.5 rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-blue-dark print:hidden"
