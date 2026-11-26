@@ -19,6 +19,7 @@ import {
 } from "@/components/icons";
 import { ListToolbar } from "../_components/list-toolbar";
 import { AttendanceTodayPanel, TodayCell, useAttendanceToday } from "./_components/attendance-today";
+import { AccountTitlesPanel } from "./_components/account-titles-panel";
 import { downloadCsv } from "@/lib/csv-export";
 import { relativeDays } from "@/lib/date-utils";
 
@@ -612,6 +613,8 @@ export default function StaffListPage() {
           )}
         </div>
       </div>
+
+      <AccountTitlesPanel />
 
       {showAddForm && (
         <form
