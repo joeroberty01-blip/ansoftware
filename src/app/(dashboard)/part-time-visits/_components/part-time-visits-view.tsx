@@ -75,6 +75,8 @@ export function PartTimeVisitsView() {
   const [visits, setVisits] = useState<PartTimeVisit[]>([]);
   const [staff, setStaff] = useState<PartTimeOptions["staff"]>([]);
   const [patients, setPatients] = useState<PartTimeOptions["patients"]>([]);
+  // Names are listed by first name, so a surname search finds e.g. "Kakwekwe".
+  const [patientSearch, setPatientSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -122,6 +124,7 @@ export function PartTimeVisitsView() {
 
   const openForm = (state: FormState, id: string | null) => {
     setForm(state);
+    setPatientSearch("");
     setPayFor(null);
     setEditingId(id);
     setFormError(null);
@@ -138,6 +141,15 @@ export function PartTimeVisitsView() {
   };
 
   const set = (patch: Partial<FormState>) => setForm((f) => (f ? { ...f, ...patch } : f));
+
+  const needle = patientSearch.trim().toLowerCase().replace(/\s+/g, " ");
+  const shownPatients = needle
+    ? patients.filter(
+        (p) =>
+          p.id === form?.patientId ||
+          p.full_name.toLowerCase().replace(/\s+/g, " ").includes(needle)
+      )
+    : patients;
 
   // The nurse usually covered is the one assigned to that patient: suggest
   // them, unless someone else was already picked by hand.
@@ -407,6 +419,27 @@ export function PartTimeVisitsView() {
               <label className={labelClass} htmlFor="pt-patient">
                 Patient
               </label>
+              <input
+                type="search"
+                value={patientSearch}
+                onChange={(e) => {
+                  setPatientSearch(e.target.value);
+                  // One match: pick it, so the user doesn't have to open the list.
+                  const q = e.target.value.trim().toLowerCase().replace(/\s+/g, " ");
+                  const hits = q
+                    ? patients.filter((p) => p.full_name.toLowerCase().replace(/\s+/g, " ").includes(q))
+                    : [];
+                  if (hits.length === 1 && hits[0].id !== form.patientId) {
+                    set({
+                      patientId: hits[0].id,
+                      coveredStaffId: suggestCovered(form, hits[0].id, form.reason),
+                    });
+                  }
+                }}
+                placeholder={`Search any part of the name (${patients.length} patients)`}
+                aria-label="Search patients"
+                className={`${inputClass} mb-1.5`}
+              />
               <select
                 id="pt-patient"
                 required
@@ -419,8 +452,12 @@ export function PartTimeVisitsView() {
                 }
                 className={inputClass}
               >
-                <option value="">-- select patient --</option>
-                {patients.map((p) => (
+                <option value="">
+                  {patientSearch.trim()
+                    ? `-- ${shownPatients.length} found --`
+                    : "-- select patient --"}
+                </option>
+                {shownPatients.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.full_name}
                   </option>
